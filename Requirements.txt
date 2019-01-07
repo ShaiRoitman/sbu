@@ -1,0 +1,18 @@
+Smart Backup Utility
+https://github.com/ShaiRoitman/sbu
+
+Scope
+This document describes the requirements of the Smart Backup Utility. 
+
+Overview
+
+Requirements
+
+
+Commands
+--------
+CreateBackupDef --name <name> --path <path>
+ListBackupDef 
+Backup --name <name>
+Restore --name <name> --date <LATEST|DateTime> --ShowOnly 
+ListBackup -- name <name>

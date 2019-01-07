@@ -1,0 +1,9 @@
+SBU - Smart Backup Utility
+
+Provides a way to backup and restore data.
+
+Features
+1. Ability to backup from multiple hosts
+2. Ability to restore from any host from any time snapshot
+3. Efficient data storage -> Data is dedupped if the same data is stored more than once
+4. Secure -> Data is obfuscated at storage

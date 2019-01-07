@@ -1,0 +1,36 @@
+Project Management
+------------------
+
+
+Features
+--------
+Metadata datasources
+File sqlite
+File sqlite enc
+Postgre db connection
+
+Data Storage
+FileSystem
+S3
+
+Encryption
+None
+AES
+
+Obfuscation
+None
+SHA2 + Key
+
+Selection
+Src HostPath
+Date 
+Label
+
+Extra Features
+Smart large file chunking
+Smart Small file aggregation
+Stopable file system scan
+Stopable file upload 
+Stopable file download
+
+

@@ -1,0 +1,20 @@
+Build Instructions
+------------------
+
+Dependencies
+------------
+Boost - https://github.com/boostorg/boost
+bootstrap
+b2 --build-type=complete address-model=64
+
+SQlite C++ Wrapper 				https://github.com/SRombauts/SQLiteCpp
+
+Future Dependencies
+-------------------
+OpenSSL                    		https://github.com/openssl/openssl
+Log4CXX  						http://git-wip-us.apache.org/repos/asf/logging-log4cxx.git
+SQlite   						https://github.com/smparkes/sqlite
+
+Clean
+-----
+git clean -fxd
