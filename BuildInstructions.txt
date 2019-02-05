@@ -1,6 +1,22 @@
 Build Instructions
 ------------------
 
+Windows
+-------
+vcpkg
+-----
+git clone https://github.com/Microsoft/vcpkg.git
+.\bootstrap-vcpkg.bat
+.\vcpkg integrate install
+
+vcpkg install sqlite3:x64-windows
+vcpkg install sqlitecpp:x64-windows
+vcpkg install openssl:x64-windows
+vcpkg install boost:x64-windows-static
+vcpkg install boost:x64-windows
+
+
+
 Dependencies
 ------------
 Boost - https://github.com/boostorg/boost
@@ -18,3 +34,4 @@ SQlite   						https://github.com/smparkes/sqlite
 Clean
 -----
 git clean -fxd
+

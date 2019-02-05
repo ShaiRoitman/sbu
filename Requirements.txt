@@ -15,4 +15,4 @@ CreateBackupDef --name <name> --path <path>
 ListBackupDef 
 Backup --name <name>
 Restore --name <name> --date <LATEST|DateTime> --ShowOnly 
-ListBackup -- name <name>
+ListBackup --name <name>

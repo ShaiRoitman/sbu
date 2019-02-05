@@ -1,0 +1,24 @@
+--
+-- File generated with SQLiteStudio v3.2.1 on Fri Jan 18 20:13:57 2019
+--
+-- Text encoding used: System
+--
+PRAGMA foreign_keys = off;
+BEGIN TRANSACTION;
+
+-- Table: Files
+CREATE TABLE Files (
+    ID          INTEGER PRIMARY KEY AUTOINCREMENT,
+    Path        TEXT,
+	Added       DATETIME,
+    DigestType  TEXT,
+    DigestValue TEXT
+);
+
+CREATE INDEX digestValueIndex ON Files (
+    DigestValue ASC
+);
+
+
+COMMIT TRANSACTION;
+PRAGMA foreign_keys = on;
