@@ -20,6 +20,7 @@ public:
 	{
 		return dbPath;
 	}
+
 	virtual void ContinueScan() override
 	{
 		AddToExecutionLog("Continue Scan", "");

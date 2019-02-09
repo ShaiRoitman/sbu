@@ -8,6 +8,9 @@ find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(sqlite3 CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 
+#set(Boost_USE_STATIC_LIBS TRUE)
+#set(OPENSSL_USE_STATIC_LIBS TRUE)
+
 file(GLOB_RECURSE resources "resources/*.sql")
 
 source_group("Resources" FILES ${resources})

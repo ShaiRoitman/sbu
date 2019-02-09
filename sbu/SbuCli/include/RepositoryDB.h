@@ -67,12 +67,13 @@ public:
 		bool shouldCopy;
 	};
 
-	virtual BackupDef AddBackupDef(const std::string& name, boost::filesystem::path rootPath) = 0;
+	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) = 0;
+	virtual std::shared_ptr<BackupDef> GetBackupDef(const std::string& name) = 0;
 	virtual bool DeleteBackupDef(Integer id) = 0;
 	virtual std::list<BackupDef> GetBackupDefs() = 0;
 
 	virtual BackupInfo Backup(BackupParameters backupParams) = 0;
-	virtual std::list<BackupInfo> GetBackups() = 0;
+	virtual std::list<BackupInfo> GetBackups(Integer id) = 0;
 
 	virtual bool Restore(RestoreParameters restoreParams) = 0;
 

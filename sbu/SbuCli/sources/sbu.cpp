@@ -1,44 +1,91 @@
 #include <stdio.h>
+#include <iostream>
 #include "BackupDB.h"
 #include "FileRepositoryDB.h"
 #include "RepositoryDB.h"
-#include "boost/program_options.hpp"
+#include "CommandLineAndConfig.h"
 
 using namespace boost::program_options;
 
 int main(int argc, const char* argv[])
 {
-	options_description desc("Allowed options");
-	std::string path;
-	std::string name;
-	bool createdef;
-	bool listdef;
-	bool backup;
-	bool restore;
-	bool listbackups;
+	CommandLineAndOptions options;
+	int retValue = options.ParseOptions(argc, argv);
+	if ( retValue != 0)
+	{ 
+		return retValue;
+	}
 
-	desc.add_options()
-		("help,h", "print usage message")
-		("createdef", bool_switch(&createdef), "create backup def")
-		("listdef", bool_switch(&listdef), "list backup def")
-		("path,p", value(&path), "Path")
-		("name,n", value(&name), "Name")
-		;
-
-	variables_map vm;
-	store(parse_command_line(argc, argv, desc), vm);
-	store(parse_config_file<char>("sbu.config", desc, false), vm);
-	store(parse_environment(desc,
-		[](const std::string& i_env_var)
-	{// maps environment variable "HOSTNAME" to user-defined option "hostname"
-		return i_env_var == "HOSTNAME" ? "hostname" : "";
-	}),
-		vm);
+	std::string action = options.vm["action"].as<std::string>();
 
 	std::string repoDB = "repoDB.db";
 	remove(repoDB.c_str());
 	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+	if (action == "CreateBackupDef")
+	{
+		std::string name = options.vm["name"].as<std::string>();
+		std::string path = options.vm["path"].as<std::string>();
+		auto backupdef = RepoDB->AddBackupDef(name, boost::filesystem::path(path));
+		std::cout << backupdef->id << ",";
+		std::cout << backupdef->name << ",";
+		std::cout << backupdef->hostName << ",";
+		std::cout << backupdef->rootPath << ",";
+		std::cout << get_string_from_time_point(backupdef->added) << "\n";
+	}
+	else if (action == "ListBackupDef")
+	{
+		auto backupdefs = RepoDB->GetBackupDefs();
+		std::list<IRepositoryDB::BackupDef>::iterator iter;
+		for (iter = backupdefs.begin(); iter != backupdefs.end(); ++iter)
+		{
+			auto backupdef = *iter;
+			std::cout << backupdef.id << ",";
+			std::cout << backupdef.name << ",";
+			std::cout << backupdef.hostName << ",";
+			std::cout << backupdef.rootPath << ",";
+			std::cout << get_string_from_time_point(backupdef.added) << "\n";
+		}
+	}
+	else if (action == "Backup")
+	{
+		std::string name = options.vm["name"].as<std::string>();
+		auto backupdef = RepoDB->GetBackupDef(name);
+		if (backupdef != nullptr)
+		{
+			auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id));
+		}
+	}
+	else if (action == "Restore")
+	{
+		std::string name = options.vm["name"].as<std::string>();
+		auto backupdef = RepoDB->GetBackupDef(name);
+		auto rootDest = options.vm["path"].as < std::string>();
+		if (backupdef != nullptr)
+		{
+			auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(backupdef->id).RootDest(rootDest));
+		}
+	}
+	else if (action == "ListBackup")
+	{
+		std::string name = options.vm["name"].as<std::string>();
+		auto backupdef = RepoDB->GetBackupDef(name);
+		if (backupdef != nullptr)
+		{
 
+			auto backups = RepoDB->GetBackups(backupdef->id);
+			std::list<IRepositoryDB::BackupInfo>::iterator iter;
+			for (iter = backups.begin(); iter != backups.end(); ++iter)
+			{
+				auto backup = *iter;
+				std::cout << backup.id << ",";
+				std::cout << backup.status << ",";
+				std::cout << get_string_from_time_point(backup.started) << ",";
+				std::cout << get_string_from_time_point(backup.ended) << ",";
+			}
+		}
+	}
+
+#ifdef TEST 
 	auto backupDef = RepoDB->AddBackupDef("Shai", "c:\\git\\clu");
 	auto values = RepoDB->GetBackupDefs();
 	auto firstBackupDef = *values.begin(); 
@@ -52,7 +99,6 @@ int main(int argc, const char* argv[])
 	//auto backupDeleted = RepoDB->DeleteBackup(backupId.id);
 	//bool deleted = RepoDB->DeleteBackupDef(backupDef.id);
 
-#ifdef TEST 
 	std::string databaseName = "backupDb.db";
 	printf("Smart Backup Utility\n");
 	remove(databaseName.c_str());

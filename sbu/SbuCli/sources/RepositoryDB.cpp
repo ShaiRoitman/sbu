@@ -28,7 +28,7 @@ public:
 		this->fileDB = fileDB;
 	}
 
-	virtual BackupDef AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
+	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
 	{
 		BackupDef retValue;
 		SQLite::Statement insertQuery(*db, "INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) Values (:name, :host, :root, :added)");
@@ -39,11 +39,23 @@ public:
 		insertQuery.bind(":added", return_current_time_and_date());
 		insertQuery.exec();
 
-		SQLite::Statement query(*db, "SELECT ID FROM BackupDefs WHERE Name=:name");
+		return this->GetBackupDef(name);
+	}
+
+	virtual std::shared_ptr<BackupDef> GetBackupDef(const std::string& name)
+	{
+		SQLite::Statement query(*db, "SELECT ID,Name,Hostname,RootPath,Added FROM BackupDefs WHERE Name=:name");
 		query.bind(":name", name);
+		std::shared_ptr<BackupDef> retValue = nullptr;
 		if (query.executeStep())
 		{
-			retValue.id = query.getColumn("ID").getInt();
+			retValue = std::make_shared<BackupDef>();
+			retValue->id = query.getColumn("ID").getInt();
+			retValue->name = query.getColumn("Name").getString();
+			retValue->rootPath = from_utf8(query.getColumn("RootPath").getString());
+			retValue->hostName = query.getColumn("Hostname").getInt();
+			retValue->added = get_time_point(query.getColumn("Added").getString());
+
 		}
 
 		return retValue;
@@ -182,10 +194,11 @@ public:
 		return retValue;
 	}
 
-	virtual std::list<BackupInfo> GetBackups() override
+	virtual std::list<BackupInfo> GetBackups(Integer id) override
 	{
 		std::list<BackupInfo> retValue;
-		SQLite::Statement selectQuery(*db, "SELECT ID, BackupDefID, Started, Ended, Status FROM Backups");
+		SQLite::Statement selectQuery(*db, "SELECT ID, BackupDefID, Started, Ended, Status FROM Backups WHERE BackupDefID=:id");
+		selectQuery.bind(":id", id);
 
 		while (selectQuery.executeStep())
 		{

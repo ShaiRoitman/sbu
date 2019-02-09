@@ -12,10 +12,20 @@ git clone https://github.com/Microsoft/vcpkg.git
 vcpkg install sqlite3:x64-windows
 vcpkg install sqlitecpp:x64-windows
 vcpkg install openssl:x64-windows
-vcpkg install boost:x64-windows-static
+
+
+vcpkg install sqlite3:x64-windows-static
+vcpkg install sqlitecpp:x64-windows-static
+vcpkg install openssl:x64-windows-static
+vcpkg install boost-filesystem:x64-windows-static
+vcpkg install boost-program-options:x64-windows-static
+
 vcpkg install boost:x64-windows
+vcpkg install boost:x64-windows-static
 
-
+Build CompileToCppVariable https://github.com/ShaiRoitman/CompileToCppVar
+ResourceCompile.cmd
+WindowsBuild.cmd
 
 Dependencies
 ------------

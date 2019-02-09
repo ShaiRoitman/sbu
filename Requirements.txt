@@ -11,8 +11,8 @@ Requirements
 
 Commands
 --------
-CreateBackupDef --name <name> --path <path>
-ListBackupDef 
-Backup --name <name>
-Restore --name <name> --date <LATEST|DateTime> --ShowOnly 
-ListBackup --name <name>
+--action CreateBackupDef --name <name> --path <path>
+--action ListBackupDef 
+--action Backup --name <name>
+--action Restore --name <name> --date <LATEST|DateTime> --ShowOnly 
+--action ListBackup --name <name>
