@@ -12,8 +12,11 @@ class TestStringMethods(unittest.TestCase):
     def executeCmdLine(self, cmdLine):
         cmdLineArgs = cmdLine.split(" ")
         cmdLineArgs.insert(0, self.executablePath)
+        cmdLineArgs.append("--config")
+        cmdLineArgs.append("""c:\git\sbu\sbu\sbu.config""")
         p = subprocess.Popen(cmdLineArgs, stdout=subprocess.PIPE)
         noArgsOutput = p.communicate()
+        print (noArgsOutput)
         return [noArgsOutput, p.returncode]
 
     def test_Spawn(self):
@@ -25,9 +28,12 @@ class TestStringMethods(unittest.TestCase):
         workDir = """c:\workdir"""
         srcPath = """c:\git\clu"""
         dstPath = """c:\git\clu2"""
+        repo = """c:\git\sbu\Repo"""
 
         if (os.path.exists(workDir)):
             shutil.rmtree(workDir)
+        if (os.path.exists(repo)):
+            shutil.rmtree(repo)
         os.makedirs(workDir)
         os.chdir(workDir)
         if (os.path.exists(dstPath)):

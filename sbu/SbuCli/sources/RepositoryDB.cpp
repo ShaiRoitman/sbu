@@ -13,13 +13,19 @@ class RepositoryDB : public IRepositoryDB
 public:
 	RepositoryDB(boost::filesystem::path dbPath)
 	{
-		bool dbexists = exists(this->dbPath);
 		this->dbPath = dbPath;
+		bool dbexists = exists(this->dbPath);
 		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
 		if (!dbexists)
 		{
-			static std::string createQuery = Text_Resource::Repository;
-			db->exec(createQuery);
+			try {
+				static std::string createQuery = Text_Resource::Repository;
+				db->exec(createQuery);
+			}
+			catch (std::runtime_error e)
+			{
+				int k = 3;
+			}
 		}
 	}
 
@@ -97,7 +103,7 @@ public:
 		return retValue;
 	}
 
-	virtual BackupInfo Backup(BackupParameters backupParams) override
+	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) override
 	{
 		BackupInfo retValue;
 		retValue.backupDefId = backupParams.backupDefId;
@@ -152,17 +158,6 @@ public:
 		backupDB->StartDiffCalc();
 		backupDB->ContinueDiffCalc();
 
-		boost::filesystem::path repoPath("C:\\git\\sbu\\sbu\\SbuCli\\Repo");
-		boost::filesystem::remove("fileRepo.db");
-		try {
-		//	boost::filesystem::remove_all(repoPath);
-		}
-		catch (std::exception ex)
-		{
-			int k = 3;
-		}
-		std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB("fileRepo.db", repoPath, true);
-
 		backupDB->StartUpload(fileRepDB);
 		backupDB->ContinueUpload();
 
@@ -215,12 +210,9 @@ public:
 		return retValue;
 	}
 
-	virtual bool Restore(RestoreParameters restoreParams)
+	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB)
 	{
 		try {
-			boost::filesystem::path repoPath("C:\\git\\sbu\\sbu\\SbuCli\\Repo");
-			std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB("fileRepo.db", repoPath, false);
-
 			auto dateToRestoreStr = get_string_from_time_point(restoreParams.dateToRestore);
 			SQLite::Statement selectQuery(*db, Text_Resource::RestoreQuery);
 			selectQuery.bind(":backupDefID", restoreParams.backupDefId);

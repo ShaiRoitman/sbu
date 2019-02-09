@@ -10,4 +10,4 @@ public:
 	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) = 0;
 };
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, bool create);
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath);

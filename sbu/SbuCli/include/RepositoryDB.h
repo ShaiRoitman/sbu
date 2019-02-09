@@ -72,10 +72,10 @@ public:
 	virtual bool DeleteBackupDef(Integer id) = 0;
 	virtual std::list<BackupDef> GetBackupDefs() = 0;
 
-	virtual BackupInfo Backup(BackupParameters backupParams) = 0;
+	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
 	virtual std::list<BackupInfo> GetBackups(Integer id) = 0;
 
-	virtual bool Restore(RestoreParameters restoreParams) = 0;
+	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
 
 	virtual BackupInfo DeleteBackup(Integer backupId) = 0;
 

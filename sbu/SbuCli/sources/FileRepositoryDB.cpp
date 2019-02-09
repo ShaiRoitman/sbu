@@ -8,14 +8,15 @@ using namespace SQLite;
 class FileRepositoryDB : public IFileRepositoryDB
 {
 public:
-	FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, bool create)
+	FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 	{
 		this->dbPath = dbPath;
+		bool dbexists = exists(this->dbPath);
 		this->dataRootPath = dataRootPath;
 
 		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
 
-		if (create)
+		if (!dbexists)
 		{
 			static std::string createQuery = Text_Resource::FileRepository;
 			db->exec(createQuery);
@@ -73,7 +74,7 @@ private:
 	path dbPath;
 };
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, bool create)
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 {
-	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath, create);
+	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath);
 }

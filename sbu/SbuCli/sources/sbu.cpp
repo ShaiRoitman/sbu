@@ -19,7 +19,6 @@ int main(int argc, const char* argv[])
 	std::string action = options.vm["action"].as<std::string>();
 
 	std::string repoDB = "repoDB.db";
-	remove(repoDB.c_str());
 	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
 	if (action == "CreateBackupDef")
 	{
@@ -52,7 +51,9 @@ int main(int argc, const char* argv[])
 		auto backupdef = RepoDB->GetBackupDef(name);
 		if (backupdef != nullptr)
 		{
-			auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id));
+			boost::filesystem::path repoPath = options.vm["FileRepository.path"].as<std::string>();
+			std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB("fileRepo.db", repoPath);
+			auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
 		}
 	}
 	else if (action == "Restore")
@@ -62,7 +63,9 @@ int main(int argc, const char* argv[])
 		auto rootDest = options.vm["path"].as < std::string>();
 		if (backupdef != nullptr)
 		{
-			auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(backupdef->id).RootDest(rootDest));
+			boost::filesystem::path repoPath = options.vm["FileRepository.path"].as<std::string>();
+			std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB("fileRepo.db", repoPath);
+			auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(backupdef->id).RootDest(rootDest), fileRepDB);
 		}
 	}
 	else if (action == "ListBackup")

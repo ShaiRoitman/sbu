@@ -198,7 +198,7 @@ protected:
 			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
 			markDeleted.exec();
 		}
-		catch (Exception ex)
+		catch (std::runtime_error ex)
 		{
 			int k = 3;
 		}

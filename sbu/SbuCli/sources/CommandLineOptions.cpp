@@ -16,14 +16,17 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string name;
 	std::string action;
 	std::string date;
+	std::string config_file;
 
 	desc.add_options()
 		("help,h", "print usage message")
 		("version", "print version")
+		("config", value(&config_file), "Config file")
 		("action,a", value(&action), "Actions include : CreateBackupDef, ListBackupDef, Backup, Restore, ListBackup")
 		("path,p", value(&path), "Path")
 		("name,n", value(&name), "Name")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
+		("FileRepository.path", "Path of the FileRepository")
 		;
 
 	try 
@@ -35,9 +38,13 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		{
 			sbuConfigFileName = std::getenv(configFileEnvVar.c_str());
 		}
+		if (!vm["config"].empty())
+		{
+			sbuConfigFileName = vm["config"].as<std::string>();
+		}
 		if (boost::filesystem::exists(sbuConfigFileName))
 		{
-			store(parse_config_file<char>(sbuConfigFileName.c_str(), desc, false), vm);
+			store(parse_config_file<char>(sbuConfigFileName.c_str(), desc, true), vm);
 		}
 
 		store(parse_environment(desc,
