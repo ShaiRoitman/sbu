@@ -59,14 +59,20 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version + std::string("\n");
 			std::cout << std::string("Written by ") << std::string(g_developer_name) + std::string("\n\n");
 			std::cout << desc << std::string("\n");
-			return 0;
+			return 1;
 		}
 
 		if (!vm["version"].empty())
 		{
 			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version + std::string("\n");
 			std::cout << std::string("Written by ") << std::string(g_developer_name) + std::string("\n\n");
-			return 0;
+			return 1;
+		}
+
+		if (vm["action"].empty())
+		{
+			std::cout << "Missing action argument\n";
+			return 1;
 		}
 	}
 	catch (const boost::program_options::unknown_option exception)

@@ -4,6 +4,7 @@
 
 #include "SQLiteCpp/SQLiteCpp.h"
 #include "utils.h"
+#include <iostream>
 
 using namespace boost::filesystem;
 using namespace SQLite;
@@ -37,13 +38,19 @@ public:
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
 	{
 		BackupDef retValue;
-		SQLite::Statement insertQuery(*db, "INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) Values (:name, :host, :root, :added)");
+		try {
+			SQLite::Statement insertQuery(*db, "INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) Values (:name, :host, :root, :added)");
 
-		insertQuery.bind(":name", name);
-		insertQuery.bind(":host", getHostName());
-		insertQuery.bind(":root", to_utf8(rootPath));
-		insertQuery.bind(":added", return_current_time_and_date());
-		insertQuery.exec();
+			insertQuery.bind(":name", name);
+			insertQuery.bind(":host", getHostName());
+			insertQuery.bind(":root", to_utf8(rootPath));
+			insertQuery.bind(":added", return_current_time_and_date());
+			insertQuery.exec();
+		}
+		catch (std::runtime_error ex)
+		{
+			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
+		}
 
 		return this->GetBackupDef(name);
 	}

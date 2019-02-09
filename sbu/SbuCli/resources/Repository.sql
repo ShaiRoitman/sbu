@@ -15,7 +15,7 @@ CREATE TABLE ExecutionLog (
 -- Table: BackupDefs
 CREATE TABLE BackupDefs (
     ID       INTEGER  PRIMARY KEY AUTOINCREMENT,
-    Name     TEXT,
+    Name     TEXT UNIQUE,
     Hostname TEXT,
     RootPath TEXT,
     Added    DATETIME
