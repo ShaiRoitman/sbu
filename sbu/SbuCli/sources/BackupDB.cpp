@@ -242,7 +242,7 @@ protected:
 
 	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
-		SQLite::Statement uploadQuery(*db, "SELECT ID,Path,DigestType, DigestValue FROM CurrentState WHERE Status='Added'");
+		SQLite::Statement uploadQuery(*db, "SELECT ID,Path,DigestType, DigestValue FROM CurrentState WHERE Status='Added' AND Type='File'");
 		while (uploadQuery.executeStep())
 		{
 			auto id = uploadQuery.getColumn("ID").getInt();

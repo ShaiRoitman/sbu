@@ -46,7 +46,7 @@ DROP TABLE CurrentState;
 Create TABLE CurrentState
 AS
 SELECT * FROM (
- SELECT Files.Path, Files.Size, Files.Created, Files.Modified, Files.Accessed,Files.Status  FROM 
+ SELECT Files.Path, Files.Type, Files.Size, Files.Created, Files.Modified, Files.Accessed,Files.Status  FROM 
 (SELECT MAX(Files.ID) AS FILEID FROM Files 
 JOIN
     Backups ON Files.BackupID = Backups.ID

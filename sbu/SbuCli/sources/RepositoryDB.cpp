@@ -226,12 +226,19 @@ public:
 			selectQuery.bind(":startDate", dateToRestoreStr);
 			while (selectQuery.executeStep())
 			{
+				auto type = selectQuery.getColumn("Type").getString();
 				auto path = from_utf8(selectQuery.getColumn("Path").getString());
 				auto fileHandle = selectQuery.getColumn("FileHandle").getString();
 
 				auto destination = restoreParams.rootDest / path;
-
-				fileRepDB->GetFile(fileHandle, destination);
+				if (type == "File")
+				{
+					fileRepDB->GetFile(fileHandle, destination);
+				}
+				else
+				{
+					boost::filesystem::create_directories(destination);
+				}
 			}
 
 		}

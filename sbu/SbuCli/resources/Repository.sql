@@ -37,6 +37,7 @@ CREATE TABLE Files (
     ID			INTEGER  PRIMARY KEY AUTOINCREMENT,
     BackupID	INTEGER  REFERENCES Backups (ID),
     Path		TEXT,
+	Type        TEXT,
 	Size		BIGINT,
     Created		DATETIME,
     Modified	DATETIME,

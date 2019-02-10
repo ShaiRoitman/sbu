@@ -1,16 +1,32 @@
 #include <stdio.h>
 #include <iostream>
+
 #include "BackupDB.h"
 #include "FileRepositoryDB.h"
 #include "RepositoryDB.h"
+
 #include "CommandLineAndConfig.h"
+#include "Loggers.h"
 
 using namespace boost::program_options;
+
+std::shared_ptr<IFileRepositoryDB> getFileRepository(variables_map& vm)
+{
+	boost::filesystem::path repoPath = vm["FileRepository.path"].as<std::string>();
+	boost::filesystem::path dbPath = vm["FileRepository.name"].as<std::string>();
+	std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB(dbPath, repoPath);
+	return fileRepDB;
+}
+
+
 
 int main(int argc, const char* argv[])
 {
 	CommandLineAndOptions options;
 	int retValue = options.ParseOptions(argc, argv);
+	LoggerFactory::InitLogger(options.vm);
+	auto logger = LoggerFactory::getLogger("application");
+
 	if ( retValue != 0)
 	{ 
 		return retValue;
@@ -51,9 +67,8 @@ int main(int argc, const char* argv[])
 		auto backupdef = RepoDB->GetBackupDef(name);
 		if (backupdef != nullptr)
 		{
-			boost::filesystem::path repoPath = options.vm["FileRepository.path"].as<std::string>();
-			std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB("fileRepo.db", repoPath);
-			auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
+			std::shared_ptr<IFileRepositoryDB> fileRepDB = getFileRepository(options.vm);
+			auto backupInfo = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
 		}
 	}
 	else if (action == "Restore")
@@ -63,9 +78,8 @@ int main(int argc, const char* argv[])
 		auto rootDest = options.vm["path"].as < std::string>();
 		if (backupdef != nullptr)
 		{
-			boost::filesystem::path repoPath = options.vm["FileRepository.path"].as<std::string>();
-			std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB("fileRepo.db", repoPath);
-			auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(backupdef->id).RootDest(rootDest), fileRepDB);
+			std::shared_ptr<IFileRepositoryDB> fileRepDB = getFileRepository(options.vm);
+			auto isRestored = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(backupdef->id).RootDest(rootDest), fileRepDB);
 		}
 	}
 	else if (action == "ListBackup")
@@ -88,37 +102,6 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-#ifdef TEST 
-	auto backupDef = RepoDB->AddBackupDef("Shai", "c:\\git\\clu");
-	auto values = RepoDB->GetBackupDefs();
-	auto firstBackupDef = *values.begin(); 
-	auto tp = get_string_from_time_point(firstBackupDef.added);
-
-	auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(firstBackupDef.id));
-
-	boost::filesystem::remove_all("c:\\git\\clu2");
-	auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(firstBackupDef.id).RootDest("c:\\git\\clu2"));
-
-	//auto backupDeleted = RepoDB->DeleteBackup(backupId.id);
-	//bool deleted = RepoDB->DeleteBackupDef(backupDef.id);
-
-	std::string databaseName = "backupDb.db";
-	printf("Smart Backup Utility\n");
-	remove(databaseName.c_str());
-	std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB(databaseName);
-	backupDB->StartScan("C:\\git\\sbu\\sbu\\SbuCli");
-	
-	std::string fileRepoDB = "fileRepo.db";
-	remove(fileRepoDB.c_str());
-	std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB(fileRepoDB, "C:\\git\\sbu\\sbu\\SbuCli\\Repo");
-	std::string fileHandle = fileRepDB->AddFile("C:\\git\\sbu\\sbu\\SbuCli\\sources\\sbu.cpp");
-	fileRepDB->GetFile(fileHandle, "C:\\git\\sbu\\sbu\\SbuCli\\sources\\sbu.cpp2");
-	
-	std::string repoDB = "repoDB.db";
-	remove(repoDB.c_str());
-	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
-	RepoDB->SetFileRepositoryDB(fileRepDB);
-#endif
 	return 0;
 }
 

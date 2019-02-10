@@ -1,14 +1,16 @@
 INSERT INTO CurrentState
 (
 	Path,
+	Type,
 	Size,
 	Created,
 	Modified,
 	Accessed,
-	Status
+	Status	
 )
 SELECT 
     Entries.Path,
+	Entries.Type,
     Entries.Size,
     Entries.Created,
     Entries.Modified,
@@ -19,4 +21,4 @@ FROM
 LEFT JOIN 
     CurrentState ON CurrentState.Path = Entries.Path
 Where 
-    CurrentState.Path is NULL and Entries.Type='File'
+    CurrentState.Path is NULL

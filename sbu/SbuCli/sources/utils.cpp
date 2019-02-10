@@ -124,3 +124,41 @@ std::string calcHash(boost::filesystem::path path)
 	return digest;
 // return to_utf8(path.relative_path());
 }
+
+
+
+
+
+
+
+#ifdef TEST 
+auto backupDef = RepoDB->AddBackupDef("Shai", "c:\\git\\clu");
+auto values = RepoDB->GetBackupDefs();
+auto firstBackupDef = *values.begin();
+auto tp = get_string_from_time_point(firstBackupDef.added);
+
+auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(firstBackupDef.id));
+
+boost::filesystem::remove_all("c:\\git\\clu2");
+auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(firstBackupDef.id).RootDest("c:\\git\\clu2"));
+
+//auto backupDeleted = RepoDB->DeleteBackup(backupId.id);
+//bool deleted = RepoDB->DeleteBackupDef(backupDef.id);
+
+std::string databaseName = "backupDb.db";
+printf("Smart Backup Utility\n");
+remove(databaseName.c_str());
+std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB(databaseName);
+backupDB->StartScan("C:\\git\\sbu\\sbu\\SbuCli");
+
+std::string fileRepoDB = "fileRepo.db";
+remove(fileRepoDB.c_str());
+std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB(fileRepoDB, "C:\\git\\sbu\\sbu\\SbuCli\\Repo");
+std::string fileHandle = fileRepDB->AddFile("C:\\git\\sbu\\sbu\\SbuCli\\sources\\sbu.cpp");
+fileRepDB->GetFile(fileHandle, "C:\\git\\sbu\\sbu\\SbuCli\\sources\\sbu.cpp2");
+
+std::string repoDB = "repoDB.db";
+remove(repoDB.c_str());
+std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+RepoDB->SetFileRepositoryDB(fileRepDB);
+#endif

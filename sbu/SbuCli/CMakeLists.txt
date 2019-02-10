@@ -3,7 +3,7 @@ include(${PROJECT_SOURCE_DIR}/CMakeInclude.cmake_include)
 file(GLOB_RECURSE cmakes "${PROJECT_SOURCE_DIR}/CMakeLists.cmake")
 
 
-find_package(Boost REQUIRED COMPONENTS filesystem program_options)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options log)
 find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(sqlite3 CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)

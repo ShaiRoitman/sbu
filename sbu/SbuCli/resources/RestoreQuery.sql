@@ -1,6 +1,7 @@
 	SELECT 
 		Files.Path, 
-		Files.Size, 
+		Files.Size,
+		Files.Type,
 		Files.Created, 
 		Files.Modified, 
 		Files.Accessed,
@@ -14,8 +15,9 @@
 			Backups ON Files.BackupID = Backups.ID
 		JOIN 
 			BackupDefs ON BackupDefID = BackupDefs.ID
-		WHERE BackupDefs.ID = :backupDefID AND
-			  Backups.Started <= :startDate
+		WHERE 
+			BackupDefs.ID = :backupDefID AND
+			Backups.Started <= :startDate
 		GROUP BY Files.Path ) Latest
 	JOIN Files ON 
 		Latest.FILEID = Files.ID

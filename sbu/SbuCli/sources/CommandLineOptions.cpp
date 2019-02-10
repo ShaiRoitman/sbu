@@ -26,7 +26,10 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("path,p", value(&path), "Path")
 		("name,n", value(&name), "Name")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
+		("FileRepository.name", "The database name of the FileRepository")
 		("FileRepository.path", "Path of the FileRepository")
+		("Logging.Console", "true/false - Enable logs to console")
+		("Logging.FileOutput", "filename - if exists emit logs to the file")
 		;
 
 	try 

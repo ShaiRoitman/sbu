@@ -2,9 +2,19 @@ import unittest
 import subprocess
 import os
 import shutil
-import filecmp
 
 class TestStringMethods(unittest.TestCase):
+
+    def dirCompare(self, left, right):
+        cmdLines = "diff -r %s %s" % (left, right)
+        cmdLines.split(" ")
+        p = subprocess.Popen(cmdLines, stdout=subprocess.PIPE)
+        noArgsOutput = p.communicate()
+        print (noArgsOutput)
+        retValue = p.returncode
+
+        return retValue==0
+
     def setUp(self):
         self.executablePath = """C:\git\sbu\sbu\SbuCli\Debug\sbu.exe"""
         self.testPath = """c:\git\sbu\sbuTests"""
@@ -44,8 +54,7 @@ class TestStringMethods(unittest.TestCase):
         self.executeCmdLine("""--action Backup --name clu """)
         self.executeCmdLine("""--action ListBackup --name clu """)
         self.executeCmdLine("""--action Restore --name clu --path """ + dstPath)
-        self.assertTrue( filecmp.cmp(srcPath,dstPath))
-
+        self.assertTrue(self.dirCompare(srcPath,dstPath))
     def test_AddingBackupDef(self):
         pass
 

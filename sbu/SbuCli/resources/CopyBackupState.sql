@@ -2,6 +2,7 @@ INSERT INTO FILES
 (
 	BackupID,
 	Path,
+	Type,
 	Size,
 	Created,
 	Modified,
@@ -14,6 +15,7 @@ INSERT INTO FILES
 SELECT 
 	:backupID,
 	Path,
+	Type,
 	Size,
 	Created,
 	Modified,

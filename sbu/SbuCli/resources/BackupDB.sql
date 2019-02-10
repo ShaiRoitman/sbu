@@ -40,6 +40,7 @@ CREATE TABLE Entries (
 CREATE TABLE CurrentState (
     ID              INTEGER  PRIMARY KEY,
     Path            TEXT,
+	Type            TEXT,
     Size            BIGINT,
     Created         DATETIME,
     Modified        DATETIME,
