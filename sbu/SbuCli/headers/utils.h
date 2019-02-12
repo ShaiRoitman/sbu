@@ -3,6 +3,7 @@
 #include <string>
 #include <chrono>
 #include <boost/filesystem.hpp>
+#include "Loggers.h"
 #include "Text_Resources.h"
 
 typedef long long Integer;

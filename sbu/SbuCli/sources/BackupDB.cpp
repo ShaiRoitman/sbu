@@ -5,6 +5,8 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
+static auto logger = LoggerFactory::getLogger("application.BackupDB");
+
 class BackupDB : public IBackupDB
 {
 public:
@@ -186,17 +188,25 @@ protected:
 	virtual void StartDiffCalc() override
 	{
 		try {
-			SQLite::Statement deleteUnchangedQuery(*db, Text_Resource::DeleteUnchanged);
-			deleteUnchangedQuery.exec();
+			Transaction transaction(*db);
+
+			logger->Debug("Marking files as Deleted existing in the backup but not in the scan");
+			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
+			markDeleted.exec();
+
+			logger->Debug("Marking files as Added existing in the scan but not in the backup");
+			SQLite::Statement addMissingQuery(*db, Text_Resource::AddMissing);
+			addMissingQuery.exec();
+
+			transaction.commit();
+
+			SQLite::Statement markUnchangedQuery(*db, Text_Resource::MarkUnchanged);
+			markUnchangedQuery.exec();
 
 			SQLite::Statement markUpdated(*db, Text_Resource::MarkUpdated);
 			markUpdated.exec();
 
-			SQLite::Statement addMissingQuery(*db, Text_Resource::AddMissing);
-			addMissingQuery.exec();
 
-			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
-			markDeleted.exec();
 		}
 		catch (std::runtime_error ex)
 		{
@@ -207,11 +217,12 @@ protected:
 
 	virtual void ContinueDiffCalc() override
 	{
-		SQLite::Statement calcDigestQuery(*db, "SELECT ID,Path FROM CurrentState WHERE Status='Added' and DigestValue is NULL");
+		SQLite::Statement calcDigestQuery(*db, Text_Resource::findHashCalcQuery);
 		while (calcDigestQuery.executeStep())
 		{
 			auto id = calcDigestQuery.getColumn("ID").getInt();
 			auto filePath = from_utf8(calcDigestQuery.getColumn("Path").getString());
+			auto status = calcDigestQuery.getColumn("Status").getString();
 
 			auto fullPath = root / boost::filesystem::path(filePath);
 			auto startDigest = std::chrono::system_clock::now();
@@ -226,13 +237,21 @@ protected:
 			updateDigest.bind(":path", to_utf8(filePath));
 			updateDigest.exec();
 
-			SQLite::Statement updateCurrentDigest(*db, "Update CurrentState SET DigestType=:digestType, DigestValue=:digestValue WHERE ID=:id");
-			updateCurrentDigest.bind(":digestType", "SHA1");
-			updateCurrentDigest.bind(":digestValue", digest);
-			updateCurrentDigest.bind(":id", id);
-			updateCurrentDigest.exec();
+			if (status == "Added")
+			{
+				SQLite::Statement updateCurrentDigest(*db, "Update CurrentState SET DigestType=:digestType, DigestValue=:digestValue WHERE ID=:id");
+				updateCurrentDigest.bind(":digestType", "SHA1");
+				updateCurrentDigest.bind(":digestValue", digest);
+				updateCurrentDigest.bind(":id", id);
+				updateCurrentDigest.exec();
+			}
 		}
-		
+
+		SQLite::Statement markUpdatedQuery(*db, Text_Resource::MarkUpdated);
+		markUpdatedQuery.exec();
+
+		SQLite::Statement markUnchangedQuery(*db, Text_Resource::MarkUnchanged);
+		markUpdatedQuery.exec();
 	}
 
 	virtual bool IsDiffCalcDone() override
@@ -242,7 +261,11 @@ protected:
 
 	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
-		SQLite::Statement uploadQuery(*db, "SELECT ID,Path,DigestType, DigestValue FROM CurrentState WHERE Status='Added' AND Type='File'");
+	}
+
+	virtual void ContinueUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
+	{
+		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
 		while (uploadQuery.executeStep())
 		{
 			auto id = uploadQuery.getColumn("ID").getInt();
@@ -270,13 +293,13 @@ protected:
 		}
 	}
 
-	virtual void ContinueUpload() override
-	{
-	}
-
 	virtual bool IsUploadDone() override
 	{
-		return false;
+		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
+		if (uploadQuery.executeStep())
+			return false;
+		else
+			return true;
 	}
 
 private:

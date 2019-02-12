@@ -15,7 +15,7 @@ public:
 	virtual bool IsDiffCalcDone() = 0;
 
 	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
-	virtual void ContinueUpload() = 0;
+	virtual void ContinueUpload(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
 	virtual bool IsUploadDone() = 0;
 
 	virtual boost::filesystem::path GetDatabasePath() = 0;

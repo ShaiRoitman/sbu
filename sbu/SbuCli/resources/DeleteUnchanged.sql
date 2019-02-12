@@ -1,1 +1,0 @@
-UPDATE CurrentState SET Path=Path WHERE Path='NA'

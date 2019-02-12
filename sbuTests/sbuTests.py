@@ -6,7 +6,7 @@ import shutil
 class TestStringMethods(unittest.TestCase):
 
     def dirCompare(self, left, right):
-        cmdLines = "diff -r %s %s" % (left, right)
+        cmdLines = """c:\dropbox\apps\bin\diff.exe -r %s %s""" % (left, right)
         cmdLines.split(" ")
         p = subprocess.Popen(cmdLines, stdout=subprocess.PIPE)
         noArgsOutput = p.communicate()

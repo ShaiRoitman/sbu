@@ -9,6 +9,8 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
+static auto logger = LoggerFactory::getLogger("application.RepositoryDB");
+
 class RepositoryDB : public IRepositoryDB
 {
 public:
@@ -166,7 +168,7 @@ public:
 		backupDB->ContinueDiffCalc();
 
 		backupDB->StartUpload(fileRepDB);
-		backupDB->ContinueUpload();
+		backupDB->ContinueUpload(fileRepDB);
 
 		SQLite::Statement attach2(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
 		attach2.exec();
@@ -244,8 +246,9 @@ public:
 		}
 		catch (std::exception ex)
 		{
-			int k = 3;
+			logger->Error("Failed to restore");
 		}
+
 		return true;
 	}
 

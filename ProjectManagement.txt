@@ -34,3 +34,11 @@ Stopable file upload
 Stopable file download
 
 
+Items To Do
+1. Mark items which have been removed
+2. Mark items which needs to be HashCalculated but exists at both
+3. Calculate Hash for items that need to be further inspected
+4. Remove items which are equal
+5. Receive DateTime paramater for restore
+6. Calculate current state if items are deleted.
+7. show only restore

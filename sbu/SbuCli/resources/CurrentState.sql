@@ -5,6 +5,8 @@ INSERT INTO BackupDB.CurrentState
 	Created,
 	Modified,
 	Accessed,
+	DigestType,
+	DigestValue,
 	Status
 )
 SELECT 
@@ -12,7 +14,9 @@ SELECT
 	Size, 
 	Created, 
 	Modified, 
-	Accessed, 
+	Accessed,
+	DigestType,
+	DigestValue,
 	'Current' 
 FROM (
 	SELECT 
@@ -21,7 +25,9 @@ FROM (
 		Files.Created, 
 		Files.Modified, 
 		Files.Accessed,
-		Files.Status  
+		Files.DigestType,
+		Files.DigestValue,
+		Files.Status
 	FROM 
 	(SELECT 
 		MAX(Files.ID) AS FILEID 

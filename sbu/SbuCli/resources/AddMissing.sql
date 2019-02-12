@@ -20,5 +20,5 @@ FROM
     Entries
 LEFT JOIN 
     CurrentState ON CurrentState.Path = Entries.Path
-Where 
+WHERE 
     CurrentState.Path is NULL
