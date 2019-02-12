@@ -8,6 +8,8 @@
 #include "boost/asio/ip/host_name.hpp"
 #include "openssl/sha.h"
 
+static auto logger = LoggerFactory::getLogger("application.Utils");
+
 std::string getHostName()
 {
 	return boost::asio::ip::host_name();
@@ -113,7 +115,6 @@ void bin2hex(unsigned char * src, int len, char * hex)
 		sprintf(&hex[j], "%02x", src[i]);
 }
 
-// TODO: Complete
 std::string calcHash(boost::filesystem::path path)
 {
 	unsigned char sha1p[SHA_DIGEST_LENGTH];
@@ -122,11 +123,30 @@ std::string calcHash(boost::filesystem::path path)
 	sha1(path.string().c_str(), sha1p);
 	bin2hex(sha1p, sizeof(sha1p), digest);
 	return digest;
-// return to_utf8(path.relative_path());
 }
 
 
+std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
+{
+	std::shared_ptr<SQLite::Database> db = nullptr;
+	
+	try
+	{
+		bool dbexists = exists(dbPath);
+		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
 
+		if (!dbexists)
+		{
+			db->exec(initScript);
+		}
+	}
+	catch (std::exception ex)
+	{
+		logger->Error("Could not open db");
+	}
+
+	return db;
+}
 
 
 

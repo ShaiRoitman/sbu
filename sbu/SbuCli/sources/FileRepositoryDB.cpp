@@ -10,18 +10,8 @@ class FileRepositoryDB : public IFileRepositoryDB
 public:
 	FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 	{
-		this->dbPath = dbPath;
-		bool dbexists = exists(this->dbPath);
 		this->dataRootPath = dataRootPath;
-
-		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
-
-		if (!dbexists)
-		{
-			static std::string createQuery = Text_Resource::FileRepository;
-			db->exec(createQuery);
-		}
-
+		this->db = getOrCreateDb(dbPath, Text_Resource::FileRepository);
 	}
 
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
@@ -32,16 +22,16 @@ public:
 		if (!query.executeStep())
 		{
 			SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Added, DigestType, DigestValue) VALUES (:path,:added,:digestType,:digestValue)");
-			insertQuery.bind(":path", key);
+			insertQuery.bind(":path", to_utf8(key));
 			insertQuery.bind(":added", return_current_time_and_date());
 			insertQuery.bind(":digestType", digestType);
 			insertQuery.bind(":digestValue", key);
 			insertQuery.exec();
 
-//			path destPath = this->dataRootPath / file.relative_path();
 			path destPath = this->dataRootPath / boost::filesystem::path(digest);
 			boost::filesystem::create_directories(destPath.branch_path());
-			try {
+			try 
+			{
 				copy_file(file, destPath, copy_option::overwrite_if_exists);
 			}
 			catch (std::exception ex)
@@ -71,7 +61,6 @@ public:
 private:
 	std::shared_ptr<SQLite::Database> db;
 	path dataRootPath;
-	path dbPath;
 };
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)

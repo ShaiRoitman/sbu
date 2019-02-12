@@ -18,7 +18,20 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(variables_map& vm)
 	return fileRepDB;
 }
 
+class Test
+{
+public:
+	Test(const char* s)
+	{
+		printf("ctor %s\n",s);
+	}
 
+	Test& operator()(const char*s) { printf("%s", s); return *this; }
+	~Test()
+	{
+		printf("dtor\n");
+	}
+};
 
 int main(int argc, const char* argv[])
 {

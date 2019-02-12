@@ -12,15 +12,7 @@ class BackupDB : public IBackupDB
 public:
 	BackupDB(path dbPath)
 	{
-		static std::string backupDBCreateQuery = Text_Resource::BackupDB;
-		this->dbPath = dbPath;
-		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
-		db->exec(backupDBCreateQuery);
-	}
-
-	virtual boost::filesystem::path GetDatabasePath() override
-	{
-		return dbPath;
+		this->db = getOrCreateDb(dbPath, Text_Resource::BackupDB);
 	}
 
 	virtual void ContinueScan() override
@@ -305,9 +297,6 @@ protected:
 private:
 	std::shared_ptr<SQLite::Database> db;
 	path root;
-	path dbPath;
-
-	// Inherited via IBackupDB
 };
 
 std::shared_ptr<IBackupDB> CreateSQLiteDB(boost::filesystem::path dbPath)

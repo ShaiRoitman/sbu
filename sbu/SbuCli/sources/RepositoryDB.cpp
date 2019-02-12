@@ -16,20 +16,7 @@ class RepositoryDB : public IRepositoryDB
 public:
 	RepositoryDB(boost::filesystem::path dbPath)
 	{
-		this->dbPath = dbPath;
-		bool dbexists = exists(this->dbPath);
-		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
-		if (!dbexists)
-		{
-			try {
-				static std::string createQuery = Text_Resource::Repository;
-				db->exec(createQuery);
-			}
-			catch (std::runtime_error e)
-			{
-				int k = 3;
-			}
-		}
+		this->db = getOrCreateDb(dbPath, Text_Resource::Repository);
 	}
 
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) override
@@ -263,7 +250,6 @@ private:
 	std::shared_ptr<SQLite::Database> db;
 	std::shared_ptr<IFileRepositoryDB> fileDB;
 	path root;
-	path dbPath;
 };
 
 std::shared_ptr<IRepositoryDB> CreateRepositorySQLiteDB(boost::filesystem::path dbPath)

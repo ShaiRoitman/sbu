@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include "Loggers.h"
 #include "Text_Resources.h"
+#include "SQLiteCpp/Database.h"
 
 typedef long long Integer;
 
@@ -17,6 +18,8 @@ std::string calcHash(boost::filesystem::path path);
 
 std::string get_string_from_time_point(std::chrono::system_clock::time_point tp);
 std::chrono::system_clock::time_point get_time_point(const std::string& timePoint);
+
+std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript);
 
 class Resource
 {
