@@ -148,6 +148,13 @@ std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, 
 	return db;
 }
 
+std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::variables_map& vm)
+{
+	boost::filesystem::path repoPath = vm["FileRepository.path"].as<std::string>();
+	boost::filesystem::path dbPath = vm["FileRepository.name"].as<std::string>();
+	std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB(dbPath, repoPath);
+	return fileRepDB;
+}
 
 
 

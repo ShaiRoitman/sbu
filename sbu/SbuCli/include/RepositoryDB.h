@@ -61,6 +61,18 @@ public:
 			return *this;
 		}
 
+		RestoreParameters& DateToRestore(std::chrono::system_clock::time_point date)
+		{
+			this->dateToRestore = date;
+			return *this;
+		}
+
+		RestoreParameters& ShowOnly(bool showOnly)
+		{
+			this->shouldCopy = !showOnly;
+			return *this;
+		}
+
 		Integer backupDefId;
 		boost::filesystem::path rootDest;
 		std::chrono::system_clock::time_point dateToRestore;
