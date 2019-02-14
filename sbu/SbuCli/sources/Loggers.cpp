@@ -4,7 +4,9 @@
 #include "boost/log/sources/severity_channel_logger.hpp"
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/expressions/keyword.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/attributes.hpp>
+
 
 class Logger : public ILogger
 {
@@ -50,11 +52,17 @@ protected:
 void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 {
 	std::string logFormat = "[%TimeStamp%]: [%Severity%] [%Message%]";
+
+	boost::log::core::get()->set_logging_enabled(false);
+	boost::log::core::get()->add_global_attribute("TimeStamp", boost::log::attributes::local_clock());
+
 	if (!vm["Logging.Console"].empty())
 	{
+		auto value = vm["Logging.Console"].as<std::string>();
 		if (vm["Logging.Console"].as<std::string>() == "true")
 		{
 			boost::log::add_console_log(std::cout, boost::log::keywords::format = logFormat);
+			boost::log::core::get()->set_logging_enabled(true);
 		}
 	}
 	if (!vm["Logging.FileOutput"].empty())
@@ -63,6 +71,7 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 		if (fileName != "")
 		{
 			boost::log::add_file_log(fileName, boost::log::keywords::format = logFormat);
+			boost::log::core::get()->set_logging_enabled(true);
 		}
 	}
 

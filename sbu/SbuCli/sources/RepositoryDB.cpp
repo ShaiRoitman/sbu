@@ -38,6 +38,11 @@ public:
 		}
 		catch (std::runtime_error ex)
 		{
+			std::string content = ex.what();
+			if (content.find("UNIQUE constraint failed") != std::string::npos)
+			{
+				// std::string::npos
+			}
 			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
 		}
 

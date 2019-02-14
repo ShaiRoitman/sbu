@@ -18,6 +18,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string action;
 	std::string date;
 	std::string config_file;
+	std::string logging;
 
 	desc.add_options()
 		("help,h", "print usage message")
@@ -30,8 +31,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("showOnly", "In restore show only the files to be restored")
 		("FileRepository.name", "The database name of the FileRepository")
 		("FileRepository.path", "Path of the FileRepository")
-		("Logging.Console", "true/false - Enable logs to console")
-		("Logging.FileOutput", "filename - if exists emit logs to the file")
+		("Logging.Console", value(&logging), "true/false - Enable logs to console")
+		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
 		;
 
 	try 

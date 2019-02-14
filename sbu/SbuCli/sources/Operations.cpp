@@ -2,13 +2,11 @@
 
 #include <iostream>
 #include "utils.h"
-#include "RepositoryDB.h"
-
+#include "factories.h"
 
 int CreateBackupDefOperation::Operate(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = "repoDB.db";
-	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+	auto RepoDB = getRepository(vm);
 
 	std::string name = vm["name"].as<std::string>();
 	std::string path = vm["path"].as<std::string>();
@@ -24,8 +22,7 @@ int CreateBackupDefOperation::Operate(boost::program_options::variables_map& vm)
 
 int ListBackupDefsOperation::Operate(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = "repoDB.db";
-	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+	auto RepoDB = getRepository(vm);
 	auto backupdefs = RepoDB->GetBackupDefs();
 	std::list<IRepositoryDB::BackupDef>::iterator iter;
 	for (iter = backupdefs.begin(); iter != backupdefs.end(); ++iter)
@@ -43,8 +40,7 @@ int ListBackupDefsOperation::Operate(boost::program_options::variables_map& vm)
 
 int RestoreOperation::Operate(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = "repoDB.db";
-	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+	auto RepoDB = getRepository(vm);
 	std::string name = vm["name"].as<std::string>();
 	auto backupdef = RepoDB->GetBackupDef(name);
 	auto rootDest = vm["path"].as < std::string>();
@@ -71,8 +67,7 @@ int RestoreOperation::Operate(boost::program_options::variables_map& vm)
 
 int BackupOperation::Operate(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = "repoDB.db";
-	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+	auto RepoDB = getRepository(vm);
 	std::string name = vm["name"].as<std::string>();
 	auto backupdef = RepoDB->GetBackupDef(name);
 	if (backupdef != nullptr)
@@ -86,8 +81,7 @@ int BackupOperation::Operate(boost::program_options::variables_map& vm)
 
 int ListBackupsOperation::Operate(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = "repoDB.db";
-	std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
+	auto RepoDB = getRepository(vm);
 	std::string name = vm["name"].as<std::string>();
 	auto backupdef = RepoDB->GetBackupDef(name);
 	if (backupdef != nullptr)
