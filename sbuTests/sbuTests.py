@@ -3,7 +3,7 @@ import subprocess
 import os
 import shutil
 
-class TestStringMethods(unittest.TestCase):
+class TestSanity(unittest.TestCase):
 
     def dirCompare(self, left, right):
         cmdLines = """c:\dropbox\apps\bin\diff.exe -r %s %s""" % (left, right)
@@ -58,6 +58,36 @@ class TestStringMethods(unittest.TestCase):
     def test_AddingBackupDef(self):
         pass
 
+class TestNightly(unittest.TestCase):
+    def test_NonFunctionalCommandLine(self):
+        testCases = """
+        help 
+        version
+        no action in cmd line
+        invalid action in cmd line
+        Config file missing by env
+        Config file missing by cmdLine
+        """
+
+    def test_Logging(self):
+        testCases = """
+        No Logging
+        Console Logging Enabled
+        File Logging Enabled
+        Console + File Enabled
+        """
+
+    def test_BackupDefs(self):
+        testCases = """
+        Add a 3 different backupdefs -> succeed
+        List the backupdefs -> succeed, check format
+        Add a non unique backupdef -> fail
+        Delete a backupdefs -> success
+        Add a backupdef currently deleted -> success
+        Delete a non exists backupdef  -> fail
+        List backupdefs -> succeed -> duplicate name should exist
+        """
+    
 
 
 if __name__ == '__main__':

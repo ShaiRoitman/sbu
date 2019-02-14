@@ -35,5 +35,16 @@ Stopable file download
 
 
 Items To Do
-1. Receive DateTime paramater for restore
-2. show only restore
+1. Test Test Test
+2. Logging
+2.5 Progress Report UX
+3. Error Handling
+3.5 Refactor, Beautify.
+
+Publish
+
+4. Stop within a scan
+5. Stop within an upload
+6. Stop within a restore
+7. Smart Restore - if file exists don't restore
+8. Restore Option - overwrite file always

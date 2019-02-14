@@ -6,6 +6,7 @@
 #include "CommandLineAndConfig.h"
 #include "Loggers.h"
 #include "Operations.h"
+#include "ExitCodes.h"
 
 static auto logger = LoggerFactory::getLogger("application");
 
@@ -22,14 +23,19 @@ int main(int argc, const char* argv[])
 	int retValue = options.ParseOptions(argc, argv);
 	LoggerFactory::InitLogger(options.vm);
 
-	if ( retValue != 0 )
+	if ( retValue == ExitCode_Success )
 	{ 
-		return retValue;
+		std::string action = options.vm["action"].as<std::string>();
+		if (operations.find(action) != operations.end())
+		{
+			std::shared_ptr<Operation>& operation = operations[action];
+			retValue = operation->Operate(options.vm);
+		}
+		else
+		{
+			retValue = ExitCode_InvalidAction;
+		}
 	}
-
-	std::string action = options.vm["action"].as<std::string>();
-	std::shared_ptr<Operation>& operation = operations[action];
-	retValue = operation->Operate(options.vm);
 
 	return retValue;
 }

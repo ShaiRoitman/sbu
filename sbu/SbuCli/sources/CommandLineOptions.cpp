@@ -1,6 +1,7 @@
 #include "CommandLineAndConfig.h"
 #include "boost/filesystem.hpp"
 #include <iostream>
+#include "ExitCodes.h"
 
 using namespace boost::program_options;
 
@@ -36,19 +37,29 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	try 
 	{
 		store(parse_command_line(argc, argv, desc), vm);
-		std::string sbuConfigFileName = "sbu.config";
+		std::string sbuConfigFileName;
 
-		if (std::getenv(configFileEnvVar.c_str()))
+		char* configFile = std::getenv(configFileEnvVar.c_str());
+		if (configFile != NULL)
 		{
-			sbuConfigFileName = std::getenv(configFileEnvVar.c_str());
+			sbuConfigFileName = configFile;
 		}
+
 		if (!vm["config"].empty())
 		{
 			sbuConfigFileName = vm["config"].as<std::string>();
 		}
-		if (boost::filesystem::exists(sbuConfigFileName))
+
+		if (!sbuConfigFileName.empty())
 		{
-			store(parse_config_file<char>(sbuConfigFileName.c_str(), desc, true), vm);
+			if (boost::filesystem::exists(sbuConfigFileName))
+			{
+				store(parse_config_file<char>(sbuConfigFileName.c_str(), desc, true), vm);
+			}
+			else
+			{
+				return ExitCode_ConfigFileMissing;
+			}
 		}
 
 		store(parse_environment(desc,
@@ -63,27 +74,27 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version + std::string("\n");
 			std::cout << std::string("Written by ") << std::string(g_developer_name) + std::string("\n\n");
 			std::cout << desc << std::string("\n");
-			return 1;
+			return ExitCode_HelpCalled;
 		}
 
 		if (!vm["version"].empty())
 		{
 			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version + std::string("\n");
 			std::cout << std::string("Written by ") << std::string(g_developer_name) + std::string("\n\n");
-			return 1;
+			return ExitCode_VersionCalled;
 		}
 
 		if (vm["action"].empty())
 		{
 			std::cout << "Missing action argument\n";
-			return 1;
+			return ExitCode_MissingAction;
 		}
 	}
 	catch (const boost::program_options::unknown_option exception)
 	{
 		std::cout << std::string("Invalid option ") << exception.get_option_name() << std::string("\n");
-		return 1;
+		return ExitCode_InvalidArgument;
 	}
 
-	return 0;
+	return ExitCode_Success;
 }
