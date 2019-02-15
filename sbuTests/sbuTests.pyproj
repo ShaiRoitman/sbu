@@ -12,7 +12,7 @@
     <Name>sbuTests</Name>
     <RootNamespace>sbuTests</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-v -k *Nightly*</CommandLineArguments>
+    <CommandLineArguments>-v -k *Sanity*</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

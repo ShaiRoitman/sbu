@@ -8,7 +8,7 @@ FROM
 WHERE 
 	Status='Added' AND 
 	Type='File' AND 
-	UploadState IS NOT NULL
+	UploadState IS NULL
 
 UNION
 
@@ -21,4 +21,4 @@ FROM
 	CurrentState
 WHERE
 	Status='Updated' AND 
-	UploadState IS NOT NULL
+	UploadState IS NULL

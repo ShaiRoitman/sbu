@@ -41,7 +41,7 @@ class SbuCmdLine:
 
         p = subprocess.Popen(cmdLineArgs, stdout=subprocess.PIPE)
         result.returnCode = p.wait()
-        result.output = __read_as_utf8(p.stdout)
+        result.output = self.__read_as_utf8(p.stdout)
 
         return result
 
@@ -65,13 +65,28 @@ class SbuCmdLine:
         retValue = self.Execute("--action ListBackup --name {0}".format(name))
         return retValue
 
-    def __read_as_utf8(fileno):
+    def __read_as_utf8(self, fileno):
         fp = io.TextIOWrapper(fileno, "utf-8")
         retValue = (fp.read())
         fp.close()
         return retValue    
 
 class TestSanity(unittest.TestCase):
+    tmp = None
+    origin = None
+
+    @classmethod
+    def setUpClass(cls):
+        TestNightly.tmp = "C:\\workdir"
+        TestNightly.origin = os.getcwd()
+        os.makedirs(TestNightly.tmp, exist_ok=True)
+        os.chdir(TestNightly.tmp)
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(TestNightly.origin)
+        # shutil.rmtree(TestNightly.tmp, ignore_errors=False)
+
 
     def dirCompare(self, left, right):
         cmdLines = """c:\dropbox\apps\bin\diff.exe -r %s %s""" % (left, right)
@@ -95,7 +110,7 @@ class TestSanity(unittest.TestCase):
         app.CreateBackupDef("clu", srcPath)
         app.ListBackupDef()
         app.Backup("clu")
-        app.ListBackup()
+        app.ListBackup("clu")
         app.Restore("clu", dstPath)
         self.assertTrue(self.dirCompare(srcPath,dstPath))
 

@@ -24,4 +24,5 @@ SELECT
 	DigestValue,
 	FileHandle,
 	Status
-FROM BackupDB.CurrentState;
+FROM BackupDB.CurrentState
+WHERE BackupDB.CurrentState != 'Current'

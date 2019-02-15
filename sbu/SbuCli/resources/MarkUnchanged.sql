@@ -13,7 +13,8 @@ WHERE
 	LEFT JOIN 
 		Entries
 	ON
-		CurrentState.Path = Entries.Path AND
+		CurrentState.Path = Entries.Path
+    WHERE
 		CurrentState.DigestValue = Entries.DigestValue AND
 		CurrentState.Status = 'Current'
-)
+  )

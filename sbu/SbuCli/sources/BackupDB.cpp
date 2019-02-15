@@ -190,16 +190,15 @@ protected:
 			SQLite::Statement addMissingQuery(*db, Text_Resource::AddMissing);
 			addMissingQuery.exec();
 
-			transaction.commit();
-
 			SQLite::Statement markUnchangedQuery(*db, Text_Resource::MarkUnchanged);
 			markUnchangedQuery.exec();
 
 			SQLite::Statement markUpdated(*db, Text_Resource::MarkUpdated);
 			markUpdated.exec();
 
-
+			transaction.commit();
 		}
+
 		catch (std::runtime_error ex)
 		{
 			int k = 3;
@@ -243,7 +242,7 @@ protected:
 		markUpdatedQuery.exec();
 
 		SQLite::Statement markUnchangedQuery(*db, Text_Resource::MarkUnchanged);
-		markUpdatedQuery.exec();
+		markUnchangedQuery.exec();
 	}
 
 	virtual bool IsDiffCalcDone() override

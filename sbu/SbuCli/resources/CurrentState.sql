@@ -1,6 +1,7 @@
 INSERT INTO BackupDB.CurrentState 
 (
 	Path,
+	Type,
 	Size,
 	Created,
 	Modified,
@@ -10,7 +11,8 @@ INSERT INTO BackupDB.CurrentState
 	Status
 )
 SELECT 
-	Path, 
+	Path,
+	Type,
 	Size, 
 	Created, 
 	Modified, 
@@ -20,7 +22,8 @@ SELECT
 	'Current' 
 FROM (
 	SELECT 
-		Files.Path, 
+		Files.Path,
+		Files.Type,
 		Files.Size, 
 		Files.Created, 
 		Files.Modified, 
