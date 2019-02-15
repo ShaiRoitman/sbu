@@ -1,9 +1,11 @@
+import datetime
 import logging
 import unittest
 import subprocess
 import os
 import shutil
 import tempfile
+import io
 
 class Sbu_ExitCodes:
     ExitCode_Success					= 0
@@ -26,15 +28,20 @@ class SbuCmdLine:
 
     def __init__(self):
         self.sbuExecutable = """C:\git\sbu\sbu\SbuCli\Debug\sbu.exe"""
+        self.configFile = None
 
     def Execute(self, cmdLine):
         cmdLineArgs = cmdLine.split(" ")
         cmdLineArgs.insert(0, self.sbuExecutable)
+        if (self.configFile != None):
+            cmdLineArgs.append("--config")
+            cmdLineArgs.append(self.configFile)
+
         result = ExecuteResult()
 
         p = subprocess.Popen(cmdLineArgs, stdout=subprocess.PIPE)
-        result.output = str(p.communicate()[0])
-        result.returnCode = p.returncode
+        result.returnCode = p.wait()
+        result.output = __read_as_utf8(p.stdout)
 
         return result
 
@@ -46,6 +53,24 @@ class SbuCmdLine:
         retValue = self.Execute("--action ListBackupDef")
         return retValue
 
+    def Backup(self, name):
+        retValue = self.Execute("--action Backup --name {0}".format(name))
+        return retValue
+
+    def Restore(self, name, dest):
+        retValue = self.Execute("--action Restore --name {0} --path {1}".format(name, dest))
+        return retValue
+
+    def ListBackup(self, name):
+        retValue = self.Execute("--action ListBackup --name {0}".format(name))
+        return retValue
+
+    def __read_as_utf8(fileno):
+        fp = io.TextIOWrapper(fileno, "utf-8")
+        retValue = (fp.read())
+        fp.close()
+        return retValue    
+
 class TestSanity(unittest.TestCase):
 
     def dirCompare(self, left, right):
@@ -55,66 +80,40 @@ class TestSanity(unittest.TestCase):
         noArgsOutput = p.communicate()[0]
         print (noArgsOutput)
         retValue = p.returncode
-
-
         return retValue==0
 
     def setUp(self):
         self.executablePath = """C:\git\sbu\sbu\SbuCli\Debug\sbu.exe"""
-        self.testPath = """c:\git\sbu\sbuTests"""
-
-
-    def executeCmdLine(self, cmdLine):
-        cmdLineArgs = cmdLine.split(" ")
-        cmdLineArgs.insert(0, self.executablePath)
-        cmdLineArgs.append("--config")
-        cmdLineArgs.append("""c:\git\sbu\sbu\sbu.config""")
-        p = subprocess.Popen(cmdLineArgs, stdout=subprocess.PIPE)
-        noArgsOutput = p.communicate()[0]
-        print (noArgsOutput)
-        return [noArgsOutput, p.returncode]
-
-    def test_Spawn(self):
-        output = self.executeCmdLine("hello")
-
-        self.assertEqual( output[1] , 0 )
 
     def test_Sanity(self):
-        workDir = """c:\workdir"""
         srcPath = """c:\git\clu"""
         dstPath = """c:\git\clu2"""
-        repo = """c:\git\sbu\Repo"""
 
-        if (os.path.exists(workDir)):
-            shutil.rmtree(workDir)
-        if (os.path.exists(repo)):
-            shutil.rmtree(repo)
-        os.makedirs(workDir)
-        os.chdir(workDir)
-        if (os.path.exists(dstPath)):
-            shutil.rmtree(dstPath)
+        app = SbuCmdLine()
+        app.configFile = """c:\git\sbu\sbu\sbu.config"""
 
-        self.executeCmdLine("""--action CreateBackupDef --name clu --path """ + srcPath)
-        self.executeCmdLine("""--action ListBackupDef """)
-        self.executeCmdLine("""--action Backup --name clu """)
-        self.executeCmdLine("""--action ListBackup --name clu """)
-        self.executeCmdLine("""--action Restore --name clu --path """ + dstPath)
+        app.CreateBackupDef("clu", srcPath)
+        app.ListBackupDef()
+        app.Backup("clu")
+        app.ListBackup()
+        app.Restore("clu", dstPath)
         self.assertTrue(self.dirCompare(srcPath,dstPath))
-    def test_AddingBackupDef(self):
-        pass
 
 class TestNightly(unittest.TestCase):
     tmp = None
+    origin = None
 
     @classmethod
     def setUpClass(cls):
-        TestNightly.tmp = os.path.join(tempfile.gettempdir(), '.{}'.format(hash(os.times())))
+        TestNightly.tmp = os.path.join(tempfile.gettempdir(), '{}'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')))
+        TestNightly.origin = os.getcwd()
         os.makedirs(TestNightly.tmp)
         os.chdir(TestNightly.tmp)
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(TestNightly.tmp, ignore_errors=True)
+        os.chdir(TestNightly.origin)
+        shutil.rmtree(TestNightly.tmp, ignore_errors=False)
 
     def test_NonFunctionalCommandLine(self):
         cmdLine = SbuCmdLine()
@@ -140,7 +139,6 @@ class TestNightly(unittest.TestCase):
 
         configFileMissingByEnv = cmdLine.Execute("--action ListBackupDef --config " + sbuConfigPath)
         self.assertEqual( configFileMissingByEnv.returnCode, Sbu_ExitCodes.ExitCode_ConfigFileMissing, "Config file missing set by file")
-
 
     def test_Logging(self):
         cmdLine = SbuCmdLine()
@@ -168,28 +166,25 @@ class TestNightly(unittest.TestCase):
         cmdLine = SbuCmdLine()
         
         AddResult1 = cmdLine.CreateBackupDef("Shai", "c:\\dev")
-        firstLine = AddResult1.output.split("\n")
+        firstLine = AddResult1.output.split("\n")[0].split(',')
+
+        logging.info("Testing CreateBackupDef Format")
+        self.assertEqual(int(str(firstLine[0])),1)
+        self.assertEqual(firstLine[1],"Shai")
+        self.assertEqual(firstLine[3].replace("\"",""),"c:\\dev")
+        
         AddResult2 = cmdLine.CreateBackupDef("Ariel", "c:\\Windows")
         AddResult3 = cmdLine.CreateBackupDef("Eitan", "c:\\Temp")
+        
         listResult = cmdLine.ListBackupDef()
+        self.assertEqual(len(listResult.output.strip().split('\n')), 3)
+
         duplicateAdd = cmdLine.CreateBackupDef("Shai", "c:\\blah")
         self.assertEqual(duplicateAdd.returnCode, Sbu_ExitCodes.ExitCode_AlreadyExists)
+
         listResultPostdup = cmdLine.ListBackupDef()
-
-        self.assertEqual(listResult.output == listResultPostdup.output)
-
-        testCases = """
-        Add a 3 different backupdefs -> succeed
-        List the backupdefs -> succeed, check format
-        Add a non unique backupdef -> fail
-        Delete a backupdefs -> success
-        Add a backupdef currently deleted -> success
-        Delete a non exists backupdef  -> fail
-        List backupdefs -> succeed -> duplicate name should exist
-        """
+        self.assertEqual(listResult.output,listResultPostdup.output)
     
-
-
 if __name__ == '__main__':
     try:
         unittest.main()

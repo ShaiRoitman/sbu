@@ -3,21 +3,30 @@
 #include <iostream>
 #include "utils.h"
 #include "factories.h"
+#include "sbu_exceptions.h"
+#include "ExitCodes.h"
 
 int CreateBackupDefOperation::Operate(boost::program_options::variables_map& vm)
 {
+	int retValue = ExitCode_Success;
 	auto RepoDB = getRepository(vm);
 
 	std::string name = vm["name"].as<std::string>();
 	std::string path = vm["path"].as<std::string>();
-	auto backupdef = RepoDB->AddBackupDef(name, boost::filesystem::path(path));
-	std::cout << backupdef->id << ",";
-	std::cout << backupdef->name << ",";
-	std::cout << backupdef->hostName << ",";
-	std::cout << backupdef->rootPath << ",";
-	std::cout << get_string_from_time_point(backupdef->added) << "\n";
+	try {
+		auto backupdef = RepoDB->AddBackupDef(name, boost::filesystem::path(path));
+		std::cout << backupdef->id << ",";
+		std::cout << backupdef->name << ",";
+		std::cout << backupdef->hostName << ",";
+		std::cout << backupdef->rootPath << ",";
+		std::cout << get_string_from_time_point(backupdef->added) << "\n";
+	}
+	catch(sbu_alreadyexists ex)
+	{
+		retValue = ExitCode_AlreadyExists;
+	}
 
-	return 0;
+	return retValue;
 }
 
 int ListBackupDefsOperation::Operate(boost::program_options::variables_map& vm)

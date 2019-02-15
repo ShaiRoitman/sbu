@@ -4,6 +4,7 @@
 
 #include "SQLiteCpp/SQLiteCpp.h"
 #include "utils.h"
+#include "sbu_exceptions.h"
 #include <iostream>
 
 using namespace boost::filesystem;
@@ -41,6 +42,7 @@ public:
 			std::string content = ex.what();
 			if (content.find("UNIQUE constraint failed") != std::string::npos)
 			{
+				throw sbu_alreadyexists();
 				// std::string::npos
 			}
 			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
@@ -60,7 +62,7 @@ public:
 			retValue->id = query.getColumn("ID").getInt();
 			retValue->name = query.getColumn("Name").getString();
 			retValue->rootPath = from_utf8(query.getColumn("RootPath").getString());
-			retValue->hostName = query.getColumn("Hostname").getInt();
+			retValue->hostName = query.getColumn("Hostname").getString();
 			retValue->added = get_time_point(query.getColumn("Added").getString());
 
 		}
