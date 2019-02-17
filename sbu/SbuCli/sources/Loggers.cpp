@@ -7,6 +7,66 @@
 #include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 
+void ILogger::TraceFormat(const char* format, ...)
+{
+	char buffer[64 * 1024];
+	va_list arglist;
+	va_start(arglist, format);
+	vsprintf(buffer, format, arglist);
+	va_end(arglist);
+	this->Trace(buffer);
+}
+
+void ILogger::DebugFormat(const char* format, ...)
+{
+	char buffer[64 * 1024];
+	va_list arglist;
+	va_start(arglist, format);
+	vsprintf(buffer, format, arglist);
+	va_end(arglist);
+	this->Debug(buffer);
+}
+void ILogger::InfoFormat(const char* format, ...)
+{
+	char buffer[64 * 1024];
+	va_list arglist;
+	va_start(arglist, format);
+	vsprintf(buffer, format, arglist);
+	va_end(arglist);
+	this->Info(buffer);
+}
+
+void ILogger::WarningFormat(const char* format, ...)
+{
+	char buffer[64 * 1024];
+	va_list arglist;
+	va_start(arglist, format);
+	vsprintf(buffer, format, arglist);
+	va_end(arglist);
+	this->Warning(buffer);
+}
+
+
+void ILogger::ErrorFormat(const char* format, ...)
+{
+	char buffer[64 * 1024];
+	va_list arglist;
+	va_start(arglist, format);
+	vsprintf(buffer, format, arglist);
+	va_end(arglist);
+	this->Error(buffer);
+}
+
+void ILogger::FatalFormat(const char* format, ...)
+{
+	char buffer[64 * 1024];
+	va_list arglist;
+	va_start(arglist, format);
+	vsprintf(buffer, format, arglist);
+	va_end(arglist);
+	this->Fatal(buffer);
+}
+
 
 class Logger : public ILogger
 {
@@ -74,9 +134,6 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 			boost::log::core::get()->set_logging_enabled(true);
 		}
 	}
-
-	auto logger = getLogger("application");
-	logger->Info("Init Application");
 }
 
 std::shared_ptr<ILogger> LoggerFactory::getLogger(const char* component)

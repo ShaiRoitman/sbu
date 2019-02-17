@@ -22,10 +22,13 @@ int main(int argc, const char* argv[])
 	CommandLineAndOptions options;
 	int retValue = options.ParseOptions(argc, argv);
 	LoggerFactory::InitLogger(options.vm);
+	logger->Info("Application Started");
 
 	if ( retValue == ExitCode_Success )
-	{ 
+	{
 		std::string action = options.vm["action"].as<std::string>();
+		logger->DebugFormat("Application action:[%s]", action.c_str());
+
 		if (operations.find(action) != operations.end())
 		{
 			std::shared_ptr<Operation>& operation = operations[action];
@@ -37,5 +40,6 @@ int main(int argc, const char* argv[])
 		}
 	}
 
+	logger->InfoFormat("Application Ended retValue:[%d]", retValue);
 	return retValue;
 }

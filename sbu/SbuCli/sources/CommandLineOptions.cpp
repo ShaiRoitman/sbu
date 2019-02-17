@@ -19,6 +19,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string date;
 	std::string config_file;
 	std::string logging;
+	std::string logging_verbosity;
 	std::string workdir;
 	std::string filerepName;
 	std::string filerepPath;
@@ -36,6 +37,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
 		("Logging.Console", value(&logging), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
+		("Logging.Verbosity", value(&logging_verbosity), "Logging Verbosity - Default Info")
 		("General.Workdir", value(&workdir), "working dir of the cmd");
 		;
 

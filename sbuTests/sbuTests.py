@@ -238,6 +238,9 @@ class TestNightly(unittest.TestCase):
 
         cmdLine.CreateBackupDef("test", srcDir)
         cmdLine.Backup("test")
+        cmdLine.Restore("test",os.path.join(TestNightly.tmp, "target") )
+
+        logging.info("Done Testing")
 
 
 if __name__ == '__main__':
