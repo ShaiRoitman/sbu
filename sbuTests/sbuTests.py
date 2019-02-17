@@ -1,3 +1,4 @@
+import random
 import datetime
 import logging
 import unittest
@@ -29,16 +30,34 @@ class SbuCmdLine:
     def __init__(self):
         self.sbuExecutable = """C:\git\sbu\sbu\SbuCli\Debug\sbu.exe"""
         self.configFile = None
+        self.repositoryPath = None
+        self.workDir = None
 
-    def Execute(self, cmdLine):
+    def formatCmdLine(self, cmdLine):
+        return ' '.join(self.executeCmdLine(cmdLineArgs));
+
+    def executeCmdLine(self, cmdLine):
         cmdLineArgs = cmdLine.split(" ")
         cmdLineArgs.insert(0, self.sbuExecutable)
         if (self.configFile != None):
             cmdLineArgs.append("--config")
             cmdLineArgs.append(self.configFile)
+        if (self.repositoryPath != None):
+            cmdLineArgs.append("--FileRepository.path")
+            cmdLineArgs.append(self.repositoryPath)
+            cmdLineArgs.append("--FileRepository.name")
+            cmdLineArgs.append("fileRepository.db")
+        if (self.workDir != None):
+            cmdLineArgs.append("--General.Workdir")
+            cmdLineArgs.append(self.workDir)
 
+        return cmdLineArgs
+
+    def Execute(self, cmdLine):
+        cmdLineArgs = self.executeCmdLine(cmdLine)
+
+        logging.info("Executing cmdline [{0}]".format(' '.join(cmdLineArgs)))
         result = ExecuteResult()
-
         p = subprocess.Popen(cmdLineArgs, stdout=subprocess.PIPE)
         result.returnCode = p.wait()
         result.output = self.__read_as_utf8(p.stdout)
@@ -128,7 +147,7 @@ class TestNightly(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         os.chdir(TestNightly.origin)
-        shutil.rmtree(TestNightly.tmp, ignore_errors=False)
+        # shutil.rmtree(TestNightly.tmp, ignore_errors=False)
 
     def test_NonFunctionalCommandLine(self):
         cmdLine = SbuCmdLine()
@@ -200,6 +219,27 @@ class TestNightly(unittest.TestCase):
         listResultPostdup = cmdLine.ListBackupDef()
         self.assertEqual(listResult.output,listResultPostdup.output)
     
+    def createRandomFile(self, name, size, var):
+        actualSize = size + random.randint(-var, var)
+        os.makedirs(os.path.dirname(name),exist_ok=True)
+        with open(name, 'wb') as fout:
+            fout.write(os.urandom(actualSize))
+
+    def test_BackupRestore(self):
+        cmdLine = SbuCmdLine()
+        cmdLine.repositoryPath = os.path.join(TestNightly.tmp,"Repo")
+
+        srcDir = os.path.join(TestNightly.tmp, "source")
+        repoDir = os.path.join(TestNightly.tmp, "Repo")
+
+        self.createRandomFile( os.path.join(srcDir,"FirstFile"), 64*1024, 16*1024)
+        self.createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
+        self.createRandomFile( os.path.join(srcDir,"ThirdFile"), 64*1024, 16*1024)
+
+        cmdLine.CreateBackupDef("test", srcDir)
+        cmdLine.Backup("test")
+
+
 if __name__ == '__main__':
     try:
         unittest.main()

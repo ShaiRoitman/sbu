@@ -181,7 +181,7 @@ public:
 		}
 		catch (std::exception ex)
 		{
-			int k = 3;
+			logger->Error((std::string("Error in ") + std::string(ex.what())).c_str());
 		}
 		return retValue;
 	}
@@ -234,7 +234,7 @@ public:
 		}
 		catch (std::exception ex)
 		{
-			logger->Error("Failed to restore");
+			logger->Error((std::string("Error in ") + std::string(ex.what())).c_str());
 		}
 
 		return true;

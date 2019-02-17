@@ -5,6 +5,8 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
+static auto logger = LoggerFactory::getLogger("application.FileRepositoryDB");
+
 class FileRepositoryDB : public IFileRepositoryDB
 {
 public:
@@ -36,7 +38,7 @@ public:
 			}
 			catch (std::exception ex)
 			{
-				int k = 3;
+				logger->Error( (std::string("Error in ") + std::string(ex.what())).c_str());
 			}
 		}
 

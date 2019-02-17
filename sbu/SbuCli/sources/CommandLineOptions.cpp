@@ -19,6 +19,9 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string date;
 	std::string config_file;
 	std::string logging;
+	std::string workdir;
+	std::string filerepName;
+	std::string filerepPath;
 
 	desc.add_options()
 		("help,h", "print usage message")
@@ -29,10 +32,11 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("name,n", value(&name), "Name")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
 		("showOnly", "In restore show only the files to be restored")
-		("FileRepository.name", "The database name of the FileRepository")
-		("FileRepository.path", "Path of the FileRepository")
+		("FileRepository.name", value(&filerepName), "The database name of the FileRepository")
+		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
 		("Logging.Console", value(&logging), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
+		("General.Workdir", value(&workdir), "working dir of the cmd");
 		;
 
 	try 
@@ -89,6 +93,11 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		{
 			std::cout << "Missing action argument\n";
 			return ExitCode_MissingAction;
+		}
+
+		if (!vm["General.Workdir]"].empty())
+		{
+			boost::filesystem::current_path(workdir);
 		}
 	}
 	catch (const boost::program_options::unknown_option exception)

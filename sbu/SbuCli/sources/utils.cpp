@@ -142,7 +142,7 @@ std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, 
 	}
 	catch (std::exception ex)
 	{
-		logger->Error("Could not open db");
+		logger->Error((std::string("Error in ") + std::string(ex.what())).c_str());
 	}
 
 	return db;
