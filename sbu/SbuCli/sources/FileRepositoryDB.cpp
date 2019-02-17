@@ -67,5 +67,6 @@ private:
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 {
+	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
 	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath);
 }

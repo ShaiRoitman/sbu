@@ -66,7 +66,6 @@ protected:
 		insertQuery.exec();
 	}
 
-
 	void AddDirectoryToScan(path dir)
 	{
 		SQLite::Statement insertQuery(*db, "INSERT INTO Scan (Path, Added) Values (:path,:added)");
@@ -300,5 +299,6 @@ private:
 
 std::shared_ptr<IBackupDB> CreateSQLiteDB(boost::filesystem::path dbPath)
 {
+	logger->DebugFormat("Creating BackupDB dbPath:[%s]", dbPath.string().c_str());
 	return std::make_shared<BackupDB>(dbPath);
 }

@@ -129,10 +129,10 @@ std::string calcHash(boost::filesystem::path path)
 std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
 {
 	std::shared_ptr<SQLite::Database> db = nullptr;
-	
+	bool dbexists = false;
 	try
 	{
-		bool dbexists = exists(dbPath);
+		dbexists = exists(dbPath);
 		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
 
 		if (!dbexists)
@@ -145,6 +145,7 @@ std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, 
 		logger->Error((std::string("Error in ") + std::string(ex.what())).c_str());
 	}
 
+	logger->InfoFormat("getOrCreateDb() dbPath:[%s], dbExists:[%d] initScript [%s]", dbPath.string().c_str(), dbexists, "");
 	return db;
 }
 

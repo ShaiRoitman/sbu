@@ -25,4 +25,4 @@ SELECT
 	FileHandle,
 	Status
 FROM BackupDB.CurrentState
-WHERE BackupDB.CurrentState != 'Current'
+WHERE BackupDB.CurrentState.Status != 'Current'
