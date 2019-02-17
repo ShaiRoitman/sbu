@@ -90,6 +90,16 @@ class SbuCmdLine:
         fp.close()
         return retValue    
 
+
+def dirCompare(left, right):
+    cmdLines = "c:\\dropbox\\apps\\bin\\diff.exe -r %s %s" % (left, right)
+    cmdLines.split(" ")
+    p = subprocess.Popen(cmdLines, stdout=subprocess.PIPE)
+    noArgsOutput = p.communicate()[0]
+    print (noArgsOutput)
+    retValue = p.returncode
+    return retValue==0
+
 class TestSanity(unittest.TestCase):
     tmp = None
     origin = None
@@ -106,15 +116,6 @@ class TestSanity(unittest.TestCase):
         os.chdir(TestNightly.origin)
         # shutil.rmtree(TestNightly.tmp, ignore_errors=False)
 
-
-    def dirCompare(self, left, right):
-        cmdLines = """c:\dropbox\apps\bin\diff.exe -r %s %s""" % (left, right)
-        cmdLines.split(" ")
-        p = subprocess.Popen(cmdLines, stdout=subprocess.PIPE)
-        noArgsOutput = p.communicate()[0]
-        print (noArgsOutput)
-        retValue = p.returncode
-        return retValue==0
 
     def setUp(self):
         self.executablePath = """C:\git\sbu\sbu\SbuCli\Debug\sbu.exe"""
@@ -230,6 +231,7 @@ class TestNightly(unittest.TestCase):
         cmdLine.repositoryPath = os.path.join(TestNightly.tmp,"Repo")
 
         srcDir = os.path.join(TestNightly.tmp, "source")
+        targetDir = os.path.join(TestNightly.tmp, "target")
         repoDir = os.path.join(TestNightly.tmp, "Repo")
 
         self.createRandomFile( os.path.join(srcDir,"FirstFile"), 64*1024, 16*1024)
@@ -238,7 +240,8 @@ class TestNightly(unittest.TestCase):
 
         cmdLine.CreateBackupDef("test", srcDir)
         cmdLine.Backup("test")
-        cmdLine.Restore("test",os.path.join(TestNightly.tmp, "target") )
+        cmdLine.Restore("test", targetDir )
+        self.assertTrue(dirCompare(srcDir, targetDir))
 
         logging.info("Done Testing")
 
