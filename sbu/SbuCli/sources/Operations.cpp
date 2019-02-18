@@ -91,7 +91,7 @@ int RestoreOperation::Operate(boost::program_options::variables_map& vm)
 			fileRepDB);
 	}
 
-	logger->InfoFormat("Operation:[Restore] Name:[%s] DestPath:[%s] Date:[%s] retValue:[%s]", name.c_str(), rootDest.c_str(), dateStr.c_str(), retValue);
+	logger->InfoFormat("Operation:[Restore] Name:[%s] DestPath:[%s] Date:[%s] retValue:[%d]", name.c_str(), rootDest.c_str(), dateStr.c_str(), retValue);
 	return retValue;
 }
 
