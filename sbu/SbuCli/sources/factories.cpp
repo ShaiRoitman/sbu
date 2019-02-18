@@ -10,7 +10,7 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 
 std::shared_ptr<IRepositoryDB> getRepository(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = "repoDB.db";
+	std::string repoDB = vm["Repository.path"].as<std::string>();
 	auto RepoDB = CreateRepositorySQLiteDB(repoDB);;
 
 	return RepoDB;

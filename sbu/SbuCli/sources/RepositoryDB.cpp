@@ -109,6 +109,9 @@ public:
 	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) override
 	{
 		BackupInfo retValue;
+		boost::filesystem::path rootPath;
+		Integer backupDefID;
+
 		try {
 			retValue.backupDefId = backupParams.backupDefId;
 			retValue.started = std::chrono::system_clock::now();
@@ -119,35 +122,26 @@ public:
 			insertBackup.bind(":status", "Started");
 			if (insertBackup.exec() > 0)
 			{
-				SQLite::Statement selectBackup(*db, "SELECT ID FROM Backups WHERE BackupDefID=:backupdefID ORDER BY ID DESC LIMIT 1");
+				SQLite::Statement selectBackup(*db, Text_Resource::findBackupInfo);
 				selectBackup.bind(":backupdefID", retValue.backupDefId);
 				if (selectBackup.executeStep())
 				{
 					retValue.id = selectBackup.getColumn("ID").getInt();
-				}
-			}
-
-			auto defs = GetBackupDefs();
-			BackupDef def;
-			for (std::list<BackupDef>::iterator iter = defs.begin(); iter != defs.end(); ++iter)
-			{
-				if ((*iter).id == retValue.backupDefId)
-				{
-					def = *iter;
-					break;
+					backupDefID = selectBackup.getColumn("BackupDefID").getInt();
+					rootPath = from_utf8(selectBackup.getColumn("RootPath").getString());
 				}
 			}
 
 			boost::filesystem::remove("backupDB.db");
 
 			std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB("backupDB.db");
-			backupDB->StartScan(def.rootPath);
+			backupDB->StartScan(rootPath);
 
 			SQLite::Statement attach(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
 			attach.exec();
 
 			SQLite::Statement currentStateQuery(*db, Text_Resource::CurrentState);
-			currentStateQuery.bind(":backupDefID", def.id);
+			currentStateQuery.bind(":backupDefID", backupDefID);
 			currentStateQuery.exec();
 
 			SQLite::Statement detach(*db, "DETACH DATABASE BackupDB");

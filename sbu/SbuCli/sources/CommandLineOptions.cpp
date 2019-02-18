@@ -2,6 +2,7 @@
 #include "boost/filesystem.hpp"
 #include <iostream>
 #include "ExitCodes.h"
+#include "Loggers.h"
 
 using namespace boost::program_options;
 
@@ -10,6 +11,8 @@ const std::string g_developer_name = "Shai Roitman";
 
 int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 {
+	int retValue = ExitCode_Success;
+
 	const std::string configFileEnvVar = "SBU_CONFIG";
 	options_description desc("Allowed options");
 
@@ -23,6 +26,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string workdir;
 	std::string filerepName;
 	std::string filerepPath;
+	std::string repPath;
 
 	desc.add_options()
 		("help,h", "print usage message")
@@ -38,7 +42,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("Logging.Console", value(&logging), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
 		("Logging.Verbosity", value(&logging_verbosity), "Logging Verbosity - Default Info")
-		("General.Workdir", value(&workdir), "working dir of the cmd");
+		("Repository.path", value(&repPath), "RepositoryDB path")
+		("General.Workdir", value(&workdir), "working dir of the cmd")
 		;
 
 	try 
@@ -96,17 +101,12 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 			std::cout << "Missing action argument\n";
 			return ExitCode_MissingAction;
 		}
-
-		if (!vm["General.Workdir]"].empty())
-		{
-			boost::filesystem::current_path(workdir);
-		}
 	}
 	catch (const boost::program_options::unknown_option exception)
 	{
 		std::cout << std::string("Invalid option ") << exception.get_option_name() << std::string("\n");
-		return ExitCode_InvalidArgument;
+		retValue = ExitCode_InvalidArgument;
 	}
 
-	return ExitCode_Success;
+	return retValue;
 }

@@ -18,11 +18,14 @@ public:
 
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
 	{
+		logger->DebugFormat("FileRepositoryDB::AddFile() path:[%s] digestType:[%s] digest:[%s]", file.string().c_str(), digestType.c_str(), digest.c_str());
+
 		std::string key = digest;
 		SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
 		query.bind(":key", key);
 		if (!query.executeStep())
 		{
+			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
 			SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Added, DigestType, DigestValue) VALUES (:path,:added,:digestType,:digestValue)");
 			insertQuery.bind(":path", to_utf8(key));
 			insertQuery.bind(":added", return_current_time_and_date());
@@ -32,14 +35,14 @@ public:
 
 			path destPath = this->dataRootPath / boost::filesystem::path(digest);
 			boost::filesystem::create_directories(destPath.branch_path());
-			try 
+			if (copy_file_logged(file, destPath) == false)
 			{
-				copy_file(file, destPath, copy_option::overwrite_if_exists);
+				logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
 			}
-			catch (std::exception ex)
-			{
-				logger->Error( (std::string("Error in ") + std::string(ex.what())).c_str());
-			}
+		}
+		else
+		{
+			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] exists", key.c_str());
 		}
 
 		return key;
@@ -47,6 +50,10 @@ public:
 
 	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override
 	{
+		logger->DebugFormat("FileRepositoryDB::GetFile() handle:[%s] destination:[%s]", 
+			handle.c_str(),
+			outFilePath.string().c_str());
+
 		SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
 		query.bind(":key", handle);
 		bool retValue = false;
@@ -54,8 +61,18 @@ public:
 		{
 			path srcPath = this->dataRootPath / from_utf8(query.getColumn("Path").getString());
 			boost::filesystem::create_directories(outFilePath.branch_path());
-			copy_file(srcPath, outFilePath, copy_option::overwrite_if_exists);
-			retValue = true;
+			if (copy_file_logged(srcPath, outFilePath) == false)
+			{
+				logger->WarningFormat("FileRepositoryDB::GetFile() handle:[%s] destination:[%s] Failed",
+					handle.c_str(),
+					outFilePath.string().c_str());
+			}
+		}
+		else
+		{
+			logger->WarningFormat("FileRepositoryDB::GetFile() handle:[%s] destination:[%s] Failed Missing in repository",
+				handle.c_str(),
+				outFilePath.string().c_str());
 		}
 		
 		return retValue;

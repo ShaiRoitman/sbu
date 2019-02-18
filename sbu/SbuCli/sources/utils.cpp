@@ -12,7 +12,10 @@ static auto logger = LoggerFactory::getLogger("application.Utils");
 
 std::string getHostName()
 {
-	return boost::asio::ip::host_name();
+	std::string retValue = boost::asio::ip::host_name();
+
+	logger->DebugFormat("getHostName() retValue:[%s]", retValue.c_str());
+	return retValue;
 }
 
 std::string to_utf8(boost::filesystem::path path)
@@ -106,13 +109,34 @@ int sha1(const char * name, unsigned char * out)
 	return 0;
 }
 
-
 void bin2hex(unsigned char * src, int len, char * hex)
 {
 	int i, j;
 
 	for (i = 0, j = 0; i < len; i++, j += 2)
 		sprintf(&hex[j], "%02x", src[i]);
+}
+
+bool copy_file_logged(boost::filesystem::path srcPath, boost::filesystem::path outFilePath)
+{
+	bool retValue = false;
+	try
+	{
+		boost::filesystem::copy_file(srcPath, outFilePath, boost::filesystem::copy_option::overwrite_if_exists);
+		logger->InfoFormat("CopyFile() Status:[Success] from:[%s] to:[%s]",
+			srcPath.string().c_str(),
+			outFilePath.string().c_str());
+		retValue = true;
+	}
+	catch (std::exception ex)
+	{
+		logger->ErrorFormat("CopyFile() Status:[Failed] from:[%s] to:[%s] exception:[%s]",
+			srcPath.string().c_str(),
+			outFilePath.string().c_str(),
+			ex.what());
+	}
+
+	return retValue;
 }
 
 std::string calcHash(boost::filesystem::path path)
@@ -124,7 +148,6 @@ std::string calcHash(boost::filesystem::path path)
 	bin2hex(sha1p, sizeof(sha1p), digest);
 	return digest;
 }
-
 
 std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
 {
@@ -142,41 +165,9 @@ std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, 
 	}
 	catch (std::exception ex)
 	{
-		logger->Error((std::string("Error in ") + std::string(ex.what())).c_str());
+		logger->ErrorFormat("getOrCreateDb() dbPath:[%s] Failed to open exception:[%s]", dbPath.string().c_str(), ex.what());
 	}
 
 	logger->InfoFormat("getOrCreateDb() dbPath:[%s], dbExists:[%d] initScript [%s]", dbPath.string().c_str(), dbexists, "");
 	return db;
 }
-
-#ifdef TEST 
-auto backupDef = RepoDB->AddBackupDef("Shai", "c:\\git\\clu");
-auto values = RepoDB->GetBackupDefs();
-auto firstBackupDef = *values.begin();
-auto tp = get_string_from_time_point(firstBackupDef.added);
-
-auto backupId = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(firstBackupDef.id));
-
-boost::filesystem::remove_all("c:\\git\\clu2");
-auto restorea = RepoDB->Restore(IRepositoryDB::RestoreParameters().BackupDefId(firstBackupDef.id).RootDest("c:\\git\\clu2"));
-
-//auto backupDeleted = RepoDB->DeleteBackup(backupId.id);
-//bool deleted = RepoDB->DeleteBackupDef(backupDef.id);
-
-std::string databaseName = "backupDb.db";
-printf("Smart Backup Utility\n");
-remove(databaseName.c_str());
-std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB(databaseName);
-backupDB->StartScan("C:\\git\\sbu\\sbu\\SbuCli");
-
-std::string fileRepoDB = "fileRepo.db";
-remove(fileRepoDB.c_str());
-std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB(fileRepoDB, "C:\\git\\sbu\\sbu\\SbuCli\\Repo");
-std::string fileHandle = fileRepDB->AddFile("C:\\git\\sbu\\sbu\\SbuCli\\sources\\sbu.cpp");
-fileRepDB->GetFile(fileHandle, "C:\\git\\sbu\\sbu\\SbuCli\\sources\\sbu.cpp2");
-
-std::string repoDB = "repoDB.db";
-remove(repoDB.c_str());
-std::shared_ptr<IRepositoryDB> RepoDB = CreateRepositorySQLiteDB(repoDB);
-RepoDB->SetFileRepositoryDB(fileRepDB);
-#endif

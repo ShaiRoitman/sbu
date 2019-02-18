@@ -28,7 +28,7 @@ int CreateBackupDefOperation::Operate(boost::program_options::variables_map& vm)
 	}
 	catch(sbu_alreadyexists ex)
 	{
-		logger->ErrorFormat("CreateBackupDef Failed due to duplicate [%s]", name.c_str());
+		logger->ErrorFormat("CreateBackupDefOperation::Operate() Failed due to duplicate [%s]", name.c_str());
 		retValue = ExitCode_AlreadyExists;
 	}
 

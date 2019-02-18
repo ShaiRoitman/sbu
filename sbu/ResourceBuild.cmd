@@ -18,5 +18,6 @@ CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\RestoreQuery.sql Restor
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findDiffQuery.sql findDiffQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findHashCalcQuery.sql findHashCalcQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findUploadQuery.sql findUploadQuery >> %FILENAME%
+CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findBackupInfo.sql findBackupInfo >> %FILENAME%
 
 echo } >> %FILENAME%
