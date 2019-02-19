@@ -13,12 +13,12 @@ static auto logger = LoggerFactory::getLogger("application");
 
 int main(int argc, const char* argv[])
 {
-	std::map<std::string, std::shared_ptr<Operation>> operations;
-	operations["CreateBackupDef"] = std::make_shared<CreateBackupDefOperation>();
-	operations["ListBackupDef"] = std::make_shared<ListBackupDefsOperation>();
-	operations["Backup"] = std::make_shared<BackupOperation>();
-	operations["Restore"] = std::make_shared<RestoreOperation>();
-	operations["ListBackup"] = std::make_shared<ListBackupsOperation>();
+	std::map<std::string, Operation::Factory> operations;
+	operations["CreateBackupDef"] = CreateBackupDefFactory;
+	operations["ListBackupDef"] = ListBackupDefsFactory;
+	operations["Backup"] = BackupFactory;
+	operations["Restore"] = RestoreFactory;
+	operations["ListBackup"] = ListBackupsFactory;
 
 	CommandLineAndOptions options;
 	int retValue = options.ParseOptions(argc, argv);
@@ -28,9 +28,9 @@ int main(int argc, const char* argv[])
 	if (!options.vm["General.Workdir]"].empty())
 	{
 		auto workDir = options.vm["General.Workdir]"].as<std::string>();
-		logger->InfoFormat("Working Directory [%s]", workDir.c_str());
 		boost::filesystem::current_path(workDir);
 	}
+	logger->InfoFormat("Working Directory [%s]", boost::filesystem::current_path().string().c_str());
 
 	if ( retValue == ExitCode_Success )
 	{
@@ -39,13 +39,14 @@ int main(int argc, const char* argv[])
 
 		if (operations.find(action) != operations.end())
 		{
-			std::shared_ptr<Operation>& operation = operations[action];
 			try {
-				retValue = operation->Operate(options.vm);
+				auto factory = operations[action]();
+				retValue = factory->Operate(options.vm);
 			}
 			catch (std::exception ex)
 			{
 				logger->ErrorFormat("Fail to run action:[%s] got exception:[%s]", action.c_str(), ex.what());
+				retValue = ExitCode_GeneralFailure;
 			}
 		}
 		else

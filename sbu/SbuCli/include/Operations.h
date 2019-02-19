@@ -4,35 +4,12 @@
 class Operation
 {
 public:
+	typedef std::function < std::shared_ptr<Operation>()> Factory;
 	virtual int Operate(boost::program_options::variables_map& vm) = 0;
 };
 
-class CreateBackupDefOperation : public Operation
-{
-public:
-	virtual int Operate(boost::program_options::variables_map& vm) override;
-};
-
-class ListBackupDefsOperation : public Operation
-{
-public:
-	virtual int Operate(boost::program_options::variables_map& vm) override;
-};
-
-class ListBackupsOperation : public Operation
-{
-public:
-	virtual int Operate(boost::program_options::variables_map& vm) override;
-};
-
-class RestoreOperation : public Operation
-{
-public:
-	virtual int Operate(boost::program_options::variables_map& vm) override;
-};
-
-class BackupOperation : public Operation
-{
-public:
-	virtual int Operate(boost::program_options::variables_map& vm) override;
-};
+std::shared_ptr<Operation> CreateBackupDefFactory();
+std::shared_ptr<Operation> ListBackupDefsFactory();
+std::shared_ptr<Operation> ListBackupsFactory();
+std::shared_ptr<Operation> RestoreFactory();
+std::shared_ptr<Operation> BackupFactory();

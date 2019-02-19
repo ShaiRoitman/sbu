@@ -25,7 +25,7 @@ public:
 		Integer id;
 		Integer backupDefId;
 		std::chrono::system_clock::time_point started;
-		std::chrono::system_clock::time_point ended;
+		std::chrono::system_clock::time_point lastUpdated;
 		std::string status;
 	};
 
@@ -86,10 +86,9 @@ public:
 
 	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
 	virtual std::list<BackupInfo> GetBackups(Integer id) = 0;
+	virtual BackupInfo DeleteBackup(Integer backupId) = 0;
 
 	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
-
-	virtual BackupInfo DeleteBackup(Integer backupId) = 0;
 
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
 };

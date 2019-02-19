@@ -16,6 +16,7 @@ class Sbu_ExitCodes:
     ExitCode_ConfigFileMissing		    = 3
     ExitCode_MissingAction			    = 4
     ExitCode_InvalidAction			    = 5
+    ExitCode_GeneralFailure             = 6
     
     ExitCode_HelpCalled				    = 1001
     ExitCode_VersionCalled			    = 1002

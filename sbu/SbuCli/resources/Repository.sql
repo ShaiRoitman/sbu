@@ -27,7 +27,7 @@ CREATE TABLE Backups (
     ID          INTEGER  PRIMARY KEY AUTOINCREMENT,
     BackupDefID INTEGER  REFERENCES BackupDefs (ID),
     Started     DATETIME,
-    Ended       DATETIME,
+    LastStatusUpdate DATETIME,
     Status      TEXT
 );
 

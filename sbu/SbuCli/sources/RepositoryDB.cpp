@@ -43,7 +43,6 @@ public:
 			if (content.find("UNIQUE constraint failed") != std::string::npos)
 			{
 				throw sbu_alreadyexists();
-				// std::string::npos
 			}
 			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
 		}
@@ -64,7 +63,6 @@ public:
 			retValue->rootPath = from_utf8(query.getColumn("RootPath").getString());
 			retValue->hostName = query.getColumn("Hostname").getString();
 			retValue->added = get_time_point(query.getColumn("Added").getString());
-
 		}
 
 		return retValue;
@@ -109,73 +107,31 @@ public:
 	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) override
 	{
 		BackupInfo retValue;
-		boost::filesystem::path rootPath;
-		Integer backupDefID;
-
+		BackupDef backupDef;
 		try {
-			retValue.backupDefId = backupParams.backupDefId;
-			retValue.started = std::chrono::system_clock::now();
-			retValue.status = "Started";
-			SQLite::Statement insertBackup(*db, "INSERT INTO Backups (BackupDefID, Started, Status ) VALUES ( :backupdefID, :started, :status )");
-			insertBackup.bind(":backupdefID", retValue.backupDefId);
-			insertBackup.bind(":started", return_current_time_and_date());
-			insertBackup.bind(":status", "Started");
-			if (insertBackup.exec() > 0)
-			{
-				SQLite::Statement selectBackup(*db, Text_Resource::findBackupInfo);
-				selectBackup.bind(":backupdefID", retValue.backupDefId);
-				if (selectBackup.executeStep())
-				{
-					retValue.id = selectBackup.getColumn("ID").getInt();
-					backupDefID = selectBackup.getColumn("BackupDefID").getInt();
-					rootPath = from_utf8(selectBackup.getColumn("RootPath").getString());
-				}
-			}
+			retValue = CreateBackupInfo(backupParams, backupDef);
 
-			boost::filesystem::remove("backupDB.db");
+			auto backupDB = getBackupDB();
+			CalculateCurrentStatus(backupDB, backupDef);
 
-			std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB("backupDB.db");
-			backupDB->StartScan(rootPath);
-
-			SQLite::Statement attach(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
-			attach.exec();
-
-			SQLite::Statement currentStateQuery(*db, Text_Resource::CurrentState);
-			currentStateQuery.bind(":backupDefID", backupDefID);
-			currentStateQuery.exec();
-
-			SQLite::Statement detach(*db, "DETACH DATABASE BackupDB");
-			detach.exec();
-
+			UpdatedBackup("CalculatingDiff", retValue);
 			backupDB->StartDiffCalc();
 			backupDB->ContinueDiffCalc();
 
+			UpdatedBackup("Uploading", retValue);
 			backupDB->StartUpload(fileRepDB);
 			backupDB->ContinueUpload(fileRepDB);
 
-			SQLite::Statement attach2(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
-			attach2.exec();
+			UpdatedBackup("UpdatingRepository", retValue);
+			CopyBackupToRepository(retValue);
 
-			SQLite::Statement copyBackupStateQuery(*db, Text_Resource::CopyBackupState);
-			copyBackupStateQuery.bind(":backupID", retValue.id);
-			copyBackupStateQuery.exec();
-
-			SQLite::Statement detach2(*db, "DETACH DATABASE BackupDB");
-			detach2.exec();
-
-			retValue.status = "Complete";
-			retValue.ended = std::chrono::system_clock::now();
-
-			SQLite::Statement updateBackup(*db, "UPDATE Backups SET Ended=:ended, Status=:status WHERE ID=:id");
-			updateBackup.bind(":ended", get_string_from_time_point(retValue.ended));
-			updateBackup.bind(":status", retValue.status);
-			updateBackup.bind(":id", retValue.id);
-			updateBackup.exec();
+			UpdatedBackup("Complete", retValue);
 
 		}
 		catch (std::exception ex)
 		{
-			logger->Error((std::string("Error in ") + std::string(ex.what())).c_str());
+			UpdatedBackup("Failed", retValue);
+			logger->ErrorFormat("RepositoryDB::Backup() Error with exception:[%s]", ex.what());
 		}
 		return retValue;
 	}
@@ -183,7 +139,7 @@ public:
 	virtual std::list<BackupInfo> GetBackups(Integer id) override
 	{
 		std::list<BackupInfo> retValue;
-		SQLite::Statement selectQuery(*db, "SELECT ID, BackupDefID, Started, Ended, Status FROM Backups WHERE BackupDefID=:id");
+		SQLite::Statement selectQuery(*db, "SELECT ID, BackupDefID, Started, LastStatusUpdate, Status FROM Backups WHERE BackupDefID=:id");
 		selectQuery.bind(":id", id);
 
 		while (selectQuery.executeStep())
@@ -192,7 +148,7 @@ public:
 			newValue.id = selectQuery.getColumn("ID").getInt();
 			newValue.backupDefId = selectQuery.getColumn("BackupDefID").getInt();
 			newValue.started = get_time_point(selectQuery.getColumn("Started").getString());
-			newValue.ended = get_time_point(selectQuery.getColumn("Ended").getString());
+			newValue.lastUpdated = get_time_point(selectQuery.getColumn("LastStatusUpdate").getString());
 			newValue.status = selectQuery.getColumn("Status").getString();
 
 			retValue.push_back(newValue);
@@ -242,6 +198,82 @@ public:
 	}
 
 private:
+	BackupInfo CreateBackupInfo(const BackupParameters& backupParams, BackupDef& backupDef)
+	{
+		BackupInfo retValue;
+
+		retValue.backupDefId = backupParams.backupDefId;
+		retValue.started = std::chrono::system_clock::now();
+		retValue.status = "Started";
+
+		SQLite::Statement insertBackup(*db, "INSERT INTO Backups (BackupDefID, Started, , LastStatusUpdate, Status ) VALUES ( :backupdefID, :started, :lastUpdated, :status )");
+		insertBackup.bind(":backupdefID", retValue.backupDefId);
+		insertBackup.bind(":started", return_current_time_and_date());
+		insertBackup.bind(":lastUpdated", return_current_time_and_date());
+		insertBackup.bind(":status", "Started");
+		if (insertBackup.exec() > 0)
+		{
+			SQLite::Statement selectBackup(*db, Text_Resource::findBackupInfo);
+			selectBackup.bind(":backupdefID", retValue.backupDefId);
+			if (selectBackup.executeStep())
+			{
+				retValue.id = selectBackup.getColumn("ID").getInt();
+				backupDef.id = selectBackup.getColumn("BackupDefID").getInt();
+				backupDef.rootPath = from_utf8(selectBackup.getColumn("RootPath").getString());
+			}
+		}
+
+		return retValue;
+	}
+
+	void CalculateCurrentStatus(std::shared_ptr<IBackupDB> backupDB, const BackupDef& backupDef)
+	{
+		backupDB->StartScan(backupDef.rootPath);
+
+		SQLite::Statement attach(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
+		attach.exec();
+
+		SQLite::Statement currentStateQuery(*db, Text_Resource::CurrentState);
+		currentStateQuery.bind(":backupDefID", backupDef.id);
+		currentStateQuery.exec();
+
+		SQLite::Statement detach(*db, "DETACH DATABASE BackupDB");
+		detach.exec();
+	}
+
+	void CopyBackupToRepository(const BackupInfo& retValue)
+	{
+		SQLite::Statement attach2(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
+		attach2.exec();
+
+		SQLite::Statement copyBackupStateQuery(*db, Text_Resource::CopyBackupState);
+		copyBackupStateQuery.bind(":backupID", retValue.id);
+		copyBackupStateQuery.exec();
+
+		SQLite::Statement detach2(*db, "DETACH DATABASE BackupDB");
+		detach2.exec();
+	}
+
+	void UpdatedBackup(const std::string& Status, BackupInfo& retValue)
+	{
+		retValue.status = Status;
+		retValue.lastUpdated = std::chrono::system_clock::now();
+
+		SQLite::Statement updateBackup(*db, "UPDATE Backups SET LastStatusUpdate=:lastUpdated, Status=:status WHERE ID=:id");
+		updateBackup.bind(":lastUpdated", get_string_from_time_point(retValue.lastUpdated));
+		updateBackup.bind(":status", retValue.status);
+		updateBackup.bind(":id", retValue.id);
+		updateBackup.exec();
+	}
+
+	std::shared_ptr<IBackupDB> getBackupDB()
+	{
+		boost::filesystem::remove("backupDB.db");
+		std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB("backupDB.db");
+
+		return backupDB;
+	}
+
 	std::shared_ptr<SQLite::Database> db;
 	std::shared_ptr<IFileRepositoryDB> fileDB;
 	path root;
