@@ -206,7 +206,7 @@ private:
 		retValue.started = std::chrono::system_clock::now();
 		retValue.status = "Started";
 
-		SQLite::Statement insertBackup(*db, "INSERT INTO Backups (BackupDefID, Started, , LastStatusUpdate, Status ) VALUES ( :backupdefID, :started, :lastUpdated, :status )");
+		SQLite::Statement insertBackup(*db, "INSERT INTO Backups (BackupDefID, Started, LastStatusUpdate, Status ) VALUES ( :backupdefID, :started, :lastUpdated, :status )");
 		insertBackup.bind(":backupdefID", retValue.backupDefId);
 		insertBackup.bind(":started", return_current_time_and_date());
 		insertBackup.bind(":lastUpdated", return_current_time_and_date());

@@ -52,6 +52,9 @@ class SbuCmdLine:
             cmdLineArgs.append("--General.Workdir")
             cmdLineArgs.append(self.workDir)
 
+        cmdLineArgs.append("--Repository.path")
+        cmdLineArgs.append("RepoDB.db")
+
         return cmdLineArgs
 
     def Execute(self, cmdLine):
@@ -239,9 +242,9 @@ class TestNightly(unittest.TestCase):
         self.createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
         self.createRandomFile( os.path.join(srcDir,"ThirdFile"), 64*1024, 16*1024)
 
-        cmdLine.CreateBackupDef("test", srcDir)
-        cmdLine.Backup("test")
-        cmdLine.Restore("test", targetDir )
+        self.assertEqual(cmdLine.CreateBackupDef("test", srcDir).returnCode , 0)
+        self.assertEqual(cmdLine.Backup("test").returnCode                  , 0)
+        self.assertEqual(cmdLine.Restore("test", targetDir ).returnCode     , 0)
         self.assertTrue(dirCompare(srcDir, targetDir))
 
         logging.info("Done Testing")
