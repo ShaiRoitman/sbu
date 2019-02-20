@@ -153,9 +153,16 @@ public:
 		return retValue;
 	}
 
-	virtual std::list<BackupInfo> GetBackups(Integer id) override
+	void Print(IRepositoryDB::BackupInfo& backup)
 	{
-		std::list<BackupInfo> retValue;
+		std::cout << backup.id << ",";
+		std::cout << backup.status << ",";
+		std::cout << get_string_from_time_point(backup.started) << ",";
+		std::cout << get_string_from_time_point(backup.lastUpdated) << std::endl;
+	}
+
+	virtual void ListBackups(Integer id) override
+	{
 		SQLite::Statement selectQuery(*db, "SELECT ID, BackupDefID, Started, LastStatusUpdate, Status FROM Backups WHERE BackupDefID=:id");
 		selectQuery.bind(":id", id);
 
@@ -168,10 +175,8 @@ public:
 			newValue.lastUpdated = get_time_point(selectQuery.getColumn("LastStatusUpdate").getString());
 			newValue.status = selectQuery.getColumn("Status").getString();
 
-			retValue.push_back(newValue);
+			Print(newValue);
 		}
-
-		return retValue;
 	}
 
 	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB)
@@ -190,7 +195,14 @@ public:
 				auto destination = restoreParams.rootDest / path;
 				if (type == "File")
 				{
-					fileRepDB->GetFile(fileHandle, destination);
+					if (restoreParams.shouldCopy)
+					{
+						fileRepDB->GetFile(fileHandle, destination);
+					}
+					else
+					{
+						std::cout << "Restore -> [" << destination << "]" << std::endl;
+					}
 				}
 				else
 				{

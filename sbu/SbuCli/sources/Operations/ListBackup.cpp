@@ -11,13 +11,6 @@ static auto logger = LoggerFactory::getLogger("Operations");
 class ListBackupsOperation : public Operation
 {
 public:
-	void Print(IRepositoryDB::BackupInfo& backup)
-	{
-		std::cout << backup.id << ",";
-		std::cout << backup.status << ",";
-		std::cout << get_string_from_time_point(backup.started) << ",";
-		std::cout << get_string_from_time_point(backup.lastUpdated) << std::endl;
-	}
 	int Operate(boost::program_options::variables_map& vm)
 	{
 		int retValue = ExitCode_Success;
@@ -30,13 +23,7 @@ public:
 		auto backupdef = RepoDB->GetBackupDef(name);
 		if (backupdef != nullptr)
 		{
-
-			auto backups = RepoDB->GetBackups(backupdef->id);
-			for (auto iter = backups.begin(); iter != backups.end(); ++iter)
-			{
-				auto backup = *iter;
-				Print(backup);
-			}
+			RepoDB->ListBackups(backupdef->id);
 		}
 
 		logger->DebugFormat("Operation:[ListBackups] Name:[%s] retValue:[%d]", name.c_str(), retValue);
