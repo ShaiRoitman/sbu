@@ -83,28 +83,28 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 
 		if (!vm["help"].empty())
 		{
-			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version + std::string("\n");
-			std::cout << std::string("Written by ") << std::string(g_developer_name) + std::string("\n\n");
-			std::cout << desc << std::string("\n");
+			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version << std::endl;
+			std::cout << std::string("Written by ") << std::string(g_developer_name) << std::endl;
+			std::cout << desc << std::endl;
 			return ExitCode_HelpCalled;
 		}
 
 		if (!vm["version"].empty())
 		{
-			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version + std::string("\n");
-			std::cout << std::string("Written by ") << std::string(g_developer_name) + std::string("\n\n");
+			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version << std::endl;
+			std::cout << std::string("Written by ") << std::string(g_developer_name) << std::endl;
 			return ExitCode_VersionCalled;
 		}
 
 		if (vm["action"].empty())
 		{
-			std::cout << "Missing action argument\n";
+			std::cout << "Missing action argument" << std::endl;
 			return ExitCode_MissingAction;
 		}
 	}
 	catch (const boost::program_options::unknown_option exception)
 	{
-		std::cout << std::string("Invalid option ") << exception.get_option_name() << std::string("\n");
+		std::cout << std::string("Invalid option ") << exception.get_option_name() << std::endl;
 		retValue = ExitCode_InvalidArgument;
 	}
 

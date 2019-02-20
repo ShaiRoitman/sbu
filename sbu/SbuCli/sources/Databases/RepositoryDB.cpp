@@ -25,9 +25,22 @@ public:
 		this->fileDB = fileDB;
 	}
 
+	void LogBackupDef(const std::string& prefix,std::shared_ptr<BackupDef> def)
+	{
+		logger->DebugFormat("[%s] ID:[%d] Name:[%s] RootPath:[%s] Host:[%s] Added:[%s]",
+			prefix.c_str(),
+			def->id,
+			def->name.c_str(),
+			def->rootPath.string().c_str(),
+			def->hostName.c_str(),
+			get_string_from_time_point(def->added).c_str()
+		);
+
+	}
+
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
 	{
-		BackupDef retValue;
+		logger->DebugFormat("Adding BackupDef Name:[%s] RootPath:[%s]", name.c_str(), rootPath.string().c_str());
 		try {
 			SQLite::Statement insertQuery(*db, "INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) Values (:name, :host, :root, :added)");
 
@@ -47,7 +60,9 @@ public:
 			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
 		}
 
-		return this->GetBackupDef(name);
+		auto retValue = this->GetBackupDef(name);
+		LogBackupDef("RepositoryDB::AddBackupDef() Added ", retValue);
+		return retValue;
 	}
 
 	virtual std::shared_ptr<BackupDef> GetBackupDef(const std::string& name)
@@ -64,6 +79,8 @@ public:
 			retValue->hostName = query.getColumn("Hostname").getString();
 			retValue->added = get_time_point(query.getColumn("Added").getString());
 		}
+
+		LogBackupDef("RepositoryDB::GetBackupDef() Added ", retValue);
 
 		return retValue;
 	}
