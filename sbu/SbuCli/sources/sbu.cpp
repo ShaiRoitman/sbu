@@ -19,6 +19,7 @@ int main(int argc, const char* argv[])
 	operations["Backup"] = BackupFactory;
 	operations["Restore"] = RestoreFactory;
 	operations["ListBackup"] = ListBackupsFactory;
+	operations["BackupInfo"] = ListBackupsFactory;
 
 	CommandLineAndOptions options;
 	int retValue = options.ParseOptions(argc, argv);

@@ -13,3 +13,4 @@ std::shared_ptr<Operation> ListBackupDefsFactory();
 std::shared_ptr<Operation> ListBackupsFactory();
 std::shared_ptr<Operation> RestoreFactory();
 std::shared_ptr<Operation> BackupFactory();
+std::shared_ptr<Operation> BackupInfoFactory();
