@@ -27,6 +27,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string filerepName;
 	std::string filerepPath;
 	std::string repPath;
+	int byID;
 
 	desc.add_options()
 		("help,h", "print usage message")
@@ -36,7 +37,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("path,p", value(&path), "Path")
 		("name,n", value(&name), "Name")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
-		("byID", value(&path), "Select By ID")
+		("byID", value(&byID), "Select By ID")
 		("showOnly", "In restore show only the files to be restored")
 		("FileRepository.name", value(&filerepName), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")

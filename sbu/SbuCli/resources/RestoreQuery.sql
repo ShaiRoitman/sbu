@@ -17,7 +17,8 @@
 			BackupDefs ON BackupDefID = BackupDefs.ID
 		WHERE 
 			BackupDefs.ID = :backupDefID AND
-			Backups.Started <= :startDate
+			Backups.Started <= :startDate AND
+			Backups.ID <= :backupID
 		GROUP BY Files.Path ) Latest
 	JOIN Files ON 
 		Latest.FILEID = Files.ID

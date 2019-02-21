@@ -179,6 +179,20 @@ public:
 		}
 	}
 
+	virtual void ListBackupInfo(Integer id)
+	{
+		SQLite::Statement selectQuery(*db, "SELECT Status, Path, Type FROM Files WHERE BackupID=:id ORDER BY Status, Path  ");
+		selectQuery.bind(":id", id);
+		while (selectQuery.executeStep())
+		{
+			std::cout << 
+				selectQuery.getColumn("Status").getString() <<
+				" : " << from_utf8(selectQuery.getColumn("Path").getString()) << 
+				" : " << selectQuery.getColumn("Type").getString() <<
+				std::endl;
+		}
+	}
+
 	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB)
 	{
 		try {
@@ -186,6 +200,7 @@ public:
 			SQLite::Statement selectQuery(*db, Text_Resource::RestoreQuery);
 			selectQuery.bind(":backupDefID", restoreParams.backupDefId);
 			selectQuery.bind(":startDate", dateToRestoreStr);
+			selectQuery.bind(":backupID", restoreParams.byID);
 			while (selectQuery.executeStep())
 			{
 				auto type = selectQuery.getColumn("Type").getString();

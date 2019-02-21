@@ -14,6 +14,17 @@ class BackupInfoOperation : public Operation
 public:
 	int Operate(boost::program_options::variables_map& vm)
 	{
+		int retValue = ExitCode_Success;
+
+		Integer backupid = vm["byID"].as<int>();
+
+		logger->DebugFormat("Operation:[BackupInfo] Id:[%d]", backupid);
+
+		auto RepoDB = getRepository(vm);
+		RepoDB->ListBackupInfo(backupid);
+
+		logger->DebugFormat("Operation:[BackupInfo] Id:[%d] retValue:[%d]", backupid, retValue);
+
 		return 0;
 	}
 }; 
