@@ -20,5 +20,7 @@ CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findDiffQuery.sql findD
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findHashCalcQuery.sql findHashCalcQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findUploadQuery.sql findUploadQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findBackupInfo.sql findBackupInfo >> %FILENAME%
+CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\DeleteUpdatedInCurrent.sql DeleteUpdatedInCurrent >> %FILENAME%
+CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\CopyUpdatedToCurrent.sql CopyUpdatedToCurrent >> %FILENAME%
 
 echo } >> %FILENAME%

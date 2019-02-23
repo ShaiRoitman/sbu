@@ -39,7 +39,9 @@ FROM (
 			Backups ON Files.BackupID = Backups.ID
 		JOIN 
 			BackupDefs ON Backups.BackupDefID = BackupDefs.ID
-		WHERE BackupDefs.ID = :backupDefID
+		WHERE 
+			BackupDefs.ID = :backupDefID AND
+			Backups.Status = 'Complete'
 		GROUP BY Files.Path ) Latest
 	JOIN Files ON 
 		Latest.FILEID = Files.ID) repo;

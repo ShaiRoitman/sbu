@@ -1,5 +1,5 @@
 UPDATE 
-	CurrentState 
+	CurrentState
 SET 
 	Status='Updated' 
 WHERE 
@@ -14,8 +14,9 @@ WHERE
 	ON 
 		CurrentState.Path = Entries.Path
 	WHERE
-		CurrentState.DigestValue IS NOT NULL AND
-		Entries.DigestValue != CurrentState.DigestValue AND
-		Entries.Type = 'File' AND
-		(CurrentState.Status != 'Added' OR CurrentState.Status !='Deleted')
-)
+		CurrentState.Status != 'Added' AND 
+		Entries.Path IS NOT NULL AND
+		CurrentState.Type = 'File' AND
+		(CurrentState.Size != Entries.Size OR
+		 CurrentState.Modified != Entries.Modified)
+)		

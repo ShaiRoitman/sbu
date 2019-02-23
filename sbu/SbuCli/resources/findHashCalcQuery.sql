@@ -1,27 +1,9 @@
 SELECT 
 	ID,
 	Path,
-	'Added' AS Status
+	Status
 FROM 
 	CurrentState 
 WHERE 
-	Status='Added' AND 
+	(Status='Added' OR Status='Updated' ) AND 
 	DigestValue IS NULL
-
-UNION
-
-SELECT
-	CurrentState.ID,
-	CurrentState.Path,
-	'Updated' AS Status
-FROM 
-	CurrentState
-LEFT JOIN 
-	Entries
-ON
-	Entries.Path = CurrentState.Path
-WHERE
-	Entries.Path IS NOT NULL AND
-	Entries.DigestValue IS NULL AND
-	CurrentState.Status !='Deleted' AND
-	Entries.Size != CurrentState.Size

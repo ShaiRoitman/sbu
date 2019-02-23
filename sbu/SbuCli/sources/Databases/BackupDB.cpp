@@ -179,8 +179,6 @@ protected:
 	virtual void StartDiffCalc() override
 	{
 		try {
-			Transaction transaction(*db);
-
 			logger->Debug("Marking files as Deleted existing in the backup but not in the scan");
 			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
 			markDeleted.exec();
@@ -189,20 +187,15 @@ protected:
 			SQLite::Statement addMissingQuery(*db, Text_Resource::AddMissing);
 			addMissingQuery.exec();
 
-			SQLite::Statement markUnchangedQuery(*db, Text_Resource::MarkUnchanged);
-			markUnchangedQuery.exec();
-
+			logger->Debug("Marking files which are potential different");
 			SQLite::Statement markUpdated(*db, Text_Resource::MarkUpdated);
 			markUpdated.exec();
-
-			transaction.commit();
 		}
 
 		catch (std::runtime_error ex)
 		{
-			int k = 3;
+			logger->ErrorFormat("BackupDB::StartDiffCalc failed exception:[%s]", ex.what());
 		}
-
 	}
 
 	virtual void ContinueDiffCalc() override
@@ -210,9 +203,7 @@ protected:
 		SQLite::Statement calcDigestQuery(*db, Text_Resource::findHashCalcQuery);
 		while (calcDigestQuery.executeStep())
 		{
-			auto id = calcDigestQuery.getColumn("ID").getInt();
 			auto filePath = from_utf8(calcDigestQuery.getColumn("Path").getString());
-			auto status = calcDigestQuery.getColumn("Status").getString();
 
 			auto fullPath = root / boost::filesystem::path(filePath);
 			auto startDigest = std::chrono::system_clock::now();
@@ -226,22 +217,13 @@ protected:
 			updateDigest.bind(":digestValue", digest);
 			updateDigest.bind(":path", to_utf8(filePath));
 			updateDigest.exec();
-
-			if (status == "Added")
-			{
-				SQLite::Statement updateCurrentDigest(*db, "Update CurrentState SET DigestType=:digestType, DigestValue=:digestValue WHERE ID=:id");
-				updateCurrentDigest.bind(":digestType", "SHA1");
-				updateCurrentDigest.bind(":digestValue", digest);
-				updateCurrentDigest.bind(":id", id);
-				updateCurrentDigest.exec();
-			}
 		}
 
-		SQLite::Statement markUpdatedQuery(*db, Text_Resource::MarkUpdated);
-		markUpdatedQuery.exec();
+		SQLite::Statement deleteUpdatedInCurrent(*db, Text_Resource::DeleteUpdatedInCurrent);
+		deleteUpdatedInCurrent.exec();
 
-		SQLite::Statement markUnchangedQuery(*db, Text_Resource::MarkUnchanged);
-		markUnchangedQuery.exec();
+		SQLite::Statement copyUpdatedToCurrent(*db, Text_Resource::CopyUpdatedToCurrent);
+		copyUpdatedToCurrent.exec();
 	}
 
 	virtual bool IsDiffCalcDone() override

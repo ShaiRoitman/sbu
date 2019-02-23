@@ -34,7 +34,8 @@ CREATE TABLE Entries (
     EndDigestCalc   DATETIME,
 	FileHandle      TEXT,
 	StartUpload     DATETIME,
-	EndUpload       DATETIME
+	EndUpload       DATETIME,
+	Status          TEXT
 );
 
 CREATE TABLE CurrentState (

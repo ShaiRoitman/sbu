@@ -230,6 +230,17 @@ class TestNightly(unittest.TestCase):
         with open(name, 'wb') as fout:
             fout.write(os.urandom(actualSize))
 
+    def test_Tests(self):
+        tests ="""
+           Delete a file
+           File modified
+           File modified same size , different hash
+           file modified same size , same data
+           a path which was a directory -> file and vice versa
+           incomplete backups
+        """
+        pass
+
     def test_BackupRestore(self):
         cmdLine = SbuCmdLine()
         cmdLine.repositoryPath = os.path.join(TestNightly.tmp,"Repo")
