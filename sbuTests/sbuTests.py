@@ -4,6 +4,7 @@ import logging
 import unittest
 import subprocess
 import os
+import os.path
 import shutil
 import tempfile
 import io
@@ -225,10 +226,13 @@ class TestNightly(unittest.TestCase):
         self.assertEqual(listResult.output,listResultPostdup.output)
     
     def createRandomFile(self, name, size, var):
+        date = None
         actualSize = size + random.randint(-var, var)
         os.makedirs(os.path.dirname(name),exist_ok=True)
         with open(name, 'wb') as fout:
-            fout.write(os.urandom(actualSize))
+            data = os.urandom(actualSize)
+            fout.write(data)
+        return data
 
     def test_Tests(self):
         tests ="""
@@ -257,6 +261,26 @@ class TestNightly(unittest.TestCase):
         self.assertEqual(cmdLine.Backup("test").returnCode                  , 0)
         self.assertEqual(cmdLine.Restore("test", targetDir ).returnCode     , 0)
         self.assertTrue(dirCompare(srcDir, targetDir))
+
+        os.remove(os.path.join(srcDir,"FirstFile"))
+        self.assertEqual(cmdLine.Backup("test").returnCode                  , 0)
+        shutil.rmtree(targetDir, True)
+        self.assertEqual(cmdLine.Restore("test", targetDir ).returnCode     , 0)
+        self.assertEqual(os.path.isfile(os.path.join(targetDir,"FirstFile")), False)
+        self.assertEqual(os.path.isfile(os.path.join(targetDir,"SecondFile")), True)
+        self.assertEqual(os.path.isfile(os.path.join(targetDir,"ThirdFile")), True)
+
+        self.createRandomFile( os.path.join(srcDir,"ForthFile"), 64*1024, 16*1024)
+        os.remove(os.path.join(srcDir,"SecondFile"))
+        self.createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
+
+        self.assertEqual(cmdLine.Backup("test").returnCode                  , 0)
+        shutil.rmtree(targetDir, True)
+        self.assertEqual(cmdLine.Restore("test", targetDir ).returnCode     , 0)
+        self.assertEqual(os.path.isfile(os.path.join(targetDir,"ForthFile")), True)
+        self.assertEqual(os.path.isfile(os.path.join(targetDir,"SecondFile")), True)
+
+
 
         logging.info("Done Testing")
 

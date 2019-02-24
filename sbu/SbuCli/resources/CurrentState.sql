@@ -44,4 +44,5 @@ FROM (
 			Backups.Status = 'Complete'
 		GROUP BY Files.Path ) Latest
 	JOIN Files ON 
-		Latest.FILEID = Files.ID) repo;
+		Latest.FILEID = Files.ID) repo
+	WHERE repo.Status !='Deleted';

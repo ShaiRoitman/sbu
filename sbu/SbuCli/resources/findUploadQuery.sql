@@ -6,5 +6,5 @@ FROM
 	NextState 
 WHERE 
 	UploadState IS NULL AND
-	(Status='Added' OR 	Status='Updatd' ) AND 
+	(Status='Added' OR 	Status='Updated' ) AND 
 	Type='File'
