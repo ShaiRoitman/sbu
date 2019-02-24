@@ -12,27 +12,32 @@ class BackupDB : public IBackupDB
 public:
 	BackupDB(path dbPath)
 	{
+		logger->DebugFormat("BackupDB::BackupDB() dbpath:[%s]", dbPath.string().c_str());
 		this->db = getOrCreateDb(dbPath, Text_Resource::BackupDB);
 	}
 
 	virtual void ContinueScan() override
 	{
+		logger->DebugFormat("BackupDB::ContinueScan() Start");
 		AddToExecutionLog("Continue Scan", "");
 		SQLite::Statement query(*db, "SELECT ID,Path from NextScan");
 		while (query.executeStep())
 		{
 			Integer id = query.getColumn("ID").getInt64();
 			path currentPath = from_utf8(query.getColumn("Path").getString());
+			logger->DebugFormat("BackupDB::ContinueScan() id:[%d] currentPath[%s]", id, currentPath.string().c_str());
 			HandleDirectory(id, currentPath);
 			query.reset();
 		}
 
+		logger->DebugFormat("BackupDB::ContinueScan() End");
 		AddToExecutionLog("End of Scan", "");
 	}
 
 	virtual void StartScan(path dir) override
 	{
 		root = dir;
+		logger->DebugFormat("BackupDB::StartScan() dir:[%s] Start", dir.string().c_str());
 
 		AddToExecutionLog("Start Scan", to_utf8(dir.generic_wstring()));
 
@@ -44,15 +49,19 @@ public:
 
 		this->AddDirectoryToScan(dir);
 		ContinueScan();
+
+		logger->DebugFormat("BackupDB::StartScan() dir:[%s] End", dir.string().c_str());
 	}
 
 	virtual bool IsScanDone() override
 	{
+		bool retValue = true;
 		SQLite::Statement query(*db, "SELECT ID,Path from NextScan");
 		if (query.executeStep())
-			return false;
-		else
-			return true;
+			retValue = false;
+
+		logger->DebugFormat("BackupDB::IsScanDone() retValue:[%d]", retValue);
+		return retValue;
 	}
 
 protected:
@@ -60,19 +69,31 @@ protected:
 	{
 		SQLite::Statement insertQuery(*db, "INSERT INTO ExecutionLog (EventTime, Comment, Argument) Values (:time, :comment, :arg)");
 
-		insertQuery.bind(":time", return_current_time_and_date());
+		auto currentTime = return_current_time_and_date();
+
+		insertQuery.bind(":time", currentTime);
 		insertQuery.bind(":comment", comment);
 		insertQuery.bind(":arg", argument);
-		insertQuery.exec();
+		auto result = insertQuery.exec();
+
+		logger->DebugFormat("BackupDB::AddToExecutionLog() time:[%s] comment:[%s] arg:[%s] result:[%d]", 
+			currentTime.c_str(),
+			comment.c_str(),
+			argument.c_str(),
+			result);
 	}
 
 	void AddDirectoryToScan(path dir)
 	{
 		SQLite::Statement insertQuery(*db, "INSERT INTO Scan (Path, Added) Values (:path,:added)");
-
+		auto added = return_current_time_and_date();
 		insertQuery.bind(":path", to_utf8(dir));
-		insertQuery.bind(":added", return_current_time_and_date());
-		insertQuery.exec();
+		insertQuery.bind(":added", added);
+		auto result = insertQuery.exec();
+		logger->DebugFormat("BackupDB::AddDirectoryToScan() dir:[%s] added:[%s] result:[%d]",
+			dir.string().c_str(),
+			added.c_str(),
+			result);
 	}
 
 	void UpdatedStarted(Integer id)
@@ -106,8 +127,10 @@ protected:
 			insertQuery.bind(":accessed", return_time_and_date(result.st_atime));
 			insertQuery.exec();
 		}
-		catch (std::runtime_error ex)
+		catch (std::exception ex)
 		{
+			logger->ErrorFormat("BackupDB::InsertDirectoryToEntries() Failed to insert dir:[%s] exception:[%s]",
+				dir.string().c_str(), ex.what());
 			AddToExecutionLog("Error In Handling Directory", to_utf8(dir.generic_wstring()));
 		}
 	}
@@ -136,8 +159,11 @@ protected:
 				it++;
 			}
 		}
-		catch (std::runtime_error ex)
+		catch (std::exception ex)
 		{
+			logger->ErrorFormat("BackupDB::ScanDirectory() Handling dir:[%s] exception:[%s]",
+				dir.string().c_str(), ex.what());
+
 			AddToExecutionLog("Error In Scanning Directory", to_utf8(dir.generic_wstring()));
 		}
 	}
@@ -170,23 +196,26 @@ protected:
 			insertQuery.bind(":accessed", return_time_and_date(result.st_atime));
 			insertQuery.exec();
 		}
-		catch (std::runtime_error ex)
+		catch (std::exception ex)
 		{
+			logger->ErrorFormat("BackupDB::ScanDirectory() Handling file:[%s] exception:[%s]",
+				file.string().c_str(), ex.what());
+
 			AddToExecutionLog("Error In Handling File", to_utf8(file.generic_wstring()));
 		}
 	}
 
 	virtual void StartDiffCalc() override
 	{
+		logger->Debug("Adding deleted files into NextState");
 		try {
-			logger->Debug("Adding deleted files into NextState");
 			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
 			markDeleted.exec();
 		}
 
-		catch (std::runtime_error ex)
+		catch (std::exception ex)
 		{
-			logger->ErrorFormat("BackupDB::StartDiffCalc failed exception:[%s]", ex.what());
+			logger->ErrorFormat("BackupDB::StartDiffCalc() failed exception:[%s]", ex.what());
 		}
 	}
 
@@ -241,6 +270,8 @@ protected:
 			auto fileHandle = fileDB->AddFile(fullPath, digestType, digest);
 			auto end = std::chrono::system_clock::now();
 
+			Transaction transaction(*db);
+
 			SQLite::Statement updateEntries(*db, "Update Entries SET StartUpload=:start, EndUpload=:end, FileHandle=:handle WHERE Path=:path");
 			updateEntries.bind(":start", get_string_from_time_point(start));
 			updateEntries.bind(":end", get_string_from_time_point(end));
@@ -253,6 +284,8 @@ protected:
 			updateCurrent.bind(":state", "Uploaded");
 			updateCurrent.bind(":path", to_utf8(filePath));
 			updateCurrent.exec();
+
+			transaction.commit();
 		}
 	}
 

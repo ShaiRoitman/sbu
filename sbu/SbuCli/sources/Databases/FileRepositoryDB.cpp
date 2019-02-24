@@ -14,6 +14,7 @@ public:
 	{
 		this->dataRootPath = dataRootPath;
 		this->db = getOrCreateDb(dbPath, Text_Resource::FileRepository);
+		logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(dataRootPath).c_str());
 	}
 
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override

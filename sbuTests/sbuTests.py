@@ -95,7 +95,6 @@ class SbuCmdLine:
         fp.close()
         return retValue    
 
-
 def dirCompare(left, right):
     cmdLines = "c:\\dropbox\\apps\\bin\\diff.exe -r %s %s" % (left, right)
     cmdLines.split(" ")
@@ -104,6 +103,15 @@ def dirCompare(left, right):
     print (noArgsOutput)
     retValue = p.returncode
     return retValue==0
+
+def createRandomFile(name, size, var):
+    date = None
+    actualSize = size + random.randint(-var, var)
+    os.makedirs(os.path.dirname(name),exist_ok=True)
+    with open(name, 'wb') as fout:
+        data = os.urandom(actualSize)
+        fout.write(data)
+    return data
 
 class TestSanity(unittest.TestCase):
     tmp = None
@@ -125,7 +133,7 @@ class TestSanity(unittest.TestCase):
     def setUp(self):
         self.executablePath = """C:\git\sbu\sbu\SbuCli\Debug\sbu.exe"""
 
-    def test_Sanity(self):
+    def atest_Sanity(self):
         srcPath = """c:\git\clu"""
         dstPath = """c:\git\clu2"""
 
@@ -137,7 +145,7 @@ class TestSanity(unittest.TestCase):
         app.Backup("clu")
         app.ListBackup("clu")
         app.Restore("clu", dstPath)
-        self.assertTrue(self.dirCompare(srcPath,dstPath))
+        self.assertTrue(dirCompare(srcPath,dstPath))
 
 class TestNightly(unittest.TestCase):
     tmp = None
@@ -184,22 +192,22 @@ class TestNightly(unittest.TestCase):
         cmdLine = SbuCmdLine()
         d = cwd = os.getcwd()
         noLoggingResult = cmdLine.Execute("--version")
-        self.assertTrue(noLoggingResult.output.find("Init Application") == -1)
+        self.assertTrue(noLoggingResult.output.find("Application Started") == -1)
 
         consoleLoggingResult = cmdLine.Execute("--version --Logging.Console true")
-        self.assertTrue(consoleLoggingResult.output.find("Init Application") != -1)
+        self.assertTrue(consoleLoggingResult.output.find("Application Started") != -1)
 
         fileLoggingResult = cmdLine.Execute("--version --Logging.FileOutput sbu.log")
         with open('sbu.log', 'r') as myfile:
             data=myfile.read().replace('\n', '')
-        self.assertTrue(data.find("Init Application") != -1)
+        self.assertTrue(data.find("Application Started") != -1)
         os.remove("sbu.log")
 
         bothResult = cmdLine.Execute("--version --Logging.FileOutput sbu.log --Logging.Console true")
-        self.assertTrue(bothResult.output.find("Init Application") != -1)
+        self.assertTrue(bothResult.output.find("Application Started") != -1)
         with open('sbu.log', 'r') as myfile:
             data=myfile.read().replace('\n', '')
-        self.assertTrue(data.find("Init Application") != -1)
+        self.assertTrue(data.find("Application Started") != -1)
         os.remove("sbu.log")
 
     def test_BackupDefs(self):
@@ -225,15 +233,6 @@ class TestNightly(unittest.TestCase):
         listResultPostdup = cmdLine.ListBackupDef()
         self.assertEqual(listResult.output,listResultPostdup.output)
     
-    def createRandomFile(self, name, size, var):
-        date = None
-        actualSize = size + random.randint(-var, var)
-        os.makedirs(os.path.dirname(name),exist_ok=True)
-        with open(name, 'wb') as fout:
-            data = os.urandom(actualSize)
-            fout.write(data)
-        return data
-
     def test_Tests(self):
         tests ="""
            Delete a file
@@ -253,9 +252,9 @@ class TestNightly(unittest.TestCase):
         targetDir = os.path.join(TestNightly.tmp, "target")
         repoDir = os.path.join(TestNightly.tmp, "Repo")
 
-        self.createRandomFile( os.path.join(srcDir,"FirstFile"), 64*1024, 16*1024)
-        self.createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
-        self.createRandomFile( os.path.join(srcDir,"ThirdFile"), 64*1024, 16*1024)
+        createRandomFile( os.path.join(srcDir,"FirstFile"), 64*1024, 16*1024)
+        createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
+        createRandomFile( os.path.join(srcDir,"ThirdFile"), 64*1024, 16*1024)
 
         self.assertEqual(cmdLine.CreateBackupDef("test", srcDir).returnCode , 0)
         self.assertEqual(cmdLine.Backup("test").returnCode                  , 0)
@@ -270,9 +269,9 @@ class TestNightly(unittest.TestCase):
         self.assertEqual(os.path.isfile(os.path.join(targetDir,"SecondFile")), True)
         self.assertEqual(os.path.isfile(os.path.join(targetDir,"ThirdFile")), True)
 
-        self.createRandomFile( os.path.join(srcDir,"ForthFile"), 64*1024, 16*1024)
+        createRandomFile( os.path.join(srcDir,"ForthFile"), 64*1024, 16*1024)
         os.remove(os.path.join(srcDir,"SecondFile"))
-        self.createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
+        createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
 
         self.assertEqual(cmdLine.Backup("test").returnCode                  , 0)
         shutil.rmtree(targetDir, True)
@@ -283,7 +282,6 @@ class TestNightly(unittest.TestCase):
 
 
         logging.info("Done Testing")
-
 
 if __name__ == '__main__':
     try:
