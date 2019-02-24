@@ -179,17 +179,9 @@ protected:
 	virtual void StartDiffCalc() override
 	{
 		try {
-			logger->Debug("Marking files as Deleted existing in the backup but not in the scan");
+			logger->Debug("Adding deleted files into NextState");
 			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
 			markDeleted.exec();
-
-			logger->Debug("Marking files as Added existing in the scan but not in the backup");
-			SQLite::Statement addMissingQuery(*db, Text_Resource::AddMissing);
-			addMissingQuery.exec();
-
-			logger->Debug("Marking files which are potential different");
-			SQLite::Statement markUpdated(*db, Text_Resource::MarkUpdated);
-			markUpdated.exec();
 		}
 
 		catch (std::runtime_error ex)
@@ -219,11 +211,11 @@ protected:
 			updateDigest.exec();
 		}
 
-		SQLite::Statement deleteUpdatedInCurrent(*db, Text_Resource::DeleteUpdatedInCurrent);
-		deleteUpdatedInCurrent.exec();
+		SQLite::Statement addMissing(*db, Text_Resource::AddMissing);
+		addMissing.exec();
 
-		SQLite::Statement copyUpdatedToCurrent(*db, Text_Resource::CopyUpdatedToCurrent);
-		copyUpdatedToCurrent.exec();
+		SQLite::Statement addUpdated(*db, Text_Resource::AddUpdated);
+		addUpdated.exec();
 	}
 
 	virtual bool IsDiffCalcDone() override
@@ -240,7 +232,6 @@ protected:
 		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
 		while (uploadQuery.executeStep())
 		{
-			auto id = uploadQuery.getColumn("ID").getInt();
 			auto filePath = from_utf8(uploadQuery.getColumn("Path").getString());
 			auto digest = uploadQuery.getColumn("DigestValue").getString();
 			auto digestType = uploadQuery.getColumn("DigestType").getString();
@@ -257,10 +248,10 @@ protected:
 			updateEntries.bind(":path", to_utf8(filePath));
 			updateEntries.exec();
 
-			SQLite::Statement updateCurrent(*db, "Update CurrentState SET FileHandle=:handle, UploadState=:state WHERE ID=:id");
+			SQLite::Statement updateCurrent(*db, "Update NextState SET FileHandle=:handle, UploadState=:state WHERE Path=:path");
 			updateCurrent.bind(":handle", fileHandle);
 			updateCurrent.bind(":state", "Uploaded");
-			updateCurrent.bind(":id", id);
+			updateCurrent.bind(":path", to_utf8(filePath));
 			updateCurrent.exec();
 		}
 	}

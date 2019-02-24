@@ -1,24 +1,10 @@
 SELECT 
-	ID,
 	Path,
 	DigestType, 
 	DigestValue 
 FROM 
-	CurrentState 
+	NextState 
 WHERE 
-	Status='Added' AND 
-	Type='File' AND 
-	UploadState IS NULL
-
-UNION
-
-SELECT 
-	ID,
-	Path,
-	DigestType,
-	DigestValue
-FROM
-	CurrentState
-WHERE
-	Status='Updated' AND 
-	UploadState IS NULL
+	UploadState IS NULL AND
+	(Status='Added' OR 	Status='Updatd' ) AND 
+	Type='File'

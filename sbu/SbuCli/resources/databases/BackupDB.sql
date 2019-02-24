@@ -53,6 +53,20 @@ CREATE TABLE CurrentState (
 	FileHandle      TEXT
 );
 
+CREATE TABLE NextState (
+    Path            TEXT PRIMARY KEY,
+	Type            TEXT,
+    Size            BIGINT,
+    Created         DATETIME,
+    Modified        DATETIME,
+    Accessed        DATETIME,
+    DigestType      TEXT,
+    DigestValue     TEXT,
+	Status          TEXT,
+	UploadState     TEXT,
+	FileHandle      TEXT
+);
+
 -- Table: Scan
 CREATE TABLE Scan (
     ID        INTEGER  PRIMARY KEY AUTOINCREMENT,

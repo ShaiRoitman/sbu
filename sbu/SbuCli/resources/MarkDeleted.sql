@@ -1,18 +1,14 @@
-UPDATE 
-	CurrentState 
-SET 
-	Status='Deleted'
-WHERE 
-	Path IN (
-		SELECT 
-			CurrentState.Path 
-		FROM 
-			CurrentState 
-		LEFT JOIN 
-			Entries
-		ON	
-			CurrentState.Path = Entries.Path
-		WHERE
-			Entries.Path is NULL
-		)
-
+INSERT INTO NextState
+	(Path, Type, Status)
+SELECT 
+	CurrentState.Path, 
+	CurrentState.Type,
+	'Deleted'
+FROM 
+	CurrentState
+LEFT JOIN 
+	Entries
+ON	
+	CurrentState.Path = Entries.Path
+WHERE
+	Entries.Path is NULL

@@ -19,10 +19,15 @@ SELECT
     Entries.Accessed,
 	Entries.DigestType,
 	Entries.DigestValue,
-    'Added'
+    'Updated'
 FROM
     Entries
-LEFT JOIN 
+LEFT JOIN
     CurrentState ON CurrentState.Path = Entries.Path
 WHERE 
-    CurrentState.Path IS NULL
+    CurrentState.Path IS NOT NULL AND
+	( Entries.Size != CurrentState.Size OR
+	  Entries.Modified != CurrentState.Modified OR
+	  Entries.Created != CurrentState.Created OR
+	  Entries.Type != CurrentState.Type
+	)
