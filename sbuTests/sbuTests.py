@@ -91,7 +91,7 @@ class SbuCmdLine:
 
     def __read_as_utf8(self, fileno):
         fp = io.TextIOWrapper(fileno, "utf-8")
-        retValue = (fp.read())
+        retValue = fp.read()
         fp.close()
         return retValue    
 
@@ -246,6 +246,7 @@ class TestNightly(unittest.TestCase):
 
     def test_BackupRestore(self):
         cmdLine = SbuCmdLine()
+        #cmdLine.configFile = """c:\git\sbu\sbu\sbu.config"""
         cmdLine.repositoryPath = os.path.join(TestNightly.tmp,"Repo")
 
         srcDir = os.path.join(TestNightly.tmp, "source")
@@ -278,8 +279,6 @@ class TestNightly(unittest.TestCase):
         self.assertEqual(cmdLine.Restore("test", targetDir ).returnCode     , 0)
         self.assertEqual(os.path.isfile(os.path.join(targetDir,"ForthFile")), True)
         self.assertEqual(os.path.isfile(os.path.join(targetDir,"SecondFile")), True)
-
-
 
         logging.info("Done Testing")
 

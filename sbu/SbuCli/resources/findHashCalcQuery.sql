@@ -8,8 +8,9 @@ ON
 	Entries.Path = CurrentState.Path
 WHERE 
 	Entries.DigestValue IS NULL AND
-	( CurrentState.Path IS NULL AND
-	  Entries.Size != CurrentState.Size OR
+    Entries.Size IS NOT NULL AND
+    CurrentState.Path IS NULL OR
+	(Entries.Size != CurrentState.Size OR
 	  Entries.Modified != CurrentState.Modified OR
 	  Entries.Created != CurrentState.Created OR
 	  Entries.Type != CurrentState.Type
