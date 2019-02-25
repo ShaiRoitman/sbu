@@ -238,6 +238,10 @@ protected:
 			updateDigest.bind(":digestValue", digest);
 			updateDigest.bind(":path", to_utf8(filePath));
 			updateDigest.exec();
+
+			logger->DebugFormat("BackupDB::ContinueDiffCalc() path:[%s] digestType:[SHA1] digestValue:[%s]",
+				to_utf8(filePath).c_str(),
+				digest.c_str());
 		}
 
 		SQLite::Statement addMissing(*db, Text_Resource::AddMissing);
