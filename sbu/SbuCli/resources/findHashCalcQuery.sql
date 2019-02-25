@@ -7,7 +7,7 @@ LEFT JOIN
 ON 
 	Entries.Path = CurrentState.Path
 WHERE 
-	Entries.DigestValue IS NULL OR
+	Entries.DigestValue IS NULL AND
 	( CurrentState.Path IS NULL AND
 	  Entries.Size != CurrentState.Size OR
 	  Entries.Modified != CurrentState.Modified OR
