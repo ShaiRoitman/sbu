@@ -1,5 +1,7 @@
 Build Instructions
 ------------------
+SQL Formatter
+https://sqlformat.org
 
 Windows
 -------

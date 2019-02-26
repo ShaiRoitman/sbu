@@ -14,10 +14,39 @@ public:
 	{
 		logger->DebugFormat("BackupDB::BackupDB() dbpath:[%s]", dbPath.string().c_str());
 		this->db = getOrCreateDb(dbPath, Text_Resource::BackupDB);
+
+	}
+
+	void UpdateAction(const std::string& action)
+	{
+		SQLite::Statement updateQuery(*db, "Update GeneralInfo Set LastAction=:action");
+		updateQuery.bind(":action", action);
+		updateQuery.exec();
+	}
+
+	virtual void StartScan(path dir) override
+	{
+		root = dir;
+		logger->DebugFormat("BackupDB::StartScan() dir:[%s] Start", dir.string().c_str());
+
+		AddToExecutionLog("Start Scan", to_utf8(dir.generic_wstring()));
+
+		SQLite::Statement insertQuery(*db, "INSERT INTO GeneralInfo (RootPath, Created, LastAction) Values (:root ,:created, :lastAction)");
+
+		insertQuery.bind(":root", to_utf8(dir));
+		insertQuery.bind(":created", return_current_time_and_date());
+		insertQuery.bind(":lastAction", std::string("StartScan"));
+		insertQuery.exec();
+
+		this->AddDirectoryToScan(dir);
+		ContinueScan();
+
+		logger->DebugFormat("BackupDB::StartScan() dir:[%s] End", dir.string().c_str());
 	}
 
 	virtual void ContinueScan() override
 	{
+		this->UpdateAction("ContinueScan");
 		logger->DebugFormat("BackupDB::ContinueScan() Start");
 		AddToExecutionLog("Continue Scan", "");
 		SQLite::Statement query(*db, "SELECT ID,Path from NextScan");
@@ -34,25 +63,6 @@ public:
 		AddToExecutionLog("End of Scan", "");
 	}
 
-	virtual void StartScan(path dir) override
-	{
-		root = dir;
-		logger->DebugFormat("BackupDB::StartScan() dir:[%s] Start", dir.string().c_str());
-
-		AddToExecutionLog("Start Scan", to_utf8(dir.generic_wstring()));
-
-		SQLite::Statement insertQuery(*db, "INSERT INTO GeneralInfo (RootPath, Created) Values (:root ,:created)");
-
-		insertQuery.bind(":root", to_utf8(dir));
-		insertQuery.bind(":created", return_current_time_and_date());
-		insertQuery.exec();
-
-		this->AddDirectoryToScan(dir);
-		ContinueScan();
-
-		logger->DebugFormat("BackupDB::StartScan() dir:[%s] End", dir.string().c_str());
-	}
-
 	virtual bool IsScanDone() override
 	{
 		bool retValue = true;
@@ -62,6 +72,112 @@ public:
 
 		logger->DebugFormat("BackupDB::IsScanDone() retValue:[%d]", retValue);
 		return retValue;
+	}
+
+	virtual void StartDiffCalc() override
+	{
+		this->UpdateAction("StartDiffCalc");
+		logger->Debug("Adding deleted files into NextState");
+		try {
+			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
+			markDeleted.exec();
+		}
+
+		catch (std::exception ex)
+		{
+			logger->ErrorFormat("BackupDB::StartDiffCalc() failed exception:[%s]", ex.what());
+		}
+	}
+
+	virtual void ContinueDiffCalc() override
+	{
+		this->UpdateAction("ContinueDiffCalc");
+		SQLite::Statement calcDigestQuery(*db, Text_Resource::findHashCalcQuery);
+		while (calcDigestQuery.executeStep())
+		{
+			auto filePath = from_utf8(calcDigestQuery.getColumn("Path").getString());
+
+			auto fullPath = root / boost::filesystem::path(filePath);
+			auto startDigest = std::chrono::system_clock::now();
+			auto digest = calcHash(fullPath);
+			auto endDigest = std::chrono::system_clock::now();
+
+			SQLite::Statement updateDigest(*db, "Update Entries SET StartDigestCalc=:startDigest, EndDigestCalc=:endDigest, DigestType=:digestType, DigestValue=:digestValue WHERE Path=:path");
+			updateDigest.bind(":startDigest", get_string_from_time_point(startDigest));
+			updateDigest.bind(":endDigest", get_string_from_time_point(endDigest));
+			updateDigest.bind(":digestType", "SHA1");
+			updateDigest.bind(":digestValue", digest);
+			updateDigest.bind(":path", to_utf8(filePath));
+			updateDigest.exec();
+
+			logger->DebugFormat("BackupDB::ContinueDiffCalc() path:[%s] digestType:[SHA1] digestValue:[%s]",
+				to_utf8(filePath).c_str(),
+				digest.c_str());
+		}
+
+		SQLite::Statement addMissing(*db, Text_Resource::AddMissing);
+		addMissing.exec();
+
+		SQLite::Statement addUpdated(*db, Text_Resource::AddUpdated);
+		addUpdated.exec();
+	}
+
+	virtual bool IsDiffCalcDone() override
+	{
+		return false;
+	}
+
+	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
+	{
+		this->UpdateAction("StartUpload");
+	}
+
+	virtual void ContinueUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
+	{
+		this->UpdateAction("ContinueUpload");
+		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
+		while (uploadQuery.executeStep())
+		{
+			auto filePath = from_utf8(uploadQuery.getColumn("Path").getString());
+			auto digest = uploadQuery.getColumn("DigestValue").getString();
+			auto digestType = uploadQuery.getColumn("DigestType").getString();
+			auto fullPath = root / boost::filesystem::path(filePath);
+
+			auto start = std::chrono::system_clock::now();
+			auto fileHandle = fileDB->AddFile(fullPath, digestType, digest);
+			auto end = std::chrono::system_clock::now();
+
+			Transaction transaction(*db);
+
+			SQLite::Statement updateEntries(*db, "Update Entries SET StartUpload=:start, EndUpload=:end, FileHandle=:handle WHERE Path=:path");
+			updateEntries.bind(":start", get_string_from_time_point(start));
+			updateEntries.bind(":end", get_string_from_time_point(end));
+			updateEntries.bind(":handle", fileHandle);
+			updateEntries.bind(":path", to_utf8(filePath));
+			updateEntries.exec();
+
+			SQLite::Statement updateCurrent(*db, "Update NextState SET FileHandle=:handle, UploadState=:state WHERE Path=:path");
+			updateCurrent.bind(":handle", fileHandle);
+			updateCurrent.bind(":state", "Uploaded");
+			updateCurrent.bind(":path", to_utf8(filePath));
+			updateCurrent.exec();
+
+			transaction.commit();
+		}
+	}
+
+	virtual bool IsUploadDone() override
+	{
+		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
+		if (uploadQuery.executeStep())
+			return false;
+		else
+			return true;
+	}
+
+	virtual void Complete() override
+	{
+		this->UpdateAction("Complete");
 	}
 
 protected:
@@ -76,7 +192,7 @@ protected:
 		insertQuery.bind(":arg", argument);
 		auto result = insertQuery.exec();
 
-		logger->DebugFormat("BackupDB::AddToExecutionLog() time:[%s] comment:[%s] arg:[%s] result:[%d]", 
+		logger->DebugFormat("BackupDB::AddToExecutionLog() time:[%s] comment:[%s] arg:[%s] result:[%d]",
 			currentTime.c_str(),
 			comment.c_str(),
 			argument.c_str(),
@@ -204,104 +320,6 @@ protected:
 			AddToExecutionLog("Error In Handling File", to_utf8(file.generic_wstring()));
 		}
 	}
-
-	virtual void StartDiffCalc() override
-	{
-		logger->Debug("Adding deleted files into NextState");
-		try {
-			SQLite::Statement markDeleted(*db, Text_Resource::MarkDeleted);
-			markDeleted.exec();
-		}
-
-		catch (std::exception ex)
-		{
-			logger->ErrorFormat("BackupDB::StartDiffCalc() failed exception:[%s]", ex.what());
-		}
-	}
-
-	virtual void ContinueDiffCalc() override
-	{
-		SQLite::Statement calcDigestQuery(*db, Text_Resource::findHashCalcQuery);
-		while (calcDigestQuery.executeStep())
-		{
-			auto filePath = from_utf8(calcDigestQuery.getColumn("Path").getString());
-
-			auto fullPath = root / boost::filesystem::path(filePath);
-			auto startDigest = std::chrono::system_clock::now();
-			auto digest = calcHash(fullPath);
-			auto endDigest = std::chrono::system_clock::now();
-
-			SQLite::Statement updateDigest(*db, "Update Entries SET StartDigestCalc=:startDigest, EndDigestCalc=:endDigest, DigestType=:digestType, DigestValue=:digestValue WHERE Path=:path");
-			updateDigest.bind(":startDigest", get_string_from_time_point(startDigest));
-			updateDigest.bind(":endDigest", get_string_from_time_point(endDigest));
-			updateDigest.bind(":digestType", "SHA1");
-			updateDigest.bind(":digestValue", digest);
-			updateDigest.bind(":path", to_utf8(filePath));
-			updateDigest.exec();
-
-			logger->DebugFormat("BackupDB::ContinueDiffCalc() path:[%s] digestType:[SHA1] digestValue:[%s]",
-				to_utf8(filePath).c_str(),
-				digest.c_str());
-		}
-
-		SQLite::Statement addMissing(*db, Text_Resource::AddMissing);
-		addMissing.exec();
-
-		SQLite::Statement addUpdated(*db, Text_Resource::AddUpdated);
-		addUpdated.exec();
-	}
-
-	virtual bool IsDiffCalcDone() override
-	{
-		return false;
-	}
-
-	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
-	{
-	}
-
-	virtual void ContinueUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
-	{
-		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
-		while (uploadQuery.executeStep())
-		{
-			auto filePath = from_utf8(uploadQuery.getColumn("Path").getString());
-			auto digest = uploadQuery.getColumn("DigestValue").getString();
-			auto digestType = uploadQuery.getColumn("DigestType").getString();
-			auto fullPath = root / boost::filesystem::path(filePath);
-
-			auto start = std::chrono::system_clock::now();
-			auto fileHandle = fileDB->AddFile(fullPath, digestType, digest);
-			auto end = std::chrono::system_clock::now();
-
-			Transaction transaction(*db);
-
-			SQLite::Statement updateEntries(*db, "Update Entries SET StartUpload=:start, EndUpload=:end, FileHandle=:handle WHERE Path=:path");
-			updateEntries.bind(":start", get_string_from_time_point(start));
-			updateEntries.bind(":end", get_string_from_time_point(end));
-			updateEntries.bind(":handle", fileHandle);
-			updateEntries.bind(":path", to_utf8(filePath));
-			updateEntries.exec();
-
-			SQLite::Statement updateCurrent(*db, "Update NextState SET FileHandle=:handle, UploadState=:state WHERE Path=:path");
-			updateCurrent.bind(":handle", fileHandle);
-			updateCurrent.bind(":state", "Uploaded");
-			updateCurrent.bind(":path", to_utf8(filePath));
-			updateCurrent.exec();
-
-			transaction.commit();
-		}
-	}
-
-	virtual bool IsUploadDone() override
-	{
-		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
-		if (uploadQuery.executeStep())
-			return false;
-		else
-			return true;
-	}
-
 private:
 	std::shared_ptr<SQLite::Database> db;
 	path root;

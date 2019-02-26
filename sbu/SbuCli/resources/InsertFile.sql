@@ -1,4 +1,8 @@
-INSERT INTO Entries 
-	(Path, Type, Added, Size, Created , Modified , Accessed ) 
-Values 
-	(:path, :type, :added, :size ,:created, :modified, :accessed)
+INSERT INTO Entries (PATH, TYPE, Added, SIZE, Created, Modified, Accessed)
+VALUES (:path,
+        :type,
+        :added,
+        :size,
+        :created,
+        :modified,
+        :accessed)

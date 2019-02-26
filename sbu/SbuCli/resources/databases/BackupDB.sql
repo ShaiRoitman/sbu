@@ -14,7 +14,8 @@ CREATE TABLE ExecutionLog (
 
 CREATE TABLE GeneralInfo (
 	RootPath		TEXT,
-	Created			DATETIME
+	Created			DATETIME,
+	LastAction      TEXT
 );
 
 
@@ -34,8 +35,7 @@ CREATE TABLE Entries (
     EndDigestCalc   DATETIME,
 	FileHandle      TEXT,
 	StartUpload     DATETIME,
-	EndUpload       DATETIME,
-	Status          TEXT
+	EndUpload       DATETIME
 );
 
 CREATE TABLE CurrentState (
@@ -62,9 +62,9 @@ CREATE TABLE NextState (
     Accessed        DATETIME,
     DigestType      TEXT,
     DigestValue     TEXT,
-	Status          TEXT,
 	UploadState     TEXT,
-	FileHandle      TEXT
+	FileHandle      TEXT,
+	Status          TEXT
 );
 
 -- Table: Scan

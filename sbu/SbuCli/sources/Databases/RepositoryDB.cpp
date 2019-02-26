@@ -142,6 +142,8 @@ public:
 			UpdatedBackup("UpdatingRepository", retValue);
 			CopyBackupToRepository(retValue);
 
+			backupDB->Complete();
+
 			UpdatedBackup("Complete", retValue);
 
 		}
