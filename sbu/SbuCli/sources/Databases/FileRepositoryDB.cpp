@@ -27,8 +27,9 @@ public:
 		if (!query.executeStep())
 		{
 			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
-			SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Added, DigestType, DigestValue) VALUES (:path,:added,:digestType,:digestValue)");
+			SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
 			insertQuery.bind(":path", to_utf8(key));
+			insertQuery.bind(":size", (long long)boost::filesystem::file_size(file));
 			insertQuery.bind(":added", return_current_time_and_date());
 			insertQuery.bind(":digestType", digestType);
 			insertQuery.bind(":digestValue", key);

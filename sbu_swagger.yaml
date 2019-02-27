@@ -1,0 +1,227 @@
+swagger: '2.0'
+info:
+  description: This is a server for smart backup utility
+  version: 1.0.0
+  title: Smart Backup Utility
+  contact:
+    email: Shai@Roitman.info
+host: sbu.swagger.io
+basePath: /
+schemes:
+  - https
+  - http
+paths:
+  /backupDef:
+    get:
+      summary: Retrieves all defined backup defs
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: array
+            items: 
+              $ref: '#/definitions/BackupDef'
+    post:
+      summary: Create a new backup def
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: BackupDef object that needs to be added
+          required: true
+          schema:
+            $ref: '#/definitions/BackupDef'
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/BackupDef'
+        '405':
+          description: Invalid input
+  /backupDef/{id}:
+    get:
+      summary: Retrieve the backupDef
+      parameters: 
+        - in: path
+          name: id
+          type: string
+          required: true
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/FullBackupDefInfo'
+  /backupDef/{id}/backup:
+    post:
+      summary: Create a new backup
+      description: ''
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+        - in: body
+          name: body
+          description: Create a new Backup
+          required: true
+          schema:
+            $ref: '#/definitions/Backup'
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/Backup'
+        '405':
+          description: Invalid input
+  /backupDef/{id}/backup/{bid}:
+    get:
+      summary: Retrieve backup information
+      description: ''
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+        - in: path
+          name: bid
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/BackupInfo'
+        '405':
+          description: Invalid input
+  /backupDef/{id}/restore:
+    post:
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+        - in: body
+          name: body
+          description: Create a new Backup
+          required: true
+          schema:
+            $ref: '#/definitions/RestoreOptions'
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/Backup'
+        '405':
+          description: Invalid input
+definitions:
+  BackupDef:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      path:
+        type: string
+        format: path
+      added:
+        type: string
+        format: date-time
+      hostName:
+        type: string
+  Backup:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      backupDefId:
+        type: integer
+        format: int64
+      status:
+          type: string
+      started:
+        type: string
+        format: date-time
+      lastStatusUpdate:
+        type: string
+        format: date-time
+  FullBackupDefInfo:
+    type: object
+    properties:
+      def:
+        $ref: '#/definitions/BackupDef'
+      backups:
+        type: array
+        items: 
+          $ref: '#/definitions/Backup'
+  BackupInfo:
+    type: object
+    properties:
+      info:
+        $ref: '#/definitions/FullBackupDefInfo'
+      files:
+        type: array
+        items:
+          $ref: '#/definitions/File'
+  File:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      status:
+        type: string
+      type:
+        type: string
+      path:
+        type: string
+        format: path
+      size:
+        type: integer
+        format: int64
+      created:
+        type: string
+        format: date-time
+      modified:
+        type: string
+        format: date-time
+      accessed:
+        type: string
+        format: date-time
+      digestType:
+        type: string
+      digestValue:
+        type: string
+      fileHandle:
+        type: string
+  RestoreOptions:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      date:
+        type: string
+        format: date-time
+

@@ -11,6 +11,7 @@ CREATE TABLE Files (
     ID          INTEGER PRIMARY KEY AUTOINCREMENT,
     Path        TEXT,
 	Added       DATETIME,
+	Size		BIGINT,
     DigestType  TEXT,
     DigestValue TEXT
 );
