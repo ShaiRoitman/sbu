@@ -15,7 +15,6 @@ CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\InsertDirectory.sql Ins
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\InsertFile.sql InsertFile >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\MarkDeleted.sql MarkDeleted >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\RestoreQuery.sql RestoreQuery >> %FILENAME%
-CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findDiffQuery.sql findDiffQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findHashCalcQuery.sql findHashCalcQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findUploadQuery.sql findUploadQuery >> %FILENAME%
 CompileToCppVariable.exe C:\git\sbu\sbu\SbuCli\resources\findBackupInfo.sql findBackupInfo >> %FILENAME%

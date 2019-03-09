@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include "FileRepositoryDB.h"
+#include "BackupDB.h"
 #include "utils.h"
 
 class IRepositoryDB
@@ -101,6 +102,9 @@ public:
 	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
 
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
+
+	virtual void CopyCurrentStateIntoBackupDB(boost::filesystem::path backupDBPath, const BackupDef& backupDef) = 0;
+	virtual void CopyBackupDBStateIntoRepo(boost::filesystem::path backupDBPath, const BackupInfo& retValue) = 0;
 };
 
 std::shared_ptr<IRepositoryDB> CreateRepositorySQLiteDB(boost::filesystem::path dbPath);

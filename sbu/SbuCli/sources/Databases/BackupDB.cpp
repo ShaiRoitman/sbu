@@ -39,7 +39,6 @@ public:
 		insertQuery.exec();
 
 		this->AddDirectoryToScan(dir);
-		ContinueScan();
 
 		logger->DebugFormat("BackupDB::StartScan() dir:[%s] End", dir.string().c_str());
 	}

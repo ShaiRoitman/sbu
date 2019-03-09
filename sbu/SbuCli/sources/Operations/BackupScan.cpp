@@ -5,6 +5,7 @@
 #include "factories.h"
 #include "sbu_exceptions.h"
 #include "ExitCodes.h"
+#include "BackupDB.h"
 
 static auto logger = LoggerFactory::getLogger("Operations");
 
@@ -15,18 +16,28 @@ public:
 	{
 		int retValue = ExitCode_Success;
 
-		std::string name = vm["name"].as<std::string>();
+		std::string dbPath = vm["BackupDB.path"].as<std::string>();
 
-		logger->DebugFormat("Operation:[Backup] Name:[%s]", name.c_str());
+		logger->DebugFormat("Operation:[BackupScanOperation] dbPath:[%s]", dbPath.c_str());
 
-		auto RepoDB = getRepository(vm);
-		auto backupdef = RepoDB->GetBackupDef(name);
-		if (backupdef != nullptr)
+		bool doesExists = boost::filesystem::exists(dbPath);
+		auto backupDB = CreateSQLiteDB(dbPath);
+		if (doesExists == false)
 		{
-			auto backupInfo = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
+			std::string name = vm["name"].as<std::string>();
+			auto RepoDB = getRepository(vm);
+			auto backupdef = RepoDB->GetBackupDef(name);
+			if (backupdef != nullptr)
+			{
+				backupDB->StartScan(backupdef->rootPath);
+			}
+		}
+		else
+		{
+			backupDB->ContinueScan();
 		}
 
-		logger->DebugFormat("Operation:[Backup] Name:[%s] retValue:[%d]", name.c_str(), retValue);
+		logger->DebugFormat("Operation:[BackupScanOperation] dbPath:[%s] retValue:[%d]", dbPath.c_str(), retValue);
 		return retValue;
 	}
 };

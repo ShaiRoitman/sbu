@@ -128,8 +128,14 @@ public:
 		try {
 			retValue = CreateBackupInfo(backupParams, backupDef);
 
+			UpdatedBackup("Starting Backup", retValue);
+			boost::filesystem::remove("backupDB.db");
 			auto backupDB = getBackupDB();
-			CalculateCurrentStatus(backupDB, backupDef);
+
+			UpdatedBackup("Scanning FileSystem", retValue);
+			backupDB->StartScan(backupDef.rootPath);
+			backupDB->ContinueScan();
+			this->CopyCurrentStateIntoBackupDB("backupDB.db", backupDef);
 
 			UpdatedBackup("CalculatingDiff", retValue);
 			backupDB->StartDiffCalc();
@@ -140,10 +146,9 @@ public:
 			backupDB->ContinueUpload(fileRepDB);
 
 			UpdatedBackup("UpdatingRepository", retValue);
-			CopyBackupToRepository(retValue);
+			CopyBackupDBStateIntoRepo("backupDB.db", retValue);
 
 			backupDB->Complete();
-
 			UpdatedBackup("Complete", retValue);
 
 		}
@@ -272,10 +277,8 @@ private:
 		return retValue;
 	}
 
-	void CalculateCurrentStatus(std::shared_ptr<IBackupDB> backupDB, const BackupDef& backupDef)
+	void CopyCurrentStateIntoBackupDB(boost::filesystem::path backupDBPath, const BackupDef& backupDef) override
 	{
-		backupDB->StartScan(backupDef.rootPath);
-
 		SQLite::Statement attach(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
 		attach.exec();
 
@@ -287,7 +290,7 @@ private:
 		detach.exec();
 	}
 
-	void CopyBackupToRepository(const BackupInfo& retValue)
+	void CopyBackupDBStateIntoRepo(boost::filesystem::path backupDBPath, const BackupInfo& retValue) override
 	{
 		SQLite::Statement attach2(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
 		attach2.exec();
@@ -314,7 +317,6 @@ private:
 
 	std::shared_ptr<IBackupDB> getBackupDB()
 	{
-		boost::filesystem::remove("backupDB.db");
 		std::shared_ptr<IBackupDB> backupDB = CreateSQLiteDB("backupDB.db");
 
 		return backupDB;
