@@ -31,6 +31,7 @@ public:
 		return retValue;
 	}
 };
+
 std::shared_ptr<Operation> BackupFactory()
 {
 	return std::make_shared<BackupOperation>();

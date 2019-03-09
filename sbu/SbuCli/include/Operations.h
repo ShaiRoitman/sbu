@@ -14,3 +14,6 @@ std::shared_ptr<Operation> ListBackupsFactory();
 std::shared_ptr<Operation> RestoreFactory();
 std::shared_ptr<Operation> BackupFactory();
 std::shared_ptr<Operation> BackupInfoFactory();
+std::shared_ptr<Operation> BackupScanFactory();
+std::shared_ptr<Operation> BackupDiffCalcFactory();
+std::shared_ptr<Operation> BackupFileUploadFactory();
