@@ -13,7 +13,21 @@ class BackupScanOperation : public Operation
 public:
 	int Operate(boost::program_options::variables_map& vm)
 	{
-		return ExitCode_Success;
+		int retValue = ExitCode_Success;
+
+		std::string name = vm["name"].as<std::string>();
+
+		logger->DebugFormat("Operation:[Backup] Name:[%s]", name.c_str());
+
+		auto RepoDB = getRepository(vm);
+		auto backupdef = RepoDB->GetBackupDef(name);
+		if (backupdef != nullptr)
+		{
+			auto backupInfo = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
+		}
+
+		logger->DebugFormat("Operation:[Backup] Name:[%s] retValue:[%d]", name.c_str(), retValue);
+		return retValue;
 	}
 };
 

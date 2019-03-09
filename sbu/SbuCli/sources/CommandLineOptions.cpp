@@ -27,6 +27,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string filerepName;
 	std::string filerepPath;
 	std::string repPath;
+	std::string backupDBPath;
 	int byID;
 
 	desc.add_options()
@@ -45,6 +46,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
 		("Logging.Verbosity", value(&logging_verbosity), "Logging Verbosity - Default Info")
 		("Repository.path", value(&repPath), "RepositoryDB path")
+		("BackupDB.path", value(&backupDBPath), "The name of the Backup database to use")
 		("General.Workdir", value(&workdir), "working dir of the cmd")
 		;
 

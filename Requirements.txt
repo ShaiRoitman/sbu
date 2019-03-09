@@ -16,3 +16,7 @@ Commands
 --action Backup --name <name>
 --action Restore --name <name> --date <LATEST|DateTime> --ShowOnly 
 --action ListBackup --name <name>
+--action BackupInfo --byID <bid>
+--action BackupScan --name <name>
+--action BackupCalcDiff --name <name>
+--action BackupFileUpload --name <name>
