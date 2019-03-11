@@ -28,13 +28,15 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string filerepPath;
 	std::string repPath;
 	std::string backupDBPath;
+	std::string step;
 	int byID;
 
 	desc.add_options()
 		("help,h", "print usage message")
 		("version", "print version")
 		("config", value(&config_file), "Config file")
-		("action,a", value(&action), "Actions include : CreateBackupDef, ListBackupDef, Backup, Restore, ListBackup, BackupInfo, BackupScan, BackupDiffCalc, BackupFileUpload")
+		("action,a", value(&action), "Actions include : CreateBackupDef, ListBackupDef, Backup, Restore, ListBackup, BackupInfo")
+		("bstep,a", value(&step), "BackupStep : All, Init, Scan, DiffCalc, FileUpload, Complete")
 		("path,p", value(&path), "Path")
 		("name,n", value(&name), "Name")
 		("date,d", value(&date), "The last effective date - Defaults to now()")

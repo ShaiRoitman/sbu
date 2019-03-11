@@ -103,8 +103,10 @@ public:
 
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
 
+	virtual BackupInfo CreateBackupInfo(BackupDef& backupDef) = 0;
 	virtual void CopyCurrentStateIntoBackupDB(boost::filesystem::path backupDBPath, const BackupDef& backupDef) = 0;
-	virtual void CopyBackupDBStateIntoRepo(boost::filesystem::path backupDBPath, const BackupInfo& retValue) = 0;
+	virtual void CopyBackupDBStateIntoRepoAndComplete(boost::filesystem::path backupDBPath, BackupInfo& retValue) = 0;
+
 };
 
 std::shared_ptr<IRepositoryDB> CreateRepositorySQLiteDB(boost::filesystem::path dbPath);

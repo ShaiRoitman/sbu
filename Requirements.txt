@@ -17,6 +17,8 @@ Commands
 --action Restore --name <name> --date <LATEST|DateTime> --ShowOnly 
 --action ListBackup --name <name>
 --action BackupInfo --byID <bid>
---action BackupScan --name <name>
---action BackupCalcDiff --name <name>
---action BackupFileUpload --name <name>
+--action Backup --bstep Init --name <name>
+--action Backup --bstep Scan
+--action Backup --bstep DiffCalc
+--action Backup --bstep FileUpload
+--action Backup --bstep Complete

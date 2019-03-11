@@ -125,8 +125,9 @@ public:
 	{
 		BackupInfo retValue;
 		BackupDef backupDef;
+		backupDef.id = backupParams.backupDefId;
 		try {
-			retValue = CreateBackupInfo(backupParams, backupDef);
+			retValue = CreateBackupInfo(backupDef);
 
 			UpdatedBackup("Starting Backup", retValue);
 			boost::filesystem::remove("backupDB.db");
@@ -144,13 +145,10 @@ public:
 			UpdatedBackup("Uploading", retValue);
 			backupDB->StartUpload(fileRepDB);
 			backupDB->ContinueUpload(fileRepDB);
+			backupDB->Complete();
 
 			UpdatedBackup("UpdatingRepository", retValue);
-			CopyBackupDBStateIntoRepo("backupDB.db", retValue);
-
-			backupDB->Complete();
-			UpdatedBackup("Complete", retValue);
-
+			CopyBackupDBStateIntoRepoAndComplete("backupDB.db", retValue);
 		}
 		catch (std::exception ex)
 		{
@@ -248,12 +246,11 @@ public:
 		return retValue;
 	}
 
-private:
-	BackupInfo CreateBackupInfo(const BackupParameters& backupParams, BackupDef& backupDef)
+	virtual BackupInfo CreateBackupInfo(BackupDef& backupDef) override
 	{
 		BackupInfo retValue;
 
-		retValue.backupDefId = backupParams.backupDefId;
+		retValue.backupDefId = backupDef.id;
 		retValue.started = std::chrono::system_clock::now();
 		retValue.status = "Started";
 
@@ -290,7 +287,8 @@ private:
 		detach.exec();
 	}
 
-	void CopyBackupDBStateIntoRepo(boost::filesystem::path backupDBPath, const BackupInfo& retValue) override
+private:
+	void CopyBackupDBStateIntoRepoAndComplete(boost::filesystem::path backupDBPath, BackupInfo& retValue) override
 	{
 		SQLite::Statement attach2(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
 		attach2.exec();
@@ -301,6 +299,9 @@ private:
 
 		SQLite::Statement detach2(*db, "DETACH DATABASE BackupDB");
 		detach2.exec();
+
+		UpdatedBackup("Complete", retValue);
+
 	}
 
 	void UpdatedBackup(const std::string& Status, BackupInfo& retValue)
