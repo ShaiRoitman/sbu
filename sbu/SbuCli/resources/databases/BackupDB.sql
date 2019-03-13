@@ -15,7 +15,11 @@ CREATE TABLE ExecutionLog (
 CREATE TABLE GeneralInfo (
 	RootPath		TEXT,
 	Created			DATETIME,
-	LastAction      TEXT
+	LastAction      TEXT,
+	ScanComplete    DATETIME,
+	DiffComplete    DATETIME,
+	FileUploadComplete DATETIME,
+	FinalizationComplete DATETIME
 );
 
 

@@ -13,7 +13,16 @@ public:
 	BackupDB(path dbPath)
 	{
 		logger->DebugFormat("BackupDB::BackupDB() dbpath:[%s]", dbPath.string().c_str());
+		bool exists = boost::filesystem::exists(dbPath);
 		this->db = getOrCreateDb(dbPath, Text_Resource::BackupDB);
+		if (exists) 
+		{
+			SQLite::Statement infoQuery(*db, "SELECT RootPath FROM GeneralInfo");
+			if (infoQuery.executeStep())
+			{
+				this->root = from_utf8(infoQuery.getColumn("RootPath").getString());
+			}
+		}
 
 	}
 
@@ -45,6 +54,13 @@ public:
 
 	virtual void ContinueScan() override
 	{
+		SQLite::Statement shouldRunStage(*db, "SELECT FileUploadComplete FROM GeneralInfo WHERE ScanComplete IS NOT NULL");
+		if (shouldRunStage.executeStep())
+		{
+			logger->DebugFormat("BackupDB::ContinueUpload() Already done");
+			return;
+		}
+
 		this->UpdateAction("ContinueScan");
 		logger->DebugFormat("BackupDB::ContinueScan() Start");
 		AddToExecutionLog("Continue Scan", "");
@@ -57,6 +73,10 @@ public:
 			HandleDirectory(id, currentPath);
 			query.reset();
 		}
+
+		SQLite::Statement completeStage(*db, "UPDATE GeneralInfo Set ScanComplete=:date");
+		completeStage.bind(":date", return_current_time_and_date());
+		completeStage.exec();
 
 		logger->DebugFormat("BackupDB::ContinueScan() End");
 		AddToExecutionLog("End of Scan", "");
@@ -85,40 +105,61 @@ public:
 		catch (std::exception ex)
 		{
 			logger->ErrorFormat("BackupDB::StartDiffCalc() failed exception:[%s]", ex.what());
+			throw;
 		}
 	}
 
 	virtual void ContinueDiffCalc() override
 	{
-		this->UpdateAction("ContinueDiffCalc");
-		SQLite::Statement calcDigestQuery(*db, Text_Resource::findHashCalcQuery);
-		while (calcDigestQuery.executeStep())
+		SQLite::Statement shouldRunStage(*db, "SELECT FileUploadComplete FROM GeneralInfo WHERE DiffComplete IS NOT NULL");
+		if (shouldRunStage.executeStep())
 		{
-			auto filePath = from_utf8(calcDigestQuery.getColumn("Path").getString());
-
-			auto fullPath = root / boost::filesystem::path(filePath);
-			auto startDigest = std::chrono::system_clock::now();
-			auto digest = calcHash(fullPath);
-			auto endDigest = std::chrono::system_clock::now();
-
-			SQLite::Statement updateDigest(*db, "Update Entries SET StartDigestCalc=:startDigest, EndDigestCalc=:endDigest, DigestType=:digestType, DigestValue=:digestValue WHERE Path=:path");
-			updateDigest.bind(":startDigest", get_string_from_time_point(startDigest));
-			updateDigest.bind(":endDigest", get_string_from_time_point(endDigest));
-			updateDigest.bind(":digestType", "SHA1");
-			updateDigest.bind(":digestValue", digest);
-			updateDigest.bind(":path", to_utf8(filePath));
-			updateDigest.exec();
-
-			logger->DebugFormat("BackupDB::ContinueDiffCalc() path:[%s] digestType:[SHA1] digestValue:[%s]",
-				to_utf8(filePath).c_str(),
-				digest.c_str());
+			logger->DebugFormat("BackupDB::ContinueUpload() Already done");
+			return;
 		}
 
-		SQLite::Statement addMissing(*db, Text_Resource::AddMissing);
-		addMissing.exec();
+		try {
+			this->UpdateAction("ContinueDiffCalc");
+			SQLite::Statement calcDigestQuery(*db, Text_Resource::findHashCalcQuery);
+			while (calcDigestQuery.executeStep())
+			{
+				auto filePath = from_utf8(calcDigestQuery.getColumn("Path").getString());
 
-		SQLite::Statement addUpdated(*db, Text_Resource::AddUpdated);
-		addUpdated.exec();
+				auto fullPath = root / boost::filesystem::path(filePath);
+				auto startDigest = std::chrono::system_clock::now();
+				auto digest = calcHash(fullPath);
+				auto endDigest = std::chrono::system_clock::now();
+
+				SQLite::Statement updateDigest(*db, "Update Entries SET StartDigestCalc=:startDigest, EndDigestCalc=:endDigest, DigestType=:digestType, DigestValue=:digestValue WHERE Path=:path");
+				updateDigest.bind(":startDigest", get_string_from_time_point(startDigest));
+				updateDigest.bind(":endDigest", get_string_from_time_point(endDigest));
+				updateDigest.bind(":digestType", "SHA1");
+				updateDigest.bind(":digestValue", digest);
+				updateDigest.bind(":path", to_utf8(filePath));
+				updateDigest.exec();
+
+				logger->DebugFormat("BackupDB::ContinueDiffCalc() path:[%s] digestType:[SHA1] digestValue:[%s]",
+					to_utf8(filePath).c_str(),
+					digest.c_str());
+			}
+
+			SQLite::Statement addMissing(*db, Text_Resource::AddMissing);
+			addMissing.exec();
+
+			SQLite::Statement addUpdated(*db, Text_Resource::AddUpdated);
+			addUpdated.exec();
+
+			SQLite::Statement completeStage(*db, "UPDATE GeneralInfo Set DiffComplete=:date");
+			completeStage.bind(":date", return_current_time_and_date());
+			completeStage.exec();
+
+		}
+		catch (std::exception ex)
+		{
+			logger->ErrorFormat("BackupDB::ContinueDiffCalc() Error with exception:[%s]", ex.what());
+			throw;
+		}
+
 	}
 
 	virtual bool IsDiffCalcDone() override
@@ -133,6 +174,13 @@ public:
 
 	virtual void ContinueUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
+		SQLite::Statement shouldRunStage(*db, "SELECT FileUploadComplete FROM GeneralInfo WHERE FileUploadComplete IS NOT NULL");
+		if (shouldRunStage.executeStep())
+		{
+			logger->DebugFormat("BackupDB::ContinueUpload() Already done");
+			return;
+		}
+
 		this->UpdateAction("ContinueUpload");
 		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
 		while (uploadQuery.executeStep())
@@ -161,6 +209,10 @@ public:
 			updateCurrent.bind(":path", to_utf8(filePath));
 			updateCurrent.exec();
 
+			SQLite::Statement completeStage(*db, "UPDATE GeneralInfo Set FileUploadComplete=:date");
+			completeStage.bind(":date", return_current_time_and_date());
+			completeStage.exec();
+
 			transaction.commit();
 		}
 	}
@@ -176,6 +228,10 @@ public:
 
 	virtual void Complete() override
 	{
+		SQLite::Statement completeStage(*db, "UPDATE GeneralInfo Set FinalizationComplete=:date");
+		completeStage.bind(":date", return_current_time_and_date());
+		completeStage.exec();
+
 		this->UpdateAction("Complete");
 	}
 

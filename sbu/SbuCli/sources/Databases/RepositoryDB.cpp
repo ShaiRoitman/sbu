@@ -276,7 +276,8 @@ public:
 
 	void CopyCurrentStateIntoBackupDB(boost::filesystem::path backupDBPath, const BackupDef& backupDef) override
 	{
-		SQLite::Statement attach(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
+		SQLite::Statement attach(*db, "ATTACH DATABASE :backupDB AS BackupDB");
+		attach.bind(":backupDB", backupDBPath.string().c_str());
 		attach.exec();
 
 		SQLite::Statement currentStateQuery(*db, Text_Resource::CurrentState);
@@ -290,15 +291,16 @@ public:
 private:
 	void CopyBackupDBStateIntoRepoAndComplete(boost::filesystem::path backupDBPath, BackupInfo& retValue) override
 	{
-		SQLite::Statement attach2(*db, "ATTACH DATABASE 'backupDB.db' AS BackupDB");
-		attach2.exec();
+		SQLite::Statement attach(*db, "ATTACH DATABASE :backupDB AS BackupDB");
+		attach.bind(":backupDB", backupDBPath.string().c_str());
+		attach.exec();
 
 		SQLite::Statement copyBackupStateQuery(*db, Text_Resource::CopyBackupState);
 		copyBackupStateQuery.bind(":backupID", retValue.id);
 		copyBackupStateQuery.exec();
 
-		SQLite::Statement detach2(*db, "DETACH DATABASE BackupDB");
-		detach2.exec();
+		SQLite::Statement detach(*db, "DETACH DATABASE BackupDB");
+		detach.exec();
 
 		UpdatedBackup("Complete", retValue);
 
