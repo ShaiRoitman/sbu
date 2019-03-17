@@ -2,6 +2,15 @@
 #include "SQLiteCpp/SQLiteCpp.h"
 #include "utils.h"
 
+#include "Poco/Crypto/Cipher.h"
+#include "Poco/Crypto/CipherFactory.h"
+#include "Poco/Crypto/CipherKey.h"
+#include "Poco/FileStream.h"
+#include "Poco/Crypto/CryptoStream.h"
+#include "Poco/StreamCopier.h"
+using namespace Poco::Crypto;
+
+
 using namespace boost::filesystem;
 using namespace SQLite;
 
@@ -79,9 +88,67 @@ public:
 		
 		return retValue;
 	}
+
+	virtual void Complete() override
+	{
+	}
+
 private:
 	std::shared_ptr<SQLite::Database> db;
 	path dataRootPath;
+};
+
+void PocoEncryptFile(boost::filesystem::path source, boost::filesystem::path dest, Cipher* pCipher)
+{
+	Poco::FileOutputStream sink(dest.string());
+	CryptoOutputStream encryptor(sink, pCipher->createEncryptor());
+
+	Poco::FileInputStream fileSource(source.string());
+	Poco::StreamCopier::copyStream(fileSource, encryptor);
+
+	// Always close output streams to flush all internal buffers
+	encryptor.close();
+	sink.close();
+}
+
+void PocoDecryptFile(boost::filesystem::path source, boost::filesystem::path dest, Cipher* pCipher)
+{
+	Poco::FileOutputStream sink(dest.string());
+	CryptoOutputStream decryptor(sink, pCipher->createDecryptor());
+
+	Poco::FileInputStream fileSource(source.string());
+	Poco::StreamCopier::copyStream(fileSource, decryptor);
+
+	// Always close output streams to flush all internal buffers
+	decryptor.close();
+	sink.close();
+}
+
+
+class SecureFileRepositoryDB : public FileRepositoryDB
+{
+public:
+	SecureFileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath) : FileRepositoryDB(dbPath, dataRootPath)
+	{
+	}
+	
+	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
+	{
+		CipherFactory& factory = CipherFactory::defaultFactory();
+		// Creates a 256-bit AES cipher
+		Cipher* pCipher = factory.createCipher(CipherKey("aes-256","Shai"));
+
+		std::string secureFile;
+		PocoEncryptFile(file, secureFile, pCipher);
+		std::string secureDigest = pCipher->encryptString(digest);
+		std::string secureDigestType = "Secure_" + digestType;
+		return FileRepositoryDB::AddFile(secureFile, secureDigestType, secureDigest);
+	}
+
+	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override
+	{
+		return FileRepositoryDB::GetFile(handle, outFilePath);
+	}
 };
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)

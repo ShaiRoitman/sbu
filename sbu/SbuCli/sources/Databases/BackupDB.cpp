@@ -215,6 +215,8 @@ public:
 
 			transaction.commit();
 		}
+
+		fileDB->Complete();
 	}
 
 	virtual bool IsUploadDone() override
