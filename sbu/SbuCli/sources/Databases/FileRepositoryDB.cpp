@@ -26,14 +26,35 @@ public:
 		logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(dataRootPath).c_str());
 	}
 
+	virtual bool HasFile(const std::string& handle) override
+	{
+		return this->HasFile(handle, nullptr);
+	}
+
+	virtual bool HasFile(const std::string& handle, boost::filesystem::path* path)
+	{
+		std::string key = handle;
+		SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
+		query.bind(":key", key);
+		bool retValue = false;
+		if (query.executeStep())
+		{
+			if (path != nullptr)
+			{
+				*path = this->dataRootPath / from_utf8(query.getColumn("Path").getString());
+			}
+			retValue = true;
+		}
+
+		return retValue;
+	}
+
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
 	{
 		logger->DebugFormat("FileRepositoryDB::AddFile() path:[%s] digestType:[%s] digest:[%s]", file.string().c_str(), digestType.c_str(), digest.c_str());
 
 		std::string key = digest;
-		SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
-		query.bind(":key", key);
-		if (!query.executeStep())
+		if (this->HasFile(digest))
 		{
 			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
 			SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
@@ -65,12 +86,15 @@ public:
 			handle.c_str(),
 			outFilePath.string().c_str());
 
+		std::string key = handle;
+		boost::filesystem::path srcPath;
+
+
 		SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
 		query.bind(":key", handle);
 		bool retValue = false;
-		if (query.executeStep())
+		if (this->HasFile(key, &srcPath))
 		{
-			path srcPath = this->dataRootPath / from_utf8(query.getColumn("Path").getString());
 			boost::filesystem::create_directories(outFilePath.branch_path());
 			if (copy_file_logged(srcPath, outFilePath) == false)
 			{
@@ -128,16 +152,15 @@ void PocoDecryptFile(boost::filesystem::path source, boost::filesystem::path des
 class SecureFileRepositoryDB : public FileRepositoryDB
 {
 public:
-	SecureFileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath) : FileRepositoryDB(dbPath, dataRootPath)
+	SecureFileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password) 
+		: FileRepositoryDB(dbPath, dataRootPath)
 	{
+		CipherFactory& factory = CipherFactory::defaultFactory();
+		Cipher* pCipher = factory.createCipher(CipherKey("aes-256", password, "SecureFileRepositoryDB"));
 	}
 	
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
 	{
-		CipherFactory& factory = CipherFactory::defaultFactory();
-		// Creates a 256-bit AES cipher
-		Cipher* pCipher = factory.createCipher(CipherKey("aes-256","Shai"));
-
 		std::string secureFile;
 		PocoEncryptFile(file, secureFile, pCipher);
 		std::string secureDigest = pCipher->encryptString(digest);
@@ -147,12 +170,30 @@ public:
 
 	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override
 	{
-		return FileRepositoryDB::GetFile(handle, outFilePath);
+		boost::filesystem::path srcPath;
+		bool retValue = false;
+		if (this->HasFile(handle, &srcPath))
+		{
+			boost::filesystem::create_directories(outFilePath.branch_path());
+			PocoDecryptFile(srcPath, outFilePath, pCipher);
+			retValue = true;
+		}
+
+		return retValue;
 	}
+
+private:
+	Cipher* pCipher;
 };
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 {
 	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
 	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath);
+}
+
+std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password)
+{
+	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
+	return std::make_shared<SecureFileRepositoryDB>(dbPath, dataRootPath, password);
 }

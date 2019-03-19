@@ -2,9 +2,19 @@
 
 std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::variables_map& vm)
 {
+	std::shared_ptr<IFileRepositoryDB> fileRepDB;
 	boost::filesystem::path repoPath = vm["FileRepository.path"].as<std::string>();
 	boost::filesystem::path dbPath = vm["FileRepository.name"].as<std::string>();
-	std::shared_ptr<IFileRepositoryDB> fileRepDB = CreateFileRepositorySQLiteDB(dbPath, repoPath);
+
+	if (!vm["FileRepository.password"].empty())
+	{
+		fileRepDB = CreateSecureFileRepositorySQLiteDB(dbPath, repoPath, vm["FileRepository.password"].as<std::string>());
+	}
+	else
+	{
+		fileRepDB = CreateFileRepositorySQLiteDB(dbPath, repoPath);
+	}
+	
 	return fileRepDB;
 }
 

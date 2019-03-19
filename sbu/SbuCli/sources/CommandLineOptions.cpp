@@ -29,7 +29,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string repPath;
 	std::string backupDBPath;
 	std::string step;
-	std::string filerepType;
+	std::string filerepPassword;
 	int byID;
 
 	desc.add_options()
@@ -43,7 +43,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("date,d", value(&date), "The last effective date - Defaults to now()")
 		("byID", value(&byID), "Select By ID")
 		("showOnly", "In restore show only the files to be restored")
-		("FileRepository.type", value (&filerepType)->default_value("LocalDisk"), "Types: LocalDisk, SecureLocalDisk")
+		("FileRepository.password", value (&filerepPassword), "If exists uses this password in a SecureFileRepository")
 		("FileRepository.name", value(&filerepName)->default_value("FileRepository.db"), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
 		("Logging.Console", value(&logging)->default_value("False"), "true/false - Enable logs to console")
