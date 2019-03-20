@@ -48,6 +48,35 @@ CREATE TABLE Files (
     Status		TEXT
 );
 
+CREATE VIEW LatestFiles AS
+    SELECT Files.Path,
+           Files.Size,
+           Files.Type,
+           Files.Created,
+           Files.Modified,
+           Files.Accessed,
+           Files.Status,
+           Files.FileHandle,
+           backupDefID,
+           Started,
+           backupID
+      FROM (
+               SELECT MAX(Files.ID) AS FILEID,
+                      BackupDefs.ID AS backupDefID,
+                      Backups.Started AS Started,
+                      Backups.ID AS backupID
+                 FROM Files
+                      JOIN
+                      Backups ON Files.BackupID = Backups.ID
+                      JOIN
+                      BackupDefs ON BackupDefID = BackupDefs.ID
+                WHERE Backups.Status = 'Complete'
+                GROUP BY Files.Path
+           )
+           Latest
+           JOIN
+           Files ON Latest.FILEID = Files.ID;
+
 
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
