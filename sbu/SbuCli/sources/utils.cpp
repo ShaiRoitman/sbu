@@ -117,6 +117,7 @@ void bin2hex(unsigned char * src, int len, char * hex)
 		sprintf(&hex[j], "%02x", src[i]);
 }
 
+
 bool copy_file_logged(boost::filesystem::path srcPath, boost::filesystem::path outFilePath)
 {
 	bool retValue = false;
@@ -148,6 +149,21 @@ std::string calcHash(boost::filesystem::path path)
 	bin2hex(sha1p, sizeof(sha1p), digest);
 	return digest;
 }
+
+std::string calcHash(const std::string& str)
+{
+	unsigned char sha1p[SHA_DIGEST_LENGTH];
+	char digest[256];
+	memset(digest, 0, sizeof(digest));
+	SHA_CTX ctxt;
+	SHA1_Init(&ctxt);
+	SHA1_Update(&ctxt, str.c_str(), str.length());
+	SHA1_Final(sha1p, &ctxt);
+
+	bin2hex(sha1p, sizeof(sha1p), digest);
+	return digest;
+}
+
 
 std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
 {

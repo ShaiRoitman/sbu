@@ -54,7 +54,7 @@ public:
 		logger->DebugFormat("FileRepositoryDB::AddFile() path:[%s] digestType:[%s] digest:[%s]", file.string().c_str(), digestType.c_str(), digest.c_str());
 
 		std::string key = digest;
-		if (this->HasFile(digest))
+		if (!this->HasFile(digest))
 		{
 			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
 			SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
@@ -156,16 +156,20 @@ public:
 		: FileRepositoryDB(dbPath, dataRootPath)
 	{
 		CipherFactory& factory = CipherFactory::defaultFactory();
-		Cipher* pCipher = factory.createCipher(CipherKey("aes-256", password, "SecureFileRepositoryDB"));
+		pCipher = factory.createCipher(CipherKey("aes-256-cbc", password, "SecureFileRepositoryDB"));
 	}
 	
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
 	{
-		std::string secureFile;
+		std::string secureFile = boost::filesystem::unique_path().string();
 		PocoEncryptFile(file, secureFile, pCipher);
-		std::string secureDigest = pCipher->encryptString(digest);
+		std::string secureDigest = calcHash(digest);
 		std::string secureDigestType = "Secure_" + digestType;
-		return FileRepositoryDB::AddFile(secureFile, secureDigestType, secureDigest);
+		
+		auto retValue = FileRepositoryDB::AddFile(secureFile, secureDigestType, secureDigest);
+
+		boost::filesystem::remove(secureFile);
+		return retValue;
 	}
 
 	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override
