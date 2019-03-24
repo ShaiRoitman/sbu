@@ -31,6 +31,8 @@ public:
 		SQLite::Statement updateQuery(*db, "Update GeneralInfo Set LastAction=:action");
 		updateQuery.bind(":action", action);
 		updateQuery.exec();
+
+		logger->DebugFormat("BackupDB::UpdateAction() Updating with action[%s]", action.c_str());
 	}
 
 	virtual void StartScan(path dir) override
@@ -159,7 +161,6 @@ public:
 			logger->ErrorFormat("BackupDB::ContinueDiffCalc() Error with exception:[%s]", ex.what());
 			throw;
 		}
-
 	}
 
 	virtual bool IsDiffCalcDone() override
@@ -310,6 +311,7 @@ protected:
 
 	void ScanDirectory(path dir)
 	{
+		logger->DebugFormat("BackupDB::ScanDirectory() path:[%s]", dir.string().c_str());
 		try {
 			directory_iterator it{ dir };
 			while (it != directory_iterator())
@@ -343,6 +345,7 @@ protected:
 
 	void HandleDirectory(Integer id, path dir)
 	{
+		logger->DebugFormat("BackupDB::HandleDirectory() Id:[%ld] Path:[%s]", id, dir.string().c_str());
 		Transaction transaction(*db);
 
 		UpdatedStarted(id);
