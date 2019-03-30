@@ -1,15 +1,19 @@
 #include "Loggers.h"
-#include "boost/log/utility/setup/console.hpp"
-#include "boost/log/utility/setup/file.hpp"
-#include "boost/log/sources/severity_channel_logger.hpp"
-#include <boost/log/sources/severity_feature.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/attributes.hpp>
+#include "stdarg.h"
+
+#include "Poco/ConsoleChannel.h"
+#include "Poco/SplitterChannel.h"
+#include "Poco/FormattingChannel.h"
+#include "Poco/PatternFormatter.h"
+#include "Poco/FileChannel.h"
+#include "Poco/AutoPtr.h"
+#include "Poco/Logger.h"
+
+const int bufferSize = 64 * 1024;
 
 void ILogger::TraceFormat(const char* format, ...)
 {
-	char buffer[64 * 1024];
+	char buffer[bufferSize];
 	va_list arglist;
 	va_start(arglist, format);
 	vsprintf(buffer, format, arglist);
@@ -19,7 +23,7 @@ void ILogger::TraceFormat(const char* format, ...)
 
 void ILogger::DebugFormat(const char* format, ...)
 {
-	char buffer[64 * 1024];
+	char buffer[bufferSize];
 	va_list arglist;
 	va_start(arglist, format);
 	vsprintf(buffer, format, arglist);
@@ -28,7 +32,7 @@ void ILogger::DebugFormat(const char* format, ...)
 }
 void ILogger::InfoFormat(const char* format, ...)
 {
-	char buffer[64 * 1024];
+	char buffer[bufferSize];
 	va_list arglist;
 	va_start(arglist, format);
 	vsprintf(buffer, format, arglist);
@@ -38,7 +42,7 @@ void ILogger::InfoFormat(const char* format, ...)
 
 void ILogger::WarningFormat(const char* format, ...)
 {
-	char buffer[64 * 1024];
+	char buffer[bufferSize];
 	va_list arglist;
 	va_start(arglist, format);
 	vsprintf(buffer, format, arglist);
@@ -49,7 +53,7 @@ void ILogger::WarningFormat(const char* format, ...)
 
 void ILogger::ErrorFormat(const char* format, ...)
 {
-	char buffer[64 * 1024];
+	char buffer[bufferSize];
 	va_list arglist;
 	va_start(arglist, format);
 	vsprintf(buffer, format, arglist);
@@ -59,7 +63,7 @@ void ILogger::ErrorFormat(const char* format, ...)
 
 void ILogger::FatalFormat(const char* format, ...)
 {
-	char buffer[64 * 1024];
+	char buffer[bufferSize];
 	va_list arglist;
 	va_start(arglist, format);
 	vsprintf(buffer, format, arglist);
@@ -67,71 +71,73 @@ void ILogger::FatalFormat(const char* format, ...)
 	this->Fatal(buffer);
 }
 
-
 class Logger : public ILogger
 {
 public:
-	Logger(const char* component)
-		: m_Logger(boost::log::keywords::channel = (component))
+	Logger(const char* component) :
+		m_Logger(Poco::Logger::get(component))
 	{
 	}
 
 	virtual void Trace(const char * str) override
 	{
-		BOOST_LOG_SEV(m_Logger, boost::log::trivial::trace) << str;
+		m_Logger.trace(str);
 	}
 
 	virtual void Debug(const char * str) override
 	{
-		BOOST_LOG_SEV(m_Logger, boost::log::trivial::debug) << str;
+		m_Logger.debug(str);
 	}
 
 	virtual void Info(const char * str) override
 	{
-		BOOST_LOG_SEV(m_Logger, boost::log::trivial::info) << str;
+		m_Logger.information(str);
 	}
 
 	virtual void Warning(const char * str) override
 	{
-		BOOST_LOG_SEV(m_Logger, boost::log::trivial::warning) << str;
+		m_Logger.warning(str);
 	}
 
 	virtual void Error(const char * str) override
 	{
-		BOOST_LOG_SEV(m_Logger, boost::log::trivial::error) << str;
+		m_Logger.error(str);
 	}
 
 	virtual void Fatal(const char * str) override
 	{
-		BOOST_LOG_SEV(m_Logger, boost::log::trivial::fatal) << str;
+		m_Logger.fatal(str);
+
 	}
 protected:
-	boost::log::sources::severity_channel_logger_mt<boost::log::trivial::severity_level> m_Logger;
+	Poco::Logger& m_Logger;
 };
 
 void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 {
+	Poco::AutoPtr<Poco::SplitterChannel> sChannel(new Poco::SplitterChannel());
+	Poco::Logger::root().setChannel(sChannel);
+	Poco::AutoPtr<Poco::PatternFormatter> pPF(new Poco::PatternFormatter());	pPF->setProperty("pattern", "%Y-%m-%d %H:%M:%S [%P:%I] [%s]:[%p]: %t");	Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pPF, sChannel));
 	std::string logFormat = "[%TimeStamp%]: [%Severity%] [%Message%]";
-
-	boost::log::core::get()->set_logging_enabled(false);
-	boost::log::core::get()->add_global_attribute("TimeStamp", boost::log::attributes::local_clock());
 
 	if (!vm["Logging.Console"].empty())
 	{
 		auto value = vm["Logging.Console"].as<std::string>();
 		if (vm["Logging.Console"].as<std::string>() == "true")
 		{
-			boost::log::add_console_log(std::cout, boost::log::keywords::format = logFormat);
-			boost::log::core::get()->set_logging_enabled(true);
+			Poco::AutoPtr<Poco::ConsoleChannel> cChannel;
+			sChannel->addChannel(cChannel);
 		}
 	}
+
 	if (!vm["Logging.FileOutput"].empty())
 	{
 		auto fileName = vm["Logging.FileOutput"].as<std::string>();
 		if (fileName != "")
 		{
-			boost::log::add_file_log(fileName, boost::log::keywords::format = logFormat);
-			boost::log::core::get()->set_logging_enabled(true);
+			Poco::AutoPtr<Poco::FileChannel> pChannel(new Poco::FileChannel);
+			pChannel->setProperty("path", fileName);
+			sChannel->addChannel(pChannel);
 		}
 	}
 }
