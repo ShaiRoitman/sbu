@@ -5,12 +5,11 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
-static auto logger = LoggerFactory::getLogger("application.BackupDB");
-
 class BackupDB : public IBackupDB
 {
 public:
-	BackupDB(path dbPath)
+	BackupDB(path dbPath) : 
+		logger(LoggerFactory::getLogger("application.BackupDB"))
 	{
 		logger->DebugFormat("BackupDB::BackupDB() dbpath:[%s]", dbPath.string().c_str());
 		bool exists = boost::filesystem::exists(dbPath);
@@ -382,11 +381,13 @@ protected:
 	}
 private:
 	std::shared_ptr<SQLite::Database> db;
+	std::shared_ptr<ILogger> logger;
 	path root;
 };
 
 std::shared_ptr<IBackupDB> CreateSQLiteDB(boost::filesystem::path dbPath)
 {
+	static auto logger = LoggerFactory::getLogger("application.BackupDB");
 	logger->DebugFormat("Creating BackupDB dbPath:[%s]", dbPath.string().c_str());
 	return std::make_shared<BackupDB>(dbPath);
 }

@@ -1,4 +1,5 @@
 #include "FileRepositoryDB.h"
+#include "Loggers.h"
 #include "SQLiteCpp/SQLiteCpp.h"
 
 class FileRepositoryDB : public IFileRepositoryDB
@@ -12,5 +13,6 @@ public:
 	virtual void Complete() override;
 private:
 	std::shared_ptr<SQLite::Database> db;
+	std::shared_ptr<ILogger> logger;
 	boost::filesystem::path dataRootPath;
 };

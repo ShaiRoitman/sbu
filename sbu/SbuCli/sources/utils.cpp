@@ -8,10 +8,9 @@
 #include "boost/asio/ip/host_name.hpp"
 #include "openssl/sha.h"
 
-static auto logger = LoggerFactory::getLogger("application.Utils");
-
 std::string getHostName()
 {
+	static auto logger = LoggerFactory::getLogger("application.Utils");
 	std::string retValue = boost::asio::ip::host_name();
 
 	logger->DebugFormat("getHostName() retValue:[%s]", retValue.c_str());
@@ -120,6 +119,8 @@ void bin2hex(unsigned char * src, int len, char * hex)
 
 bool copy_file_logged(boost::filesystem::path srcPath, boost::filesystem::path outFilePath)
 {
+	static auto logger = LoggerFactory::getLogger("application.Utils");
+
 	bool retValue = false;
 	try
 	{
@@ -167,6 +168,8 @@ std::string calcHash(const std::string& str)
 
 std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
 {
+	static auto logger = LoggerFactory::getLogger("application.Utils");
+
 	std::shared_ptr<SQLite::Database> db = nullptr;
 	bool dbexists = false;
 	try

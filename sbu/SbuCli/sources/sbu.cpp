@@ -9,8 +9,6 @@
 #include "Operations.h"
 #include "ExitCodes.h"
 
-static auto logger = LoggerFactory::getLogger("application");
-
 int main(int argc, const char* argv[])
 {
 	std::map<std::string, Operation::Factory> operations;
@@ -24,6 +22,8 @@ int main(int argc, const char* argv[])
 	CommandLineAndOptions options;
 	int retValue = options.ParseOptions(argc, argv);
 	LoggerFactory::InitLogger(options.vm);
+	static auto logger = LoggerFactory::getLogger("application");
+
 	logger->Info("Application Started");
 
 	if (!options.vm["General.Workdir]"].empty())

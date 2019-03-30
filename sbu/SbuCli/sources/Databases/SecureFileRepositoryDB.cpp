@@ -14,8 +14,6 @@ using namespace Poco::Crypto;
 using namespace boost::filesystem;
 using namespace SQLite;
 
-static auto logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
-
 static void PocoTransform(boost::filesystem::path source, boost::filesystem::path dest, Poco::Crypto::CryptoTransform* transform)
 {
 	Poco::FileOutputStream sink(dest.string());
@@ -83,6 +81,7 @@ private:
 
 std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password)
 {
+	static auto logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
 	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
 	return std::make_shared<SecureFileRepositoryDB>(dbPath, dataRootPath, password);
 }

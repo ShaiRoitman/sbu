@@ -7,9 +7,8 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
-static auto logger = LoggerFactory::getLogger("application.FileRepositoryDB");
-
-FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
+FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath) : 
+	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
 {
 	this->dataRootPath = dataRootPath;
 	this->db = getOrCreateDb(dbPath, Text_Resource::FileRepository);
@@ -109,6 +108,8 @@ void FileRepositoryDB::Complete()
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 {
+	static auto logger = LoggerFactory::getLogger("application.FileRepositoryDB");
+
 	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
 	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath);
 }

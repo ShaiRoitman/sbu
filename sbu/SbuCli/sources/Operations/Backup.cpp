@@ -6,11 +6,10 @@
 #include "sbu_exceptions.h"
 #include "ExitCodes.h"
 
-static auto logger = LoggerFactory::getLogger("Operations");
-
 class BackupOperation : public Operation
 {
 public:
+	BackupOperation() : logger(LoggerFactory::getLogger("Operations")) {}
 	int Init(boost::program_options::variables_map& vm)
 	{
 		int retValue = ExitCode_Success;
@@ -197,6 +196,9 @@ public:
 		logger->DebugFormat("Operation:[Backup] Step [%s] retValue:[%d]", step.c_str(), retValue);
 		return retValue;
 	}
+
+private:
+	std::shared_ptr<ILogger> logger;
 };
 
 std::shared_ptr<Operation> BackupFactory()

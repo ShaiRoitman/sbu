@@ -2,6 +2,7 @@
 #include "stdarg.h"
 
 #include "Poco/ConsoleChannel.h"
+#include "Poco/StreamChannel.h"
 #include "Poco/SplitterChannel.h"
 #include "Poco/FormattingChannel.h"
 #include "Poco/PatternFormatter.h"
@@ -116,7 +117,6 @@ protected:
 void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 {
 	Poco::AutoPtr<Poco::SplitterChannel> sChannel(new Poco::SplitterChannel());
-	Poco::Logger::root().setChannel(sChannel);
 	Poco::AutoPtr<Poco::PatternFormatter> pPF(new Poco::PatternFormatter());	pPF->setProperty("pattern", "%Y-%m-%d %H:%M:%S [%P:%I] [%s]:[%p]: %t");	Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pPF, sChannel));
 	std::string logFormat = "[%TimeStamp%]: [%Severity%] [%Message%]";
 
@@ -125,7 +125,7 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 		auto value = vm["Logging.Console"].as<std::string>();
 		if (vm["Logging.Console"].as<std::string>() == "true")
 		{
-			Poco::AutoPtr<Poco::ConsoleChannel> cChannel;
+			Poco::AutoPtr<Poco::StreamChannel> cChannel(new Poco::StreamChannel(std::cout));
 			sChannel->addChannel(cChannel);
 		}
 	}
@@ -135,11 +135,14 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 		auto fileName = vm["Logging.FileOutput"].as<std::string>();
 		if (fileName != "")
 		{
-			Poco::AutoPtr<Poco::FileChannel> pChannel(new Poco::FileChannel);
+			Poco::AutoPtr<Poco::FileChannel> pChannel(new Poco::FileChannel());
 			pChannel->setProperty("path", fileName);
 			sChannel->addChannel(pChannel);
 		}
 	}
+
+	Poco::Logger::root().setChannel(pFC);
+	Poco::Logger::root().setLevel("information");
 }
 
 std::shared_ptr<ILogger> LoggerFactory::getLogger(const char* component)
