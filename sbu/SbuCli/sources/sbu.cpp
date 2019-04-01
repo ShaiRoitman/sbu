@@ -9,8 +9,26 @@
 #include "Operations.h"
 #include "ExitCodes.h"
 
+#include "Poco/Zip/Compress.h"
+#include <iostream>
+
+class MultiFile
+{
+public:
+	void Test()
+	{
+		std::ofstream out("c:\\workdir\\test.zip", std::ios::binary);
+		Poco::Zip::Compress a(out, true);
+		a.addFile("C:\\workdir\\backupDB.db", "Shai");
+
+		auto file = a.close();
+	}
+};
+
 int main(int argc, const char* argv[])
 {
+	MultiFile a;
+	a.Test();
 	std::map<std::string, Operation::Factory> operations;
 	operations["CreateBackupDef"] = CreateBackupDefFactory;
 	operations["ListBackupDef"] = ListBackupDefsFactory;

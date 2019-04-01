@@ -117,7 +117,10 @@ protected:
 void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 {
 	Poco::AutoPtr<Poco::SplitterChannel> sChannel(new Poco::SplitterChannel());
-	Poco::AutoPtr<Poco::PatternFormatter> pPF(new Poco::PatternFormatter());	pPF->setProperty("pattern", "%Y-%m-%d %H:%M:%S [%P:%I] [%s]:[%p]: %t");	Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pPF, sChannel));
+	Poco::AutoPtr<Poco::PatternFormatter> pPF(new Poco::PatternFormatter());
+	pPF->setProperty("pattern", "%Y-%m-%d %H:%M:%S [%P:%I] [%s]:[%p]: %t");
+	Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pPF, sChannel));
+
 	std::string logFormat = "[%TimeStamp%]: [%Severity%] [%Message%]";
 
 	if (!vm["Logging.Console"].empty())

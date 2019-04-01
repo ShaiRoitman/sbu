@@ -4,7 +4,7 @@ find_package(Boost REQUIRED COMPONENTS filesystem program_options log)
 find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(sqlite3 CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(Poco REQUIRED Foundation Util Crypto)
+find_package(Poco REQUIRED Foundation Util Crypto Zip)
 
 #set(Boost_USE_STATIC_LIBS TRUE)
 #set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -31,5 +31,5 @@ source_group("Sources\\Databases" FILES ${databases})
 
 add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${resources_db})
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES} Poco::Foundation Poco::Util Poco::Crypto)
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES} Poco::Foundation Poco::Util Poco::Crypto Poco::Zip)
 
