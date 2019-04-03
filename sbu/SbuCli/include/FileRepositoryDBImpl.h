@@ -1,6 +1,31 @@
 #include "FileRepositoryDB.h"
 #include "Loggers.h"
 #include "SQLiteCpp/SQLiteCpp.h"
+#include "Poco/Types.h"
+
+class MultiFile
+{
+public:
+	MultiFile();
+	Poco::UInt64 GetSize();
+	bool AddFile(boost::filesystem::path file, const std::string& digest);
+	bool HasFile(const std::string& digest);
+	void Test();
+private:
+	struct fileEntry
+	{
+		boost::filesystem::path file;
+		std::string digest;
+		long long size;
+	};
+
+	Poco::UInt64 totalSize;
+	Poco::UInt64 fileSize;
+
+	std::string zipFile;
+	std::map<std::string, fileEntry> entries;
+
+};
 
 class FileRepositoryDB : public IFileRepositoryDB
 {

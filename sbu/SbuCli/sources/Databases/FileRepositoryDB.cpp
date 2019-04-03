@@ -12,79 +12,62 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
-class MultiFile
+MultiFile::MultiFile()
 {
-public:
-	MultiFile()
+	this->totalSize = 0;
+	this->fileSize = 0;
+	this->zipFile = "c:\\workdir\\test.zip";
+	boost::filesystem::remove(this->zipFile);
+}
+
+Poco::UInt64 MultiFile::GetSize()
+{
+	return this->fileSize;
+}
+
+bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
+{
+	if (this->HasFile(digest))
+		return false;
+	fileEntry newEntry;
+	newEntry.digest = digest;
+	newEntry.file = file;
+	newEntry.size = (long long)boost::filesystem::file_size(file);
+	entries[digest] = newEntry;
+	if (boost::filesystem::exists(zipFile) == false)
 	{
-		this->totalSize = 0;
-		this->fileSize = 0;
-		this->zipFile = "c:\\workdir\\test.zip";
-		boost::filesystem::remove(this->zipFile);
+		std::ofstream out(zipFile, std::ios::binary);
+		Poco::Zip::Compress c(out, true);
+		c.close();
 	}
+	Poco::Zip::ZipManipulator zip(zipFile, false);
+	zip.addFile(digest, file.string());
+	auto zipFile = zip.commit();
+	auto newEntryZip = zipFile.findHeader(digest);
+	this->fileSize += newEntryZip->second.getCompressedSize();
+	this->totalSize += newEntry.size;
 
-	struct fileEntry
+	return true;
+}
+
+bool MultiFile::HasFile(const std::string& digest)
+{
+	if (entries.find(digest) != entries.end())
 	{
-		boost::filesystem::path file;
-		std::string digest;
-		long long size;
-	};
-
-	Poco::UInt64 totalSize;
-	Poco::UInt64 fileSize;
-
-	std::string zipFile;
-	std::map<std::string, fileEntry> entries;
-
-	Poco::UInt64 GetSize()
-	{
-		return this->fileSize;
-	}
-
-	bool AddFile(boost::filesystem::path file, const std::string& digest)
-	{
-		if (this->HasFile(digest))
-			return false;
-		fileEntry newEntry;
-		newEntry.digest = digest;
-		newEntry.file = file;
-		newEntry.size = (long long)boost::filesystem::file_size(file);
-		entries[digest] = newEntry;
-		if (boost::filesystem::exists(zipFile) == false)
-		{
-			std::ofstream out(zipFile, std::ios::binary);
-			Poco::Zip::Compress c(out, true);
-			c.close();
-		}
-		Poco::Zip::ZipManipulator zip(zipFile, false);
-		zip.addFile(digest, file.string());
-		auto zipFile = zip.commit();
-		auto newEntryZip = zipFile.findHeader(digest);
-		this->fileSize += newEntryZip->second.getCompressedSize();
-		this->totalSize += newEntry.size;
-
 		return true;
 	}
-
-	bool HasFile(const std::string& digest)
+	else
 	{
-		if (entries.find(digest) != entries.end())
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return false;
 	}
+}
 
-	void Test()
-	{
-		this->AddFile("C:\\workdir\\backupDB.db", "Shai");
-		this->AddFile("C:\\workdir\\backupDB.db", "Shai");
-		this->AddFile("C:\\workdir\\Repository.db", "Shai2");
-	}
-};
+void MultiFile::Test()
+{
+	this->AddFile("C:\\workdir\\backupDB.db", "Shai");
+	this->AddFile("C:\\workdir\\backupDB.db", "Shai");
+	this->AddFile("C:\\workdir\\Repository.db", "Shai2");
+}
 
 FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize) :
 	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
