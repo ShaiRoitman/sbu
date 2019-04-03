@@ -13,11 +13,16 @@ CREATE TABLE Files (
 	Added       DATETIME,
 	Size		BIGINT,
     DigestType  TEXT,
-    DigestValue TEXT
+    DigestValue TEXT,
+	HostDigest  TEXT
 );
 
 CREATE INDEX digestValueIndex ON Files (
     DigestValue ASC
+);
+
+CREATE INDEX hostDigestIndex ON Files (
+    HostDigest ASC
 );
 
 

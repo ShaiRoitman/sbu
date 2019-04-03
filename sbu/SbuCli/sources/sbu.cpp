@@ -31,11 +31,16 @@ public:
 		long long size;
 	};
 
-	long totalSize;
-	long fileSize;
+	Poco::UInt64 totalSize;
+	Poco::UInt64 fileSize;
 
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
+
+	Poco::UInt64 GetSize()
+	{
+		return this->fileSize;
+	}
 
 	bool AddFile(boost::filesystem::path file, const std::string& digest)
 	{
@@ -58,6 +63,8 @@ public:
 		auto newEntryZip = zipFile.findHeader(digest);
 		this->fileSize += newEntryZip->second.getCompressedSize();
 		this->totalSize += newEntry.size;
+
+		return true;
 	}
 
 	bool HasFile(const std::string& digest)

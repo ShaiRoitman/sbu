@@ -7,11 +7,13 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
-FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath) : 
+FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize) :
 	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
 {
 	this->dataRootPath = dataRootPath;
 	this->db = getOrCreateDb(dbPath, Text_Resource::FileRepository);
+	this->smallFileBulkThreshold = smallFileThreshold;
+	this->bulkSize = bulkSize;
 	logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(dataRootPath).c_str());
 }
 
@@ -43,9 +45,16 @@ std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::s
 	logger->DebugFormat("FileRepositoryDB::AddFile() path:[%s] digestType:[%s] digest:[%s]", file.string().c_str(), digestType.c_str(), digest.c_str());
 
 	std::string key = digest;
-	if (!this->HasFile(digest))
+	if (!this->HasFile(key))
 	{
 		logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
+		path destPath = this->dataRootPath / boost::filesystem::path(digest);
+		boost::filesystem::create_directories(destPath.branch_path());
+		if (copy_file_logged(file, destPath) == false)
+		{
+			logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
+		}
+
 		SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
 		insertQuery.bind(":path", to_utf8(key));
 		insertQuery.bind(":size", (long long)boost::filesystem::file_size(file));
@@ -53,13 +62,6 @@ std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::s
 		insertQuery.bind(":digestType", digestType);
 		insertQuery.bind(":digestValue", key);
 		insertQuery.exec();
-
-		path destPath = this->dataRootPath / boost::filesystem::path(digest);
-		boost::filesystem::create_directories(destPath.branch_path());
-		if (copy_file_logged(file, destPath) == false)
-		{
-			logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
-		}
 	}
 	else
 	{
@@ -109,8 +111,15 @@ void FileRepositoryDB::Complete()
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
 {
 	static auto logger = LoggerFactory::getLogger("application.FileRepositoryDB");
+	const long long minFileToBulk = 128 * 1024;
+	const long long bulkFileSize = 5 * 1024 * 1024;
 
-	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
-	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath);
+	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s] minFileToBulk:[%lld] fileBulkSize:[%lld]", 
+		dbPath.string().c_str(), 
+		dataRootPath.string().c_str(),
+		minFileToBulk,
+		bulkFileSize);
+
+	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath, minFileToBulk, bulkFileSize);
 }
 

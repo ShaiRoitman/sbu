@@ -41,7 +41,7 @@ class SecureFileRepositoryDB : public FileRepositoryDB
 {
 public:
 	SecureFileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password)
-		: FileRepositoryDB(dbPath, dataRootPath)
+		: FileRepositoryDB(dbPath, dataRootPath, LLONG_MAX, LLONG_MAX)
 	{
 		CipherFactory& factory = CipherFactory::defaultFactory();
 		pCipher = factory.createCipher(CipherKey("aes-256-cbc", password, "SecureFileRepositoryDB"));
