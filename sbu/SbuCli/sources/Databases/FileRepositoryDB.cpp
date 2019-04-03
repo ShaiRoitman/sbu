@@ -109,21 +109,41 @@ std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::s
 	std::string key = digest;
 	if (!this->HasFile(key))
 	{
-		logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
-		path destPath = this->dataRootPath / boost::filesystem::path(digest);
-		boost::filesystem::create_directories(destPath.branch_path());
-		if (copy_file_logged(file, destPath) == false)
+		if (!this->multiFile.HasFile(key))
 		{
-			logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
-		}
+			auto fileSize = (long long)boost::filesystem::file_size(file);
+			if (fileSize < this->smallFileBulkThreshold)
+			{
+				this->multiFile.AddFile(file, digest);
+				if (this->multiFile.GetSize() > this->bulkSize)
+				{
+					this->SendMultiFile();
+				}
+			}
+			else
+			{
+				logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
+				path destPath = this->dataRootPath / boost::filesystem::path(digest);
+				boost::filesystem::create_directories(destPath.branch_path());
+				if (copy_file_logged(file, destPath) == false)
+				{
+					logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
+				}
 
-		SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
-		insertQuery.bind(":path", to_utf8(key));
-		insertQuery.bind(":size", (long long)boost::filesystem::file_size(file));
-		insertQuery.bind(":added", return_current_time_and_date());
-		insertQuery.bind(":digestType", digestType);
-		insertQuery.bind(":digestValue", key);
-		insertQuery.exec();
+				SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
+				insertQuery.bind(":path", to_utf8(key));
+				insertQuery.bind(":size", fileSize);
+				insertQuery.bind(":added", return_current_time_and_date());
+				insertQuery.bind(":digestType", digestType);
+				insertQuery.bind(":digestValue", key);
+				insertQuery.exec();
+			}
+		}
+		else
+		{
+			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] exists in multiFile", key.c_str());
+
+		}
 	}
 	else
 	{
@@ -168,6 +188,55 @@ bool FileRepositoryDB::GetFile(const std::string& handle, boost::filesystem::pat
 
 void FileRepositoryDB::Complete()
 {
+	if (this->multiFile.GetSize() != 0)
+	{
+		SendMultiFile();
+	}
+}
+
+void FileRepositoryDB::SendMultiFile()
+{
+	Transaction transaction(*db);
+
+	auto digest = calcHash(this->multiFile.zipFile);
+
+	for (std::map<std::string, MultiFile::fileEntry>::iterator iter = this->multiFile.entries.begin();
+		iter != this->multiFile.entries.end();
+		++iter)
+	{
+		auto currEntry = (*iter).second;
+		
+		SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue, HostDigest) VALUES (:path,:size,:added,:digestType,:digestValue,:hostDigest)");
+		insertQuery.bind(":path", to_utf8(currEntry.file));
+		insertQuery.bind(":size", currEntry.size);
+		insertQuery.bind(":added", return_current_time_and_date());
+		insertQuery.bind(":digestType", "SHA1");
+		insertQuery.bind(":digestValue", currEntry.digest);
+		insertQuery.bind(":hostDigest", digest);
+		insertQuery.exec();
+	}
+
+
+	auto fileSize = (long long)boost::filesystem::file_size(this->multiFile.zipFile);
+	auto key = digest;
+
+	path destPath = this->dataRootPath / boost::filesystem::path(digest);
+	boost::filesystem::create_directories(destPath.branch_path());
+	if (copy_file_logged(this->multiFile.zipFile, destPath) == false)
+	{
+		logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
+	}
+
+	SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
+	insertQuery.bind(":path", to_utf8(this->multiFile.zipFile));
+	insertQuery.bind(":size", fileSize);
+	insertQuery.bind(":added", return_current_time_and_date());
+	insertQuery.bind(":digestType", "SHA1");
+	insertQuery.bind(":digestValue", digest);
+	insertQuery.exec();
+	transaction.commit();
+
+	this->multiFile = MultiFile();
 }
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)

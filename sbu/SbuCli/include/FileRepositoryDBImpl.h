@@ -11,7 +11,8 @@ public:
 	bool AddFile(boost::filesystem::path file, const std::string& digest);
 	bool HasFile(const std::string& digest);
 	void Test();
-private:
+
+public:
 	struct fileEntry
 	{
 		boost::filesystem::path file;
@@ -24,7 +25,6 @@ private:
 
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
-
 };
 
 class FileRepositoryDB : public IFileRepositoryDB
@@ -36,6 +36,8 @@ public:
 	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override;
 	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override;
 	virtual void Complete() override;
+protected:
+	void SendMultiFile();
 private:
 	std::shared_ptr<SQLite::Database> db;
 	std::shared_ptr<ILogger> logger;
@@ -43,4 +45,6 @@ private:
 	
 	long long smallFileBulkThreshold;
 	long long bulkSize;
+
+	MultiFile multiFile;
 };
