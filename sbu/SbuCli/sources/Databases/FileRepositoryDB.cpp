@@ -13,11 +13,13 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
-MultiFile::MultiFile() 
+MultiFile::MultiFile() :
+	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
 {
 	this->totalSize = 0;
 	this->fileSize = 0;
 	this->zipFile = Poco::TemporaryFile::tempName();
+	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile);
 	boost::filesystem::remove(this->zipFile);
 	zip = nullptr;
 }
@@ -28,35 +30,44 @@ MultiFile::MultiFile(const std::string& fileName)
 	this->fileSize = 0;
 	this->zipFile = fileName;
 	zip = new Poco::Zip::ZipManipulator(this->zipFile, false);
+	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile);
 }
 
 MultiFile::~MultiFile()
 {
+	logger->DebugFormat("MultiFile::~MultiFile() closing filename [%s]", this->zipFile);
 	this->Close();
 }
 
 Poco::UInt64 MultiFile::GetSize()
 {
-	return this->totalSize;
+	auto retValue = this->totalSize;
+	logger->DebugFormat("MultiFile::GetSize() filename [%s] currentSize [%lld]", this->zipFile, this->totalSize);
+	return retValue;
 }
 
 bool MultiFile::Close() 
 {
-	if (this->zip!= nullptr)
+	bool retValue = false;
+	if (this->zip != nullptr)
 	{
 		zip->commit();
 		delete zip;
 		zip = nullptr;
-		return true;
+		retValue = true;
 	}
 
-	return false;
+	logger->DebugFormat("MultiFile::Close() filename [%s] closing [%d]", this->zipFile, retValue);
+	return retValue;
 }
 
 bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 {
 	if (this->HasFile(digest))
+	{
+		logger->DebugFormat("MultiFile::AddFile() filename [%s], path [%s] digest [%s] Already Exists", this->zipFile, file.string(), digest);
 		return false;
+	}
 	fileEntry newEntry;
 	newEntry.digest = digest;
 	newEntry.file = file;
@@ -77,19 +88,20 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 	zip->addFile(digest, file.string());
 	this->totalSize += newEntry.size;
 
+	logger->DebugFormat("MultiFile::AddFile() filename [%s], path [%s] digest [%s] Added", this->zipFile, file.string(), digest);
 	return true;
 }
 
 bool MultiFile::HasFile(const std::string& digest)
 {
+	bool retValue = false;
 	if (entries.find(digest) != entries.end())
 	{
-		return true;
+		retValue = true;
 	}
-	else
-	{
-		return false;
-	}
+
+	logger->DebugFormat("MultiFile::HasFile() filename [%s], digest [%s] retValue ", this->zipFile, digest, retValue);
+	return retValue;
 }
 
 bool MultiFile::ExtractFile(const std::string& handle, const std::string& path)

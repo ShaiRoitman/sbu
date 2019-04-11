@@ -30,6 +30,8 @@ public:
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
 	Poco::Zip::ZipManipulator* zip;
+
+	std::shared_ptr<ILogger> logger;
 };
 
 class FileRepositoryDB : public IFileRepositoryDB
