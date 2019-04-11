@@ -12,17 +12,36 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
-MultiFile::MultiFile()
+MultiFile::MultiFile() 
 {
 	this->totalSize = 0;
 	this->fileSize = 0;
 	this->zipFile = "c:\\workdir\\test.zip";
 	boost::filesystem::remove(this->zipFile);
+	zip = nullptr;
+}
+
+MultiFile::~MultiFile()
+{
+	this->Close();
 }
 
 Poco::UInt64 MultiFile::GetSize()
 {
-	return this->fileSize;
+	return this->totalSize;
+}
+
+bool MultiFile::Close() 
+{
+	if (this->zip!= nullptr)
+	{
+		zip->commit();
+		delete zip;
+		zip = nullptr;
+		return true;
+	}
+
+	return false;
 }
 
 bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
@@ -34,17 +53,19 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 	newEntry.file = file;
 	newEntry.size = (long long)boost::filesystem::file_size(file);
 	entries[digest] = newEntry;
-	if (boost::filesystem::exists(zipFile) == false)
+	if (boost::filesystem::exists(zipFile) == false && zip == nullptr)
 	{
 		std::ofstream out(zipFile, std::ios::binary);
 		Poco::Zip::Compress c(out, true);
 		c.close();
+		if (zip != nullptr)
+		{
+			delete zip;
+			zip = nullptr;
+		}
+		zip = new Poco::Zip::ZipManipulator(this->zipFile, false);
 	}
-	Poco::Zip::ZipManipulator zip(zipFile, false);
-	zip.addFile(digest, file.string());
-	auto zipFile = zip.commit();
-	auto newEntryZip = zipFile.findHeader(digest);
-	this->fileSize += newEntryZip->second.getCompressedSize();
+	zip->addFile(digest, file.string());
 	this->totalSize += newEntry.size;
 
 	return true;
@@ -60,13 +81,6 @@ bool MultiFile::HasFile(const std::string& digest)
 	{
 		return false;
 	}
-}
-
-void MultiFile::Test()
-{
-	this->AddFile("C:\\workdir\\backupDB.db", "Shai");
-	this->AddFile("C:\\workdir\\backupDB.db", "Shai");
-	this->AddFile("C:\\workdir\\Repository.db", "Shai2");
 }
 
 FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize) :
@@ -188,6 +202,7 @@ bool FileRepositoryDB::GetFile(const std::string& handle, boost::filesystem::pat
 
 void FileRepositoryDB::Complete()
 {
+	logger->DebugFormat("FileRepositoryDB::Complete()");
 	if (this->multiFile.GetSize() != 0)
 	{
 		SendMultiFile();
@@ -196,7 +211,9 @@ void FileRepositoryDB::Complete()
 
 void FileRepositoryDB::SendMultiFile()
 {
+	this->multiFile.Close();
 	Transaction transaction(*db);
+	logger->DebugFormat("FileRepositoryDB::SendMultiFile()");
 
 	auto digest = calcHash(this->multiFile.zipFile);
 
@@ -206,8 +223,7 @@ void FileRepositoryDB::SendMultiFile()
 	{
 		auto currEntry = (*iter).second;
 		
-		SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue, HostDigest) VALUES (:path,:size,:added,:digestType,:digestValue,:hostDigest)");
-		insertQuery.bind(":path", to_utf8(currEntry.file));
+		SQLite::Statement insertQuery(*db, "INSERT INTO Files (Size, Added, DigestType, DigestValue, HostDigest) VALUES (:size,:added,:digestType,:digestValue,:hostDigest)");
 		insertQuery.bind(":size", currEntry.size);
 		insertQuery.bind(":added", return_current_time_and_date());
 		insertQuery.bind(":digestType", "SHA1");
@@ -228,7 +244,7 @@ void FileRepositoryDB::SendMultiFile()
 	}
 
 	SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
-	insertQuery.bind(":path", to_utf8(this->multiFile.zipFile));
+	insertQuery.bind(":path", to_utf8(digest));
 	insertQuery.bind(":size", fileSize);
 	insertQuery.bind(":added", return_current_time_and_date());
 	insertQuery.bind(":digestType", "SHA1");

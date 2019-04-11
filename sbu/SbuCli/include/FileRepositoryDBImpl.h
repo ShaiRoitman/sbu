@@ -2,14 +2,17 @@
 #include "Loggers.h"
 #include "SQLiteCpp/SQLiteCpp.h"
 #include "Poco/Types.h"
+#include "Poco/Zip/ZipManipulator.h"
 
 class MultiFile
 {
 public:
 	MultiFile();
+	virtual ~MultiFile();
 	Poco::UInt64 GetSize();
 	bool AddFile(boost::filesystem::path file, const std::string& digest);
 	bool HasFile(const std::string& digest);
+	bool Close();
 	void Test();
 
 public:
@@ -25,6 +28,8 @@ public:
 
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
+	Poco::Zip::ZipManipulator* zip;
+
 };
 
 class FileRepositoryDB : public IFileRepositoryDB
