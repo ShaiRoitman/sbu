@@ -6,6 +6,7 @@
 
 #include "Poco/Zip/Compress.h"
 #include "Poco/Zip/ZipManipulator.h"
+#include "Poco/TemporaryFile.h"
 
 #include <iostream>
 
@@ -16,9 +17,17 @@ MultiFile::MultiFile()
 {
 	this->totalSize = 0;
 	this->fileSize = 0;
-	this->zipFile = "c:\\workdir\\test.zip";
+	this->zipFile = Poco::TemporaryFile::tempName();
 	boost::filesystem::remove(this->zipFile);
 	zip = nullptr;
+}
+
+MultiFile::MultiFile(const std::string& fileName)
+{
+	this->totalSize = 0;
+	this->fileSize = 0;
+	this->zipFile = fileName;
+	zip = new Poco::Zip::ZipManipulator(this->zipFile, false);
 }
 
 MultiFile::~MultiFile()
@@ -83,6 +92,12 @@ bool MultiFile::HasFile(const std::string& digest)
 	}
 }
 
+bool MultiFile::ExtractFile(const std::string& handle, const std::string& path)
+{
+	return true;
+}
+
+
 FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize) :
 	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
 {
@@ -101,14 +116,30 @@ bool FileRepositoryDB::HasFile(const std::string& handle)
 bool FileRepositoryDB::HasFile(const std::string& handle, boost::filesystem::path* path)
 {
 	std::string key = handle;
-	SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
+	SQLite::Statement query(*db, "SELECT Path,HostDigest FROM Files WHERE DigestValue=:key");
 	query.bind(":key", key);
 	bool retValue = false;
 	if (query.executeStep())
 	{
 		if (path != nullptr)
 		{
-			*path = this->dataRootPath / from_utf8(query.getColumn("Path").getString());
+			if (query.getColumn("Path").isNull() == false)
+			{
+				*path = this->dataRootPath / from_utf8(query.getColumn("Path").getString());
+			}
+			else
+			{
+				auto hostDigest = query.getColumn("HostDigest").getString();
+				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
+				{
+					auto hostPath = this->dataRootPath / boost::filesystem::path(hostDigest);
+					this->zipFiles[hostDigest] = new MultiFile(hostPath.string());
+				}
+				auto tempFileName = Poco::TemporaryFile::tempName();
+				auto multiFile = this->zipFiles[hostDigest];
+				multiFile->ExtractFile(key, Poco::TemporaryFile::tempName());
+				*path = tempFileName;
+			}
 		}
 		retValue = true;
 	}
@@ -176,9 +207,6 @@ bool FileRepositoryDB::GetFile(const std::string& handle, boost::filesystem::pat
 	std::string key = handle;
 	boost::filesystem::path srcPath;
 
-
-	SQLite::Statement query(*db, "SELECT Path FROM Files WHERE DigestValue=:key");
-	query.bind(":key", handle);
 	bool retValue = false;
 	if (this->HasFile(key, &srcPath))
 	{
