@@ -6,9 +6,14 @@
 
 #include "Poco/Zip/Compress.h"
 #include "Poco/Zip/ZipManipulator.h"
+#include "Poco/Zip/ZipStream.h"
+#include "Poco/StreamCopier.h"
 #include "Poco/TemporaryFile.h"
 
+
 #include <iostream>
+#include <ostream>
+#include <sstream>
 
 using namespace boost::filesystem;
 using namespace SQLite;
@@ -24,12 +29,14 @@ MultiFile::MultiFile() :
 	zip = nullptr;
 }
 
-MultiFile::MultiFile(const std::string& fileName)
+MultiFile::MultiFile(const std::string& fileName) :
+	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
 {
 	this->totalSize = 0;
 	this->fileSize = 0;
 	this->zipFile = fileName;
-	zip = new Poco::Zip::ZipManipulator(this->zipFile, false);
+	this->zipArchiveStream = new std::ifstream(fileName, std::ios::binary);
+	this->zipArchive = new Poco::Zip::ZipArchive(*this->zipArchiveStream);
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile);
 }
 
@@ -55,6 +62,18 @@ bool MultiFile::Close()
 		delete zip;
 		zip = nullptr;
 		retValue = true;
+	}
+	if (zipArchiveStream != nullptr)
+	{
+		zipArchiveStream->close();
+		delete zipArchiveStream;
+		zipArchiveStream = nullptr;
+	}
+
+	if (zipArchive != nullptr)
+	{
+		delete zipArchive;
+		zipArchive = nullptr;
 	}
 
 	logger->DebugFormat("MultiFile::Close() filename [%s] closing [%d]", this->zipFile, retValue);
@@ -106,6 +125,11 @@ bool MultiFile::HasFile(const std::string& digest)
 
 bool MultiFile::ExtractFile(const std::string& handle, const std::string& path)
 {
+	Poco::Zip::ZipArchive::FileHeaders::const_iterator it = this->zipArchive->findHeader(handle);
+	Poco::Zip::ZipInputStream zipin(*this->zipArchiveStream, it->second);
+	std::ofstream out(path,std::ios::binary);
+	Poco::StreamCopier::copyStream(zipin, out); 
+	out.close();
 	return true;
 }
 
@@ -149,7 +173,7 @@ bool FileRepositoryDB::HasFile(const std::string& handle, boost::filesystem::pat
 				}
 				auto tempFileName = Poco::TemporaryFile::tempName();
 				auto multiFile = this->zipFiles[hostDigest];
-				multiFile->ExtractFile(key, Poco::TemporaryFile::tempName());
+				multiFile->ExtractFile(key, tempFileName);
 				*path = tempFileName;
 			}
 		}

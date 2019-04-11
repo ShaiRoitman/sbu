@@ -30,6 +30,8 @@ public:
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
 	Poco::Zip::ZipManipulator* zip;
+	Poco::Zip::ZipArchive* zipArchive;
+	std::ifstream* zipArchiveStream;
 
 	std::shared_ptr<ILogger> logger;
 };
