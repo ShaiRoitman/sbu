@@ -18,8 +18,49 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
+ZipWrapper::ZipWrapper(const std::string& fileName) :
+	logger(LoggerFactory::getLogger("application.ZipWrapper"))
+{
+	this->zipArchiveStream = new std::ifstream(fileName, std::ios::binary);
+	this->zipArchive = new Poco::Zip::ZipArchive(*this->zipArchiveStream);
+	logger->DebugFormat("ZipWrapper::ZipWrapper() using filename [%s]", fileName);
+}
+ZipWrapper::~ZipWrapper()
+{
+
+}
+bool ZipWrapper::ExtractFile(const std::string& handle, const std::string& path)
+{
+	Poco::Zip::ZipArchive::FileHeaders::const_iterator it = this->zipArchive->findHeader(handle);
+	Poco::Zip::ZipInputStream zipin(*this->zipArchiveStream, it->second);
+	std::ofstream out(path, std::ios::binary);
+	Poco::StreamCopier::copyStream(zipin, out);
+	out.close();
+	return true;
+}
+bool ZipWrapper::Close()
+{
+	bool retValue = false;
+	if (zipArchiveStream != nullptr)
+	{
+		zipArchiveStream->close();
+		delete zipArchiveStream;
+		zipArchiveStream = nullptr;
+	}
+
+	if (zipArchive != nullptr)
+	{
+		delete zipArchive;
+		zipArchive = nullptr;
+	}
+
+	logger->DebugFormat("ZipWrapper::Close() filename [%s] closing [%d]", "test", retValue);
+	return retValue;
+}
+
+
 MultiFile::MultiFile() :
-	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
+	logger(LoggerFactory::getLogger("application.MultiFile"))
 {
 	this->totalSize = 0;
 	this->fileSize = 0;
@@ -27,17 +68,6 @@ MultiFile::MultiFile() :
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile);
 	boost::filesystem::remove(this->zipFile);
 	zip = nullptr;
-}
-
-MultiFile::MultiFile(const std::string& fileName) :
-	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
-{
-	this->totalSize = 0;
-	this->fileSize = 0;
-	this->zipFile = fileName;
-	this->zipArchiveStream = new std::ifstream(fileName, std::ios::binary);
-	this->zipArchive = new Poco::Zip::ZipArchive(*this->zipArchiveStream);
-	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile);
 }
 
 MultiFile::~MultiFile()
@@ -62,18 +92,6 @@ bool MultiFile::Close()
 		delete zip;
 		zip = nullptr;
 		retValue = true;
-	}
-	if (zipArchiveStream != nullptr)
-	{
-		zipArchiveStream->close();
-		delete zipArchiveStream;
-		zipArchiveStream = nullptr;
-	}
-
-	if (zipArchive != nullptr)
-	{
-		delete zipArchive;
-		zipArchive = nullptr;
 	}
 
 	logger->DebugFormat("MultiFile::Close() filename [%s] closing [%d]", this->zipFile, retValue);
@@ -123,17 +141,6 @@ bool MultiFile::HasFile(const std::string& digest)
 	return retValue;
 }
 
-bool MultiFile::ExtractFile(const std::string& handle, const std::string& path)
-{
-	Poco::Zip::ZipArchive::FileHeaders::const_iterator it = this->zipArchive->findHeader(handle);
-	Poco::Zip::ZipInputStream zipin(*this->zipArchiveStream, it->second);
-	std::ofstream out(path,std::ios::binary);
-	Poco::StreamCopier::copyStream(zipin, out); 
-	out.close();
-	return true;
-}
-
-
 FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize) :
 	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
 {
@@ -169,7 +176,7 @@ bool FileRepositoryDB::HasFile(const std::string& handle, boost::filesystem::pat
 				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
 				{
 					auto hostPath = this->dataRootPath / boost::filesystem::path(hostDigest);
-					this->zipFiles[hostDigest] = new MultiFile(hostPath.string());
+					this->zipFiles[hostDigest] = new ZipWrapper(hostPath.string());
 				}
 				auto tempFileName = Poco::TemporaryFile::tempName();
 				auto multiFile = this->zipFiles[hostDigest];

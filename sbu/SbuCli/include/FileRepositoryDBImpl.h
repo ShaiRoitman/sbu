@@ -5,16 +5,27 @@
 #include "Poco/Zip/ZipManipulator.h"
 #include <map>
 
+class ZipWrapper
+{
+public:
+	ZipWrapper(const std::string& fileName);
+	virtual ~ZipWrapper();
+	bool ExtractFile(const std::string& handle, const std::string& path);
+	bool Close();
+
+	Poco::Zip::ZipArchive* zipArchive;
+	std::ifstream* zipArchiveStream;
+	std::shared_ptr<ILogger> logger;
+};
+
 class MultiFile
 {
 public:
 	MultiFile();
-	MultiFile(const std::string& fileName);
 	virtual ~MultiFile();
 	Poco::UInt64 GetSize();
 	bool AddFile(boost::filesystem::path file, const std::string& digest);
 	bool HasFile(const std::string& digest);
-	bool ExtractFile(const std::string& handle, const std::string& path);
 	bool Close();
 public:
 	struct fileEntry
@@ -30,9 +41,6 @@ public:
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
 	Poco::Zip::ZipManipulator* zip;
-	Poco::Zip::ZipArchive* zipArchive;
-	std::ifstream* zipArchiveStream;
-
 	std::shared_ptr<ILogger> logger;
 };
 
@@ -56,5 +64,5 @@ private:
 	long long bulkSize;
 
 	MultiFile multiFile;
-	std::map<std::string, MultiFile*> zipFiles;
+	std::map<std::string, ZipWrapper*> zipFiles;
 };
