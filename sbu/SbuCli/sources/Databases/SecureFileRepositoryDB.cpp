@@ -79,7 +79,12 @@ private:
 };
 
 
-std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password)
+std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
+	boost::filesystem::path dbPath,
+	boost::filesystem::path dataRootPath,
+	const std::string& password,
+	long minSizeToBulk,
+	long bulkSize)
 {
 	static auto logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
 	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());

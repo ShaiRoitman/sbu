@@ -326,18 +326,19 @@ void FileRepositoryDB::SendMultiFile()
 	this->multiFile = MultiFile();
 }
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath)
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath,
+	boost::filesystem::path dataRootPath,
+	long minSizeToBulk,
+	long bulkSize)
 {
 	static auto logger = LoggerFactory::getLogger("application.FileRepositoryDB");
-	const long long minFileToBulk = 128 * 1024;
-	const long long bulkFileSize = 5 * 1024 * 1024;
 
 	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s] minFileToBulk:[%lld] fileBulkSize:[%lld]", 
 		dbPath.string().c_str(), 
 		dataRootPath.string().c_str(),
-		minFileToBulk,
-		bulkFileSize);
+		minSizeToBulk,
+		bulkSize);
 
-	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath, minFileToBulk, bulkFileSize);
+	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath, minSizeToBulk, bulkSize);
 }
 

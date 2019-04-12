@@ -12,5 +12,14 @@ public:
 	virtual void Complete() = 0;
 };
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath);
-std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password);
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(
+	boost::filesystem::path dbPath,
+	boost::filesystem::path dataRootPath,
+	long minSizeToBulk,
+	long bulkSize);
+std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
+	boost::filesystem::path dbPath, 
+	boost::filesystem::path dataRootPath, 
+	const std::string& password,
+	long minSizeToBulk,
+	long bulkSize);

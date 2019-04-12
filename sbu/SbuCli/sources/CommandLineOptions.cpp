@@ -31,6 +31,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string step;
 	std::string filerepPassword;
 	int byID;
+	long minSizeToBulk;
+	long bulkSize;
 
 	desc.add_options()
 		("help,h", "print usage message")
@@ -46,6 +48,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("FileRepository.password", value (&filerepPassword), "If exists uses this password in a SecureFileRepository")
 		("FileRepository.name", value(&filerepName)->default_value("FileRepository.db"), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
+		("FileRepository.minSizeToBulk", value(&minSizeToBulk)->default_value(128*1024), "Minimum file size to bulk")
+		("FileRepository.bulkSize", value(&bulkSize)->default_value(5*1024*1024), "bulk Size")
 		("Logging.Console", value(&logging)->default_value("False"), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
 		("Logging.Verbosity", value(&logging_verbosity)->default_value("Info"), "Logging Verbosity - Default Info")

@@ -5,14 +5,16 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 	std::shared_ptr<IFileRepositoryDB> fileRepDB;
 	boost::filesystem::path repoPath = vm["FileRepository.path"].as<std::string>();
 	boost::filesystem::path dbPath = vm["FileRepository.name"].as<std::string>();
+	long minSizeToBulk = vm["FileRepository.minSizeToBulk"].as<long>();
+	long bulkSize = vm["FileRepository.bulkSize"].as<long>();
 
 	if (!vm["FileRepository.password"].empty())
 	{
-		fileRepDB = CreateSecureFileRepositorySQLiteDB(dbPath, repoPath, vm["FileRepository.password"].as<std::string>());
+		fileRepDB = CreateSecureFileRepositorySQLiteDB(dbPath, repoPath, vm["FileRepository.password"].as<std::string>(), minSizeToBulk, bulkSize);
 	}
 	else
 	{
-		fileRepDB = CreateFileRepositorySQLiteDB(dbPath, repoPath);
+		fileRepDB = CreateFileRepositorySQLiteDB(dbPath, repoPath, minSizeToBulk, bulkSize);
 	}
 	
 	return fileRepDB;
