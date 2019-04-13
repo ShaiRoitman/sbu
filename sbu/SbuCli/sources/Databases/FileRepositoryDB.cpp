@@ -21,8 +21,8 @@ using namespace SQLite;
 ZipWrapper::ZipWrapper(const std::string& fileName) :
 	logger(LoggerFactory::getLogger("application.ZipWrapper"))
 {
-	this->zipArchiveStream = new std::ifstream(fileName, std::ios::binary);
-	this->zipArchive = new Poco::Zip::ZipArchive(*this->zipArchiveStream);
+	this->zipArchiveStream = std::make_shared<std::ifstream>(fileName, std::ios::binary);
+	this->zipArchive = std::make_shared<Poco::Zip::ZipArchive>(*this->zipArchiveStream);
 	logger->DebugFormat("ZipWrapper::ZipWrapper() using filename [%s]", fileName);
 }
 ZipWrapper::~ZipWrapper()
@@ -44,13 +44,11 @@ bool ZipWrapper::Close()
 	if (zipArchiveStream != nullptr)
 	{
 		zipArchiveStream->close();
-		delete zipArchiveStream;
 		zipArchiveStream = nullptr;
 	}
 
 	if (zipArchive != nullptr)
 	{
-		delete zipArchive;
 		zipArchive = nullptr;
 	}
 
@@ -89,7 +87,6 @@ bool MultiFile::Close()
 	if (this->zip != nullptr)
 	{
 		zip->commit();
-		delete zip;
 		zip = nullptr;
 		retValue = true;
 	}
@@ -117,10 +114,9 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 		c.close();
 		if (zip != nullptr)
 		{
-			delete zip;
 			zip = nullptr;
 		}
-		zip = new Poco::Zip::ZipManipulator(this->zipFile, false);
+		zip = std::make_shared<Poco::Zip::ZipManipulator>(this->zipFile, false);
 	}
 	zip->addFile(digest, file.string());
 	this->totalSize += newEntry.size;
@@ -176,7 +172,7 @@ bool FileRepositoryDB::HasFile(const std::string& handle, boost::filesystem::pat
 				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
 				{
 					auto hostPath = this->dataRootPath / boost::filesystem::path(hostDigest);
-					this->zipFiles[hostDigest] = new ZipWrapper(hostPath.string());
+					this->zipFiles[hostDigest] = std::make_shared<ZipWrapper>(hostPath.string());
 				}
 				auto tempFileName = Poco::TemporaryFile::tempName();
 				auto multiFile = this->zipFiles[hostDigest];

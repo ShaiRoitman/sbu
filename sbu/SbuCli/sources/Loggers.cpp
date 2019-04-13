@@ -12,6 +12,26 @@
 
 const int bufferSize = 64 * 1024;
 
+class InitRootLogger
+{
+public:
+	InitRootLogger()
+	{
+		sChannel = new Poco::SplitterChannel();
+		Poco::AutoPtr<Poco::PatternFormatter> pPF(new Poco::PatternFormatter());
+		pPF->setProperty("pattern", "%Y-%m-%d %H:%M:%S [%P:%I] [%s]:[%p]: %t");
+		Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pPF, sChannel));
+
+		Poco::Logger::root().setChannel(pFC);
+		Poco::Logger::root().setLevel("information");
+	}
+
+	static Poco::AutoPtr<Poco::SplitterChannel> sChannel;
+};
+
+Poco::AutoPtr<Poco::SplitterChannel> InitRootLogger::sChannel;
+static InitRootLogger initLogger;
+
 void ILogger::TraceFormat(const char* format, ...)
 {
 	char buffer[bufferSize];
@@ -116,20 +136,13 @@ protected:
 
 void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 {
-	Poco::AutoPtr<Poco::SplitterChannel> sChannel(new Poco::SplitterChannel());
-	Poco::AutoPtr<Poco::PatternFormatter> pPF(new Poco::PatternFormatter());
-	pPF->setProperty("pattern", "%Y-%m-%d %H:%M:%S [%P:%I] [%s]:[%p]: %t");
-	Poco::AutoPtr<Poco::FormattingChannel> pFC(new Poco::FormattingChannel(pPF, sChannel));
-
-	std::string logFormat = "[%TimeStamp%]: [%Severity%] [%Message%]";
-
 	if (!vm["Logging.Console"].empty())
 	{
 		auto value = vm["Logging.Console"].as<std::string>();
 		if (vm["Logging.Console"].as<std::string>() == "true")
 		{
 			Poco::AutoPtr<Poco::StreamChannel> cChannel(new Poco::StreamChannel(std::cout));
-			sChannel->addChannel(cChannel);
+			InitRootLogger::sChannel->addChannel(cChannel);
 		}
 	}
 
@@ -140,12 +153,9 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 		{
 			Poco::AutoPtr<Poco::FileChannel> pChannel(new Poco::FileChannel());
 			pChannel->setProperty("path", fileName);
-			sChannel->addChannel(pChannel);
+			InitRootLogger::sChannel->addChannel(pChannel);
 		}
 	}
-
-	Poco::Logger::root().setChannel(pFC);
-	Poco::Logger::root().setLevel("information");
 }
 
 std::shared_ptr<ILogger> LoggerFactory::getLogger(const char* component)

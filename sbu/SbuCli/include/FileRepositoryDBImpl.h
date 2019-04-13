@@ -13,8 +13,8 @@ public:
 	bool ExtractFile(const std::string& handle, const std::string& path);
 	bool Close();
 
-	Poco::Zip::ZipArchive* zipArchive;
-	std::ifstream* zipArchiveStream;
+	std::shared_ptr<Poco::Zip::ZipArchive> zipArchive;
+	std::shared_ptr <std::ifstream> zipArchiveStream;
 	std::shared_ptr<ILogger> logger;
 };
 
@@ -40,7 +40,7 @@ public:
 
 	std::string zipFile;
 	std::map<std::string, fileEntry> entries;
-	Poco::Zip::ZipManipulator* zip;
+	std::shared_ptr <Poco::Zip::ZipManipulator> zip;
 	std::shared_ptr<ILogger> logger;
 };
 
@@ -64,5 +64,5 @@ private:
 	long long bulkSize;
 
 	MultiFile multiFile;
-	std::map<std::string, ZipWrapper*> zipFiles;
+	std::map<std::string, std::shared_ptr<ZipWrapper>> zipFiles;
 };

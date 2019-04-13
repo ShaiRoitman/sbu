@@ -9,8 +9,6 @@
 #include "Operations.h"
 #include "ExitCodes.h"
 
-
-
 int main(int argc, const char* argv[])
 {
 	std::map<std::string, Operation::Factory> operations;
