@@ -15,6 +15,7 @@ public:
 
 	std::shared_ptr<Poco::Zip::ZipArchive> zipArchive;
 	std::shared_ptr <std::ifstream> zipArchiveStream;
+	std::string zipArchiveStreamName;
 	std::shared_ptr<ILogger> logger;
 };
 

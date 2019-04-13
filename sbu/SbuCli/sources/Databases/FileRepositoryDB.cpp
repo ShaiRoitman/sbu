@@ -22,8 +22,9 @@ ZipWrapper::ZipWrapper(const std::string& fileName) :
 	logger(LoggerFactory::getLogger("application.ZipWrapper"))
 {
 	this->zipArchiveStream = std::make_shared<std::ifstream>(fileName, std::ios::binary);
+	this->zipArchiveStreamName = fileName;
 	this->zipArchive = std::make_shared<Poco::Zip::ZipArchive>(*this->zipArchiveStream);
-	logger->DebugFormat("ZipWrapper::ZipWrapper() using filename [%s]", fileName);
+	logger->DebugFormat("ZipWrapper::ZipWrapper() using filename:[%s]", fileName);
 }
 ZipWrapper::~ZipWrapper()
 {
@@ -31,13 +32,24 @@ ZipWrapper::~ZipWrapper()
 }
 bool ZipWrapper::ExtractFile(const std::string& handle, const std::string& path)
 {
-	Poco::Zip::ZipArchive::FileHeaders::const_iterator it = this->zipArchive->findHeader(handle);
-	Poco::Zip::ZipInputStream zipin(*this->zipArchiveStream, it->second);
-	std::ofstream out(path, std::ios::binary);
-	Poco::StreamCopier::copyStream(zipin, out);
-	out.close();
-	return true;
+	bool retValue = false;
+	logger->DebugFormat("ZipWrapper::ExtractFile() Extract handle:[%s] path:[%s]", handle, path);
+	try {
+		Poco::Zip::ZipArchive::FileHeaders::const_iterator it = this->zipArchive->findHeader(handle);
+		Poco::Zip::ZipInputStream zipin(*this->zipArchiveStream, it->second);
+		std::ofstream out(path, std::ios::binary);
+		Poco::StreamCopier::copyStream(zipin, out);
+		out.close();
+		retValue = true;
+	}
+	catch (std::exception ex)
+	{
+		logger->ErrorFormat("ZipWrapper::ExtractFile() Extract handle:[%s] path:[%s] Failed exception:[%s]",
+			handle, path, ex.what());
+	}
+	return retValue;
 }
+
 bool ZipWrapper::Close()
 {
 	bool retValue = false;
@@ -52,7 +64,7 @@ bool ZipWrapper::Close()
 		zipArchive = nullptr;
 	}
 
-	logger->DebugFormat("ZipWrapper::Close() filename [%s] closing [%d]", "test", retValue);
+	logger->DebugFormat("ZipWrapper::Close() filename:[%s] closing:[%d]", zipArchiveStreamName, retValue);
 	return retValue;
 }
 
@@ -70,14 +82,14 @@ MultiFile::MultiFile() :
 
 MultiFile::~MultiFile()
 {
-	logger->DebugFormat("MultiFile::~MultiFile() closing filename [%s]", this->zipFile);
+	logger->DebugFormat("MultiFile::~MultiFile() closing filename:[%s]", this->zipFile);
 	this->Close();
 }
 
 Poco::UInt64 MultiFile::GetSize()
 {
 	auto retValue = this->totalSize;
-	logger->DebugFormat("MultiFile::GetSize() filename [%s] currentSize [%lld]", this->zipFile, this->totalSize);
+	logger->DebugFormat("MultiFile::GetSize() filename [%s]:currentSize:[%lld]", this->zipFile, this->totalSize);
 	return retValue;
 }
 
@@ -91,7 +103,7 @@ bool MultiFile::Close()
 		retValue = true;
 	}
 
-	logger->DebugFormat("MultiFile::Close() filename [%s] closing [%d]", this->zipFile, retValue);
+	logger->DebugFormat("MultiFile::Close() filename:[%s] closing:[%d]", this->zipFile, retValue);
 	return retValue;
 }
 
@@ -99,7 +111,7 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 {
 	if (this->HasFile(digest))
 	{
-		logger->DebugFormat("MultiFile::AddFile() filename [%s], path [%s] digest [%s] Already Exists", this->zipFile, file.string(), digest);
+		logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Already Exists", this->zipFile, file.string(), digest);
 		return false;
 	}
 	fileEntry newEntry;
@@ -121,7 +133,7 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 	zip->addFile(digest, file.string());
 	this->totalSize += newEntry.size;
 
-	logger->DebugFormat("MultiFile::AddFile() filename [%s], path [%s] digest [%s] Added", this->zipFile, file.string(), digest);
+	logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Size:[%ld]", this->zipFile, file.string(), digest, newEntry.size);
 	return true;
 }
 
@@ -225,13 +237,13 @@ std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::s
 		}
 		else
 		{
-			logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] exists in multiFile", key.c_str());
+			logger->DebugFormat("FileRepositoryDB::AddFile() key:[%s] exists in multiFile", key.c_str());
 
 		}
 	}
 	else
 	{
-		logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] exists", key.c_str());
+		logger->DebugFormat("FileRepositoryDB::AddFile() key:[%s] exists", key.c_str());
 	}
 
 	return key;
@@ -307,7 +319,7 @@ void FileRepositoryDB::SendMultiFile()
 	boost::filesystem::create_directories(destPath.branch_path());
 	if (copy_file_logged(this->multiFile.zipFile, destPath) == false)
 	{
-		logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
+		logger->ErrorFormat("FileRepositoryDB::AddFile() key:[%s] Failed", key.c_str());
 	}
 
 	SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
