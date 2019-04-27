@@ -49,21 +49,24 @@ class FileRepositoryDB : public IFileRepositoryDB
 {
 public:
 	FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize);
-	virtual bool HasFile(const std::string& handle) override;
-	virtual bool HasFile(const std::string& handle, boost::filesystem::path* path);
-	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override;
-	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override;
-	virtual void Complete() override;
+	virtual RepoHandle AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) final;
+	virtual bool HasFile(const RepoHandle& handle) final;
+	virtual bool GetFile(const RepoHandle& handle, boost::filesystem::path outFilePath) final;
+	virtual void Complete() final;
 protected:
-	void SendMultiFile();
+	virtual bool CopyFileToRepository(const RepoHandle& handle, boost::filesystem::path filePath) ;
+	virtual bool CopyFileFromRepository(const RepoHandle& handle, boost::filesystem::path filePath) ;
 private:
+	bool GetFileLocalPath(const RepoHandle& handle, boost::filesystem::path* path);
+	void SendMultiFile();
 	std::shared_ptr<SQLite::Database> db;
 	std::shared_ptr<ILogger> logger;
 	boost::filesystem::path dataRootPath;
-	
+
 	long long smallFileBulkThreshold;
 	long long bulkSize;
 
 	MultiFile multiFile;
 	std::map<std::string, std::shared_ptr<ZipWrapper>> zipFiles;
 };
+

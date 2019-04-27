@@ -49,7 +49,6 @@ bool ZipWrapper::ExtractFile(const std::string& handle, const std::string& path)
 	}
 	return retValue;
 }
-
 bool ZipWrapper::Close()
 {
 	bool retValue = false;
@@ -68,7 +67,6 @@ bool ZipWrapper::Close()
 	return retValue;
 }
 
-
 MultiFile::MultiFile() :
 	logger(LoggerFactory::getLogger("application.MultiFile"))
 {
@@ -79,20 +77,17 @@ MultiFile::MultiFile() :
 	boost::filesystem::remove(this->zipFile);
 	zip = nullptr;
 }
-
 MultiFile::~MultiFile()
 {
 	logger->DebugFormat("MultiFile::~MultiFile() closing filename:[%s]", this->zipFile);
 	this->Close();
 }
-
 Poco::UInt64 MultiFile::GetSize()
 {
 	auto retValue = this->totalSize;
 	logger->DebugFormat("MultiFile::GetSize() filename [%s]:currentSize:[%lld]", this->zipFile, this->totalSize);
 	return retValue;
 }
-
 bool MultiFile::Close() 
 {
 	bool retValue = false;
@@ -106,7 +101,6 @@ bool MultiFile::Close()
 	logger->DebugFormat("MultiFile::Close() filename:[%s] closing:[%d]", this->zipFile, retValue);
 	return retValue;
 }
-
 bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 {
 	if (this->HasFile(digest))
@@ -136,7 +130,6 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 	logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Size:[%ld]", this->zipFile, file.string(), digest, newEntry.size);
 	return true;
 }
-
 bool MultiFile::HasFile(const std::string& digest)
 {
 	bool retValue = false;
@@ -158,47 +151,7 @@ FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesy
 	this->bulkSize = bulkSize;
 	logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(dataRootPath).c_str());
 }
-
-bool FileRepositoryDB::HasFile(const std::string& handle)
-{
-	return this->HasFile(handle, nullptr);
-}
-
-bool FileRepositoryDB::HasFile(const std::string& handle, boost::filesystem::path* path)
-{
-	std::string key = handle;
-	SQLite::Statement query(*db, "SELECT Path,HostDigest FROM Files WHERE DigestValue=:key");
-	query.bind(":key", key);
-	bool retValue = false;
-	if (query.executeStep())
-	{
-		if (path != nullptr)
-		{
-			if (query.getColumn("Path").isNull() == false)
-			{
-				*path = this->dataRootPath / from_utf8(query.getColumn("Path").getString());
-			}
-			else
-			{
-				auto hostDigest = query.getColumn("HostDigest").getString();
-				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
-				{
-					auto hostPath = this->dataRootPath / boost::filesystem::path(hostDigest);
-					this->zipFiles[hostDigest] = std::make_shared<ZipWrapper>(hostPath.string());
-				}
-				auto tempFileName = Poco::TemporaryFile::tempName();
-				auto multiFile = this->zipFiles[hostDigest];
-				multiFile->ExtractFile(key, tempFileName);
-				*path = tempFileName;
-			}
-		}
-		retValue = true;
-	}
-
-	return retValue;
-}
-
-std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest)
+IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest)
 {
 	logger->DebugFormat("FileRepositoryDB::AddFile() path:[%s] digestType:[%s] digest:[%s]", file.string().c_str(), digestType.c_str(), digest.c_str());
 
@@ -219,7 +172,7 @@ std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::s
 			else
 			{
 				logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
-				path destPath = this->dataRootPath / boost::filesystem::path(digest);
+				boost::filesystem::path destPath = this->dataRootPath / boost::filesystem::path(digest);
 				boost::filesystem::create_directories(destPath.branch_path());
 				if (copy_file_logged(file, destPath) == false)
 				{
@@ -248,8 +201,11 @@ std::string FileRepositoryDB::AddFile(boost::filesystem::path file, const std::s
 
 	return key;
 }
-
-bool FileRepositoryDB::GetFile(const std::string& handle, boost::filesystem::path outFilePath)
+bool FileRepositoryDB::HasFile(const RepoHandle& handle)
+{
+	return this->GetFileLocalPath(handle, nullptr);
+}
+bool FileRepositoryDB::GetFile(const RepoHandle& handle, boost::filesystem::path outFilePath)
 {
 	logger->DebugFormat("FileRepositoryDB::GetFile() handle:[%s] destination:[%s]",
 		handle.c_str(),
@@ -259,7 +215,7 @@ bool FileRepositoryDB::GetFile(const std::string& handle, boost::filesystem::pat
 	boost::filesystem::path srcPath;
 
 	bool retValue = false;
-	if (this->HasFile(key, &srcPath))
+	if (this->GetFileLocalPath(key, &srcPath))
 	{
 		boost::filesystem::create_directories(outFilePath.branch_path());
 		if (copy_file_logged(srcPath, outFilePath) == false)
@@ -278,7 +234,6 @@ bool FileRepositoryDB::GetFile(const std::string& handle, boost::filesystem::pat
 
 	return retValue;
 }
-
 void FileRepositoryDB::Complete()
 {
 	logger->DebugFormat("FileRepositoryDB::Complete()");
@@ -287,7 +242,41 @@ void FileRepositoryDB::Complete()
 		SendMultiFile();
 	}
 }
+bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesystem::path* path)
+{
+	std::string key = handle;
+	SQLite::Statement query(*db, "SELECT Path,HostDigest FROM Files WHERE DigestValue=:key");
+	query.bind(":key", key);
+	bool retValue = false;
+	if (query.executeStep())
+	{
+		if (path != nullptr)
+		{
+			auto pathColumn = query.getColumn("Path");
+			if (pathColumn.isNull() == false)
+			{
+				*path = this->dataRootPath / from_utf8(pathColumn.getString());
+			}
+			else
+			{
+				auto hostDigest = query.getColumn("HostDigest").getString();
+				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
+				{
+					auto ziptempFileName = Poco::TemporaryFile::tempName();
+					this->CopyFileFromRepository(hostDigest, ziptempFileName);
+					this->zipFiles[hostDigest] = std::make_shared<ZipWrapper>(ziptempFileName);
+				}
+				auto tempFileName = Poco::TemporaryFile::tempName();
+				auto multiFile = this->zipFiles[hostDigest];
+				multiFile->ExtractFile(key, tempFileName);
+				*path = tempFileName;
+			}
+		}
+		retValue = true;
+	}
 
+	return retValue;
+}
 void FileRepositoryDB::SendMultiFile()
 {
 	this->multiFile.Close();
@@ -334,6 +323,16 @@ void FileRepositoryDB::SendMultiFile()
 	this->multiFile = MultiFile();
 }
 
+bool FileRepositoryDB::CopyFileToRepository(const RepoHandle& handle, boost::filesystem::path filePath)
+{
+	auto repoFilePath = this->dataRootPath / handle;
+	return copy_file_logged(filePath, repoFilePath);
+}
+bool FileRepositoryDB::CopyFileFromRepository(const RepoHandle& handle, boost::filesystem::path filePath)
+{
+	auto repoFilePath = this->dataRootPath / handle;
+	return copy_file_logged(repoFilePath, filePath);
+}
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath,
 	boost::filesystem::path dataRootPath,
 	long minSizeToBulk,

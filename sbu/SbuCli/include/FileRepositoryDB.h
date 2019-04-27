@@ -6,9 +6,10 @@
 class IFileRepositoryDB
 {
 public:
-	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) = 0;
-	virtual bool HasFile(const std::string& handle) = 0;
-	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) = 0;
+	typedef std::string RepoHandle;
+	virtual RepoHandle AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) = 0;
+	virtual bool HasFile(const RepoHandle& handle) = 0;
+	virtual bool GetFile(const RepoHandle& handle, boost::filesystem::path outFilePath) = 0;
 	virtual void Complete() = 0;
 };
 

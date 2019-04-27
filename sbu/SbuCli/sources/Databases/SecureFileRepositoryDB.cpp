@@ -26,12 +26,10 @@ static void PocoTransform(boost::filesystem::path source, boost::filesystem::pat
 	encryptor.close();
 	sink.close();
 }
-
 static void PocoEncryptFile(boost::filesystem::path source, boost::filesystem::path dest, Cipher* pCipher)
 {
 	PocoTransform(source, dest, pCipher->createEncryptor());
 }
-
 static void PocoDecryptFile(boost::filesystem::path source, boost::filesystem::path dest, Cipher* pCipher)
 {
 	PocoTransform(source, dest, pCipher->createDecryptor());
@@ -45,39 +43,38 @@ public:
 	{
 		CipherFactory& factory = CipherFactory::defaultFactory();
 		pCipher = factory.createCipher(CipherKey("aes-256-cbc", password, "SecureFileRepositoryDB"));
+		this->password = password;
 	}
 
-	virtual std::string AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) override
+	virtual bool CopyFileToRepository(const RepoHandle& handle, boost::filesystem::path filePath)
 	{
 		std::string secureFile = boost::filesystem::unique_path().string();
-		PocoEncryptFile(file, secureFile, pCipher);
-		std::string secureDigest = calcHash(digest);
-		std::string secureDigestType = "Secure_" + digestType;
+		PocoEncryptFile(filePath, secureFile, pCipher);
+		std::string secureDigest = calcHash(handle + this->password);
+		std::string secureDigestType = "Secure_SHA1";
 
-		auto retValue = FileRepositoryDB::AddFile(secureFile, secureDigestType, secureDigest);
+		auto retValue = FileRepositoryDB::CopyFileToRepository(secureDigest, secureFile);
+
+		boost::filesystem::remove(secureFile);
+		return retValue;
+
+	}
+
+	virtual bool CopyFileFromRepository(const RepoHandle& handle, boost::filesystem::path filePath)
+	{
+		std::string secureFile = boost::filesystem::unique_path().string();
+		std::string secureDigest = calcHash(handle + this->password);
+		auto retValue = FileRepositoryDB::CopyFileFromRepository(secureDigest, secureFile);
+		PocoDecryptFile(secureFile, filePath, pCipher);
 
 		boost::filesystem::remove(secureFile);
 		return retValue;
 	}
 
-	virtual bool GetFile(const std::string& handle, boost::filesystem::path outFilePath) override
-	{
-		boost::filesystem::path srcPath;
-		bool retValue = false;
-		if (this->HasFile(handle, &srcPath))
-		{
-			boost::filesystem::create_directories(outFilePath.branch_path());
-			PocoDecryptFile(srcPath, outFilePath, pCipher);
-			retValue = true;
-		}
-
-		return retValue;
-	}
-
 private:
 	Cipher* pCipher;
+	std::string password;
 };
-
 
 std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
 	boost::filesystem::path dbPath,
