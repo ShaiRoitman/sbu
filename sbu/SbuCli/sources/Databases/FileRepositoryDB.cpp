@@ -18,6 +18,7 @@
 using namespace boost::filesystem;
 using namespace SQLite;
 
+
 ZipWrapper::ZipWrapper(const std::string& fileName) :
 	logger(LoggerFactory::getLogger("application.ZipWrapper"))
 {
@@ -142,14 +143,42 @@ bool MultiFile::HasFile(const std::string& digest)
 	return retValue;
 }
 
-FileRepositoryDB::FileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, long long smallFileThreshold, long long bulkSize) :
-	logger(LoggerFactory::getLogger("application.FileRepositoryDB"))
+static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.FileRepositoryDB");
+
+
+FileSystemStorageHandler::FileSystemStorageHandler(boost::filesystem::path dataRootPath)
 {
 	this->dataRootPath = dataRootPath;
+}
+
+bool FileSystemStorageHandler::CopyFileToRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path srcFilePath)
+{
+	auto repoFilePath = this->dataRootPath / handle;
+	boost::filesystem::create_directories(repoFilePath.branch_path());
+	bool retValue = copy_file_logged(srcFilePath, repoFilePath);
+	logger->InfoFormat("FileRepositoryDB::CopyFileToRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), srcFilePath.string().c_str());
+	return retValue;
+}
+
+bool FileSystemStorageHandler::CopyFileFromRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path dstFilePath)
+{
+	auto repoFilePath = this->dataRootPath / handle;
+	boost::filesystem::create_directories(dstFilePath.branch_path());
+	bool retValue = copy_file_logged(repoFilePath, dstFilePath);
+	logger->InfoFormat("FileRepositoryDB::CopyFileFromRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), dstFilePath.string().c_str());
+	return retValue;
+}
+
+
+
+FileRepositoryDB::FileRepositoryDB(std::shared_ptr<FileSystemStorageHandler> fileHandler, boost::filesystem::path dbPath, long long smallFileThreshold, long long bulkSize)
+{
+	this->fileHandler = fileHandler;
 	this->db = getOrCreateDb(dbPath, Text_Resource::FileRepository);
 	this->smallFileBulkThreshold = smallFileThreshold;
 	this->bulkSize = bulkSize;
-	logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(dataRootPath).c_str());
+	logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(fileHandler->dataRootPath).c_str());
+
 }
 IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest)
 {
@@ -172,9 +201,7 @@ IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path 
 			else
 			{
 				logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
-				boost::filesystem::path destPath = this->dataRootPath / boost::filesystem::path(digest);
-				boost::filesystem::create_directories(destPath.branch_path());
-				if (copy_file_logged(file, destPath) == false)
+				if (this->fileHandler->CopyFileToRepository(digest, this->multiFile.zipFile) == false)
 				{
 					logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
 				}
@@ -263,7 +290,7 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
 				{
 					auto ziptempFileName = Poco::TemporaryFile::tempName();
-					this->CopyFileFromRepository(hostDigest, ziptempFileName);
+					this->fileHandler->CopyFileFromRepository(hostDigest, ziptempFileName);
 					this->zipFiles[hostDigest] = std::make_shared<ZipWrapper>(ziptempFileName);
 				}
 				auto tempFileName = Poco::TemporaryFile::tempName();
@@ -304,9 +331,7 @@ void FileRepositoryDB::SendMultiFile()
 	auto fileSize = (long long)boost::filesystem::file_size(this->multiFile.zipFile);
 	auto key = digest;
 
-	path destPath = this->dataRootPath / boost::filesystem::path(digest);
-	boost::filesystem::create_directories(destPath.branch_path());
-	if (copy_file_logged(this->multiFile.zipFile, destPath) == false)
+	if (this->fileHandler->CopyFileToRepository(digest, this->multiFile.zipFile) == false)
 	{
 		logger->ErrorFormat("FileRepositoryDB::AddFile() key:[%s] Failed", key.c_str());
 	}
@@ -323,16 +348,6 @@ void FileRepositoryDB::SendMultiFile()
 	this->multiFile = MultiFile();
 }
 
-bool FileRepositoryDB::CopyFileToRepository(const RepoHandle& handle, boost::filesystem::path filePath)
-{
-	auto repoFilePath = this->dataRootPath / handle;
-	return copy_file_logged(filePath, repoFilePath);
-}
-bool FileRepositoryDB::CopyFileFromRepository(const RepoHandle& handle, boost::filesystem::path filePath)
-{
-	auto repoFilePath = this->dataRootPath / handle;
-	return copy_file_logged(repoFilePath, filePath);
-}
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath,
 	boost::filesystem::path dataRootPath,
 	long minSizeToBulk,
@@ -346,6 +361,10 @@ std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesyste
 		minSizeToBulk,
 		bulkSize);
 
-	return std::make_shared<FileRepositoryDB>(dbPath, dataRootPath, minSizeToBulk, bulkSize);
+	return std::make_shared<FileRepositoryDB>(
+		std::make_shared<FileSystemStorageHandler>(dataRootPath), 
+		dbPath, 
+		minSizeToBulk, 
+		bulkSize);
 }
 

@@ -13,6 +13,13 @@ public:
 	virtual void Complete() = 0;
 };
 
+class IStorageHandler
+{
+public:
+	virtual bool CopyFileToRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path srcFilePath) = 0;
+	virtual bool CopyFileFromRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path dstFilePath) = 0;
+};
+
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(
 	boost::filesystem::path dbPath,
 	boost::filesystem::path dataRootPath,

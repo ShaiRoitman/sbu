@@ -34,12 +34,13 @@ static void PocoDecryptFile(boost::filesystem::path source, boost::filesystem::p
 {
 	PocoTransform(source, dest, pCipher->createDecryptor());
 }
+static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
 
 class SecureFileRepositoryDB : public FileRepositoryDB
 {
 public:
-	SecureFileRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path dataRootPath, const std::string& password)
-		: FileRepositoryDB(dbPath, dataRootPath, LLONG_MAX, LLONG_MAX)
+	SecureFileRepositoryDB(std::shared_ptr<FileSystemStorageHandler> fileHandler, boost::filesystem::path dbPath, const std::string& password)
+		: FileRepositoryDB(fileHandler, dbPath, LLONG_MAX, LLONG_MAX)
 	{
 		CipherFactory& factory = CipherFactory::defaultFactory();
 		pCipher = factory.createCipher(CipherKey("aes-256-cbc", password, "SecureFileRepositoryDB"));
@@ -53,21 +54,22 @@ public:
 		std::string secureDigest = calcHash(handle + this->password);
 		std::string secureDigestType = "Secure_SHA1";
 
-		auto retValue = FileRepositoryDB::CopyFileToRepository(secureDigest, secureFile);
+		auto retValue = this->fileHandler->CopyFileToRepository(secureDigest, secureFile);
 
 		boost::filesystem::remove(secureFile);
+		logger->InfoFormat("SecureFileRepositoryDB::CopyFileToRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), filePath.string().c_str());
 		return retValue;
-
 	}
 
 	virtual bool CopyFileFromRepository(const RepoHandle& handle, boost::filesystem::path filePath)
 	{
 		std::string secureFile = boost::filesystem::unique_path().string();
 		std::string secureDigest = calcHash(handle + this->password);
-		auto retValue = FileRepositoryDB::CopyFileFromRepository(secureDigest, secureFile);
+		auto retValue = this->fileHandler->CopyFileFromRepository(secureDigest, secureFile);
 		PocoDecryptFile(secureFile, filePath, pCipher);
 
 		boost::filesystem::remove(secureFile);
+		logger->InfoFormat("SecureFileRepositoryDB::CopyFileToRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), filePath.string().c_str());
 		return retValue;
 	}
 
@@ -85,5 +87,8 @@ std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
 {
 	static auto logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
 	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
-	return std::make_shared<SecureFileRepositoryDB>(dbPath, dataRootPath, password);
+	return std::make_shared<SecureFileRepositoryDB>(
+		std::make_shared<FileSystemStorageHandler>(dataRootPath),
+		dbPath, 
+		password);
 }
