@@ -270,7 +270,7 @@ class TestNightly(unittest.TestCase):
         self.assertEqual(os.path.isfile(os.path.join(targetDir,"SecondFile")), True)
         self.assertEqual(os.path.isfile(os.path.join(targetDir,"ThirdFile")), True)
 
-        createRandomFile( os.path.join(srcDir,"ForthFile"), 64*1024, 16*1024)
+        createRandomFile( os.path.join(srcDir,"ForthFile"), 640*1024, 16*1024)
         os.remove(os.path.join(srcDir,"SecondFile"))
         createRandomFile( os.path.join(srcDir,"SecondFile"), 64*1024, 16*1024)
 

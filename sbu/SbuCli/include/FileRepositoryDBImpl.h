@@ -1,49 +1,9 @@
 #include "FileRepositoryDB.h"
 #include "Loggers.h"
 #include "SQLiteCpp/SQLiteCpp.h"
-#include "Poco/Types.h"
-#include "Poco/Zip/ZipManipulator.h"
+#include "MultiFile.h"
+#include "ZipWrapper.h"
 #include <map>
-
-class ZipWrapper
-{
-public:
-	ZipWrapper(const std::string& fileName);
-	virtual ~ZipWrapper();
-	bool ExtractFile(const std::string& handle, const std::string& path);
-	bool Close();
-
-	std::shared_ptr<Poco::Zip::ZipArchive> zipArchive;
-	std::shared_ptr <std::ifstream> zipArchiveStream;
-	std::string zipArchiveStreamName;
-	std::shared_ptr<ILogger> logger;
-};
-
-class MultiFile
-{
-public:
-	MultiFile();
-	virtual ~MultiFile();
-	Poco::UInt64 GetSize();
-	bool AddFile(boost::filesystem::path file, const std::string& digest);
-	bool HasFile(const std::string& digest);
-	bool Close();
-public:
-	struct fileEntry
-	{
-		boost::filesystem::path file;
-		std::string digest;
-		long long size;
-	};
-
-	Poco::UInt64 totalSize;
-	Poco::UInt64 fileSize;
-
-	std::string zipFile;
-	std::map<std::string, fileEntry> entries;
-	std::shared_ptr <Poco::Zip::ZipManipulator> zip;
-	std::shared_ptr<ILogger> logger;
-};
 
 class FileSystemStorageHandler : public IStorageHandler
 {

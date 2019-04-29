@@ -4,150 +4,17 @@
 
 #include "FileRepositoryDBImpl.h"
 
-#include "Poco/Zip/Compress.h"
-#include "Poco/Zip/ZipManipulator.h"
-#include "Poco/Zip/ZipStream.h"
-#include "Poco/StreamCopier.h"
 #include "Poco/TemporaryFile.h"
-
-
-#include <iostream>
-#include <ostream>
-#include <sstream>
 
 using namespace boost::filesystem;
 using namespace SQLite;
 
 
-ZipWrapper::ZipWrapper(const std::string& fileName) :
-	logger(LoggerFactory::getLogger("application.ZipWrapper"))
-{
-	this->zipArchiveStream = std::make_shared<std::ifstream>(fileName, std::ios::binary);
-	this->zipArchiveStreamName = fileName;
-	this->zipArchive = std::make_shared<Poco::Zip::ZipArchive>(*this->zipArchiveStream);
-	logger->DebugFormat("ZipWrapper::ZipWrapper() using filename:[%s]", fileName);
-}
-ZipWrapper::~ZipWrapper()
-{
-
-}
-bool ZipWrapper::ExtractFile(const std::string& handle, const std::string& path)
-{
-	bool retValue = false;
-	logger->DebugFormat("ZipWrapper::ExtractFile() Extract handle:[%s] path:[%s]", handle, path);
-	try {
-		Poco::Zip::ZipArchive::FileHeaders::const_iterator it = this->zipArchive->findHeader(handle);
-		Poco::Zip::ZipInputStream zipin(*this->zipArchiveStream, it->second);
-		std::ofstream out(path, std::ios::binary);
-		Poco::StreamCopier::copyStream(zipin, out);
-		out.close();
-		retValue = true;
-	}
-	catch (std::exception ex)
-	{
-		logger->ErrorFormat("ZipWrapper::ExtractFile() Extract handle:[%s] path:[%s] Failed exception:[%s]",
-			handle, path, ex.what());
-	}
-	return retValue;
-}
-bool ZipWrapper::Close()
-{
-	bool retValue = false;
-	if (zipArchiveStream != nullptr)
-	{
-		zipArchiveStream->close();
-		zipArchiveStream = nullptr;
-	}
-
-	if (zipArchive != nullptr)
-	{
-		zipArchive = nullptr;
-	}
-
-	logger->DebugFormat("ZipWrapper::Close() filename:[%s] closing:[%d]", zipArchiveStreamName, retValue);
-	return retValue;
-}
-
-MultiFile::MultiFile() :
-	logger(LoggerFactory::getLogger("application.MultiFile"))
-{
-	this->totalSize = 0;
-	this->fileSize = 0;
-	this->zipFile = Poco::TemporaryFile::tempName();
-	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile);
-	boost::filesystem::remove(this->zipFile);
-	zip = nullptr;
-}
-MultiFile::~MultiFile()
-{
-	logger->DebugFormat("MultiFile::~MultiFile() closing filename:[%s]", this->zipFile);
-	this->Close();
-}
-Poco::UInt64 MultiFile::GetSize()
-{
-	auto retValue = this->totalSize;
-	logger->DebugFormat("MultiFile::GetSize() filename [%s]:currentSize:[%lld]", this->zipFile, this->totalSize);
-	return retValue;
-}
-bool MultiFile::Close() 
-{
-	bool retValue = false;
-	if (this->zip != nullptr)
-	{
-		zip->commit();
-		zip = nullptr;
-		retValue = true;
-	}
-
-	logger->DebugFormat("MultiFile::Close() filename:[%s] closing:[%d]", this->zipFile, retValue);
-	return retValue;
-}
-bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
-{
-	if (this->HasFile(digest))
-	{
-		logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Already Exists", this->zipFile, file.string(), digest);
-		return false;
-	}
-	fileEntry newEntry;
-	newEntry.digest = digest;
-	newEntry.file = file;
-	newEntry.size = (long long)boost::filesystem::file_size(file);
-	entries[digest] = newEntry;
-	if (boost::filesystem::exists(zipFile) == false && zip == nullptr)
-	{
-		std::ofstream out(zipFile, std::ios::binary);
-		Poco::Zip::Compress c(out, true);
-		c.close();
-		if (zip != nullptr)
-		{
-			zip = nullptr;
-		}
-		zip = std::make_shared<Poco::Zip::ZipManipulator>(this->zipFile, false);
-	}
-	zip->addFile(digest, file.string());
-	this->totalSize += newEntry.size;
-
-	logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Size:[%ld]", this->zipFile, file.string(), digest, newEntry.size);
-	return true;
-}
-bool MultiFile::HasFile(const std::string& digest)
-{
-	bool retValue = false;
-	if (entries.find(digest) != entries.end())
-	{
-		retValue = true;
-	}
-
-	logger->DebugFormat("MultiFile::HasFile() filename [%s], digest [%s] retValue ", this->zipFile, digest, retValue);
-	return retValue;
-}
-
 static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.FileRepositoryDB");
-
 
 FileSystemStorageHandler::FileSystemStorageHandler(boost::filesystem::path dataRootPath)
 {
+	logger->DebugFormat("FileSystemStorageHandler::FileSystemStorageHandler() dataRootPath:[%s]", dataRootPath.string().c_str());
 	this->dataRootPath = dataRootPath;
 }
 
@@ -192,6 +59,7 @@ IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path 
 			auto fileSize = (long long)boost::filesystem::file_size(file);
 			if (fileSize < this->smallFileBulkThreshold)
 			{
+				logger->DebugFormat("FileRepositoryDB::AddFile() small file size:[%ld] digest:[%s]", fileSize, digest.c_str());
 				this->multiFile.AddFile(file, digest);
 				if (this->multiFile.GetSize() > this->bulkSize)
 				{
@@ -282,7 +150,9 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 			auto pathColumn = query.getColumn("Path");
 			if (pathColumn.isNull() == false)
 			{
-				*path = this->dataRootPath / from_utf8(pathColumn.getString());
+				auto tempFileName = Poco::TemporaryFile::tempName();
+				this->fileHandler->CopyFileFromRepository(pathColumn.getString(), tempFileName);
+				*path = tempFileName;
 			}
 			else
 			{
