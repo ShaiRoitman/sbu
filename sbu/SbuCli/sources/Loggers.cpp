@@ -159,7 +159,7 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 	if (!vm["Logging.Verbosity"].empty())
 	{
 		auto verbosity = vm["Logging.Verbosity"].as<std::string>();
-//		InitRootLogger::sChannel->setProperty("level", verbosity);
+		Poco::Logger::root().setLevel(verbosity);
 	}
 }
 
