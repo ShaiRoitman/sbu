@@ -156,6 +156,11 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 			InitRootLogger::sChannel->addChannel(pChannel);
 		}
 	}
+	if (!vm["Logging.Verbosity"].empty())
+	{
+		auto verbosity = vm["Logging.Verbosity"].as<std::string>();
+//		InitRootLogger::sChannel->setProperty("level", verbosity);
+	}
 }
 
 std::shared_ptr<ILogger> LoggerFactory::getLogger(const char* component)

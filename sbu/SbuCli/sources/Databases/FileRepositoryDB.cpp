@@ -69,7 +69,7 @@ IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path 
 			else
 			{
 				logger->DebugFormat("FileRepositoryDB::AddFile() key [%s] is missing -> adding", key.c_str());
-				if (this->fileHandler->CopyFileToRepository(digest, this->multiFile.zipFile) == false)
+				if (this->fileHandler->CopyFileToRepository(digest, file) == false)
 				{
 					logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
 				}
