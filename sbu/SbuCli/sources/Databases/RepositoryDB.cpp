@@ -332,8 +332,6 @@ private:
 
 std::shared_ptr<IRepositoryDB> CreateRepositorySQLiteDB(boost::filesystem::path dbPath)
 {
-	static auto logger = LoggerFactory::getLogger("application.RepositoryDB");
-
 	logger->DebugFormat("Creating RepositoryDB dbPath:[%s]", dbPath.string().c_str());
 	return std::make_shared<RepositoryDB>(dbPath);
 }

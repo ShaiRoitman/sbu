@@ -21,9 +21,9 @@ public:
 			if (infoQuery.executeStep())
 			{
 				this->root = from_utf8(infoQuery.getColumn("RootPath").getString());
+				logger->DebugFormat("BackupDB::BackupDB() dbpath:[%s] already exists Using RootPath [%s]", dbPath.string().c_str(), this->root.c_str());
 			}
 		}
-
 	}
 
 	void UpdateAction(const std::string& action)
@@ -56,6 +56,8 @@ public:
 
 	virtual void ContinueScan() override
 	{
+		logger->DebugFormat("BackupDB::ContinueScan() Start");
+
 		SQLite::Statement shouldRunStage(*db, "SELECT FileUploadComplete FROM GeneralInfo WHERE ScanComplete IS NOT NULL");
 		if (shouldRunStage.executeStep())
 		{
@@ -64,7 +66,6 @@ public:
 		}
 
 		this->UpdateAction("ContinueScan");
-		logger->DebugFormat("BackupDB::ContinueScan() Start");
 		AddToExecutionLog("Continue Scan", "");
 		SQLite::Statement query(*db, "SELECT ID,Path from NextScan");
 		while (query.executeStep())
@@ -80,8 +81,8 @@ public:
 		completeStage.bind(":date", return_current_time_and_date());
 		completeStage.exec();
 
-		logger->DebugFormat("BackupDB::ContinueScan() End");
 		AddToExecutionLog("End of Scan", "");
+		logger->DebugFormat("BackupDB::ContinueScan() End");
 	}
 
 	virtual bool IsScanDone() override
@@ -165,16 +166,19 @@ public:
 
 	virtual bool IsDiffCalcDone() override
 	{
+		logger->InfoFormat("BackupDB::IsDiffCalcDone()");
 		return false;
 	}
 
 	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
+		logger->InfoFormat("BackupDB::StartUpload()");
 		this->UpdateAction("StartUpload");
 	}
 
 	virtual void ContinueUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
+		logger->InfoFormat("BackupDB::ContinueUpload()");
 		SQLite::Statement shouldRunStage(*db, "SELECT FileUploadComplete FROM GeneralInfo WHERE FileUploadComplete IS NOT NULL");
 		if (shouldRunStage.executeStep())
 		{
@@ -222,11 +226,13 @@ public:
 
 	virtual bool IsUploadDone() override
 	{
+		bool retValue = true;
 		SQLite::Statement uploadQuery(*db, Text_Resource::findUploadQuery);
 		if (uploadQuery.executeStep())
-			return false;
-		else
-			return true;
+			retValue = false;
+
+		logger->InfoFormat("BackupDB::IsUploadDone() retValue:[%d]", retValue);
+		return retValue;
 	}
 
 	virtual void Complete() override
@@ -236,6 +242,7 @@ public:
 		completeStage.exec();
 
 		this->UpdateAction("Complete");
+		logger->InfoFormat("BackupDB::Complete()");
 	}
 
 protected:
@@ -387,7 +394,6 @@ private:
 
 std::shared_ptr<IBackupDB> CreateSQLiteDB(boost::filesystem::path dbPath)
 {
-	static auto logger = LoggerFactory::getLogger("application.BackupDB");
 	logger->DebugFormat("Creating BackupDB dbPath:[%s]", dbPath.string().c_str());
 	return std::make_shared<BackupDB>(dbPath);
 }

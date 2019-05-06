@@ -34,6 +34,7 @@ static void PocoDecryptFile(boost::filesystem::path source, boost::filesystem::p
 {
 	PocoTransform(source, dest, pCipher->createDecryptor());
 }
+
 static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
 
 class SecureFileRepositoryDB : public FileRepositoryDB
@@ -85,7 +86,6 @@ std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
 	long minSizeToBulk,
 	long bulkSize)
 {
-	static auto logger = LoggerFactory::getLogger("application.SecureFileRepositoryDB");
 	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
 	return std::make_shared<SecureFileRepositoryDB>(
 		std::make_shared<FileSystemStorageHandler>(dataRootPath),

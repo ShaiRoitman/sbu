@@ -223,8 +223,6 @@ std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesyste
 	long minSizeToBulk,
 	long bulkSize)
 {
-	static auto logger = LoggerFactory::getLogger("application.FileRepositoryDB");
-
 	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s] minFileToBulk:[%lld] fileBulkSize:[%lld]", 
 		dbPath.string().c_str(), 
 		dataRootPath.string().c_str(),
