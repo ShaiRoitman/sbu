@@ -6,10 +6,12 @@
 #include "sbu_exceptions.h"
 #include "ExitCodes.h"
 
+static auto logger = LoggerFactory::getLogger("Operations.ListBackupDef");
+
 class ListBackupDefsOperation : public Operation
 {
 public:
-	ListBackupDefsOperation() : logger(LoggerFactory::getLogger("Operations")) {}
+	ListBackupDefsOperation() {}
 	void Print(IRepositoryDB::BackupDef& backupdef)
 	{
 		std::cout << backupdef.id << ",";
@@ -34,8 +36,6 @@ public:
 		logger->DebugFormat("Operation:[ListBackupDefs] retValue:[%d]", retValue);
 		return retValue;
 	}
-private:
-	std::shared_ptr<ILogger> logger;
 };
 
 std::shared_ptr<Operation> ListBackupDefsFactory()
