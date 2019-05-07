@@ -55,8 +55,10 @@ public:
 			std::string content = ex.what();
 			if (content.find("UNIQUE constraint failed") != std::string::npos)
 			{
+				logger->ErrorFormat("RepositoryDB::AddBackupDef() Failed due to uniqueness");
 				throw sbu_alreadyexists();
 			}
+			logger->ErrorFormat("RepositoryDB::AddBackupDef() Failed");
 			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
 		}
 
@@ -79,6 +81,13 @@ public:
 			retValue->hostName = query.getColumn("Hostname").getString();
 			retValue->added = get_time_point(query.getColumn("Added").getString());
 		}
+
+		logger->InfoFormat("RepositoryDB::GetBackupDef() name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
+			name.c_str(),
+			retValue->id,
+			retValue->rootPath.string().c_str(),
+			retValue->hostName.c_str(),
+			get_string_from_time_point(retValue->added).c_str());
 
 		LogBackupDef("RepositoryDB::GetBackupDef() Added ", retValue);
 

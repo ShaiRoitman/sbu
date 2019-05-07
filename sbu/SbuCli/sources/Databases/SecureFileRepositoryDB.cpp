@@ -8,9 +8,8 @@
 #include "Poco/FileStream.h"
 #include "Poco/Crypto/CryptoStream.h"
 #include "Poco/StreamCopier.h"
+
 using namespace Poco::Crypto;
-
-
 using namespace boost::filesystem;
 using namespace SQLite;
 
@@ -89,6 +88,6 @@ std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
 	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
 	return std::make_shared<SecureFileRepositoryDB>(
 		std::make_shared<FileSystemStorageHandler>(dataRootPath),
-		dbPath, 
+		dbPath,
 		password);
 }

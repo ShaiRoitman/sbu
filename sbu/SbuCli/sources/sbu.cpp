@@ -24,7 +24,7 @@ int main(int argc, const char* argv[])
 	LoggerFactory::InitLogger(options.vm);
 	static auto logger = LoggerFactory::getLogger("application");
 
-	logger->Info("Application Started");
+	logger->Info("main(): Application Started");
 
 	if (!options.vm["General.Workdir]"].empty())
 	{
@@ -57,6 +57,6 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-	logger->InfoFormat("Application Ended retValue:[%d]", retValue);
+	logger->InfoFormat("main(): Application Ended retValue:[%d]", retValue);
 	return retValue;
 }

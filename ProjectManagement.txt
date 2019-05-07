@@ -48,3 +48,13 @@ Publish
 6. Stop within a restore
 7. Smart Restore - if file exists don't restore
 8. Restore Option - overwrite file always
+
+Features
+--------
+1. RestoreDB Database for incremental file restore
+2. AWS S3 storage
+3. logging 
+4. RaspberryPi Compile
+5. Ubuntu Compile
+6. Performance analysis
+7. Postgres / MySQL / Aurora Database connections
