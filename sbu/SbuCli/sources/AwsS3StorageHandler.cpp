@@ -9,7 +9,7 @@
 #include "aws/core/auth/AWSCredentialsProvider.h"
 #include "aws/transfer/TransferManager.h"
 
-static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.FileSystemStorageHandler");
+static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.AwsS3StorageHandler");
 
 AwsS3StorageHandler::AwsS3StorageHandler(
 	std::string region,
@@ -23,6 +23,14 @@ AwsS3StorageHandler::AwsS3StorageHandler(
 	this->region = region;
 	this->key = key;
 	this->secret = secret;
+
+	logger->InfoFormat(
+		"AwsS3StorageHandler::AwsS3StorageHandler() region:[%s] bucket:[%s] basePath:[%s] key:[%s]",
+		region.c_str(),
+		bucket.c_str(),
+		basePath.c_str(),
+		key.c_str()
+	);
 
 	Aws::SDKOptions awsoptions;
 	Aws::InitAPI(awsoptions);
@@ -39,6 +47,7 @@ AwsS3StorageHandler::AwsS3StorageHandler(
 
 bool AwsS3StorageHandler::CopyFileToRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path srcFilePath)
 {
+	bool retValue = false;
 	auto transferHandle = transferManager->UploadFile(
 		srcFilePath.string().c_str(), 
 		this->bucket.c_str(), 
@@ -49,12 +58,21 @@ bool AwsS3StorageHandler::CopyFileToRepository(const IFileRepositoryDB::RepoHand
 	transferHandle->WaitUntilFinished();
 
 	if (transferHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED)
-		return true;
-	return false;
+		retValue = true;
+
+	logger->InfoFormat(
+		"AwsS3StorageHandler::CopyFileToRepository() handle:[%s] srcFilePath:[%s] success:[%d]", 
+		handle.c_str(), 
+		srcFilePath.string().c_str(), 
+		retValue
+	);
+	return retValue;
 }
 
 bool AwsS3StorageHandler::CopyFileFromRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path dstFilePath)
 {
+	bool retValue = false;
+
 	auto transferHandle = transferManager->DownloadFile(
 		this->bucket.c_str(),
 		handle.c_str(),
@@ -63,6 +81,14 @@ bool AwsS3StorageHandler::CopyFileFromRepository(const IFileRepositoryDB::RepoHa
 	transferHandle->WaitUntilFinished();
 
 	if (transferHandle->GetStatus() == Aws::Transfer::TransferStatus::COMPLETED)
-		return true;
-	return false;
+		retValue = true;
+
+	logger->InfoFormat(
+		"AwsS3StorageHandler::CopyFileFromRepository() handle:[%s] dstFilePath:[%s] success:[%d]",
+		handle.c_str(),
+		dstFilePath.string().c_str(),
+		retValue
+	);
+
+	return retValue;
 }

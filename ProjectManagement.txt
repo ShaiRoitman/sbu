@@ -52,7 +52,7 @@ Publish
 Features
 --------
 1. RestoreDB Database for incremental file restore
-2. AWS S3 storage
+2. AWS S3 storage - Done
 3. logging 
 4. RaspberryPi Compile
 5. Ubuntu Compile
