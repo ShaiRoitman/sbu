@@ -3,7 +3,6 @@
 #include "utils.h"
 
 #include "FileRepositoryDBImpl.h"
-#include "FileRepositoryStorageHandler.h"
 
 #include "Poco/TemporaryFile.h"
 

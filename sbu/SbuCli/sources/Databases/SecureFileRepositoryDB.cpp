@@ -9,8 +9,6 @@
 #include "Poco/Crypto/CryptoStream.h"
 #include "Poco/StreamCopier.h"
 
-#include "FileRepositoryStorageHandler.h"
-
 using namespace Poco::Crypto;
 using namespace boost::filesystem;
 using namespace SQLite;

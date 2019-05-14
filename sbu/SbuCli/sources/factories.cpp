@@ -1,7 +1,9 @@
 #include "factories.h"
 #include "FileRepositoryDB.h"
-#include "FileRepositoryStorageHandler.h"
-#include "AwsS3StorageHandler.h"
+#include "StorageHandlers/AwsS3StorageHandler.h"
+#include "StorageHandlers/FileRepositoryStorageHandler.h"
+
+static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("factories");
 
 std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::variables_map& vm)
 {
@@ -18,6 +20,7 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 	{
 		boost::filesystem::path repoPath = vm["FileRepository.path"].as<std::string>();
 		storageHander = std::make_shared<FileSystemStorageHandler>(repoPath);
+		logger->InfoFormat("getFileRepository() return FileSystemHandler path:[%s]", repoPath.string().c_str());
 	}
 	else if (repoType == "AwsS3" || repoType == "SecureAwsS3")
 	{
@@ -27,9 +30,11 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 		std::string key = vm["AwsS3Storage.key"].as<std::string>();
 		std::string secret = vm["AwsS3Storage.secret"].as<std::string>();
 		storageHander = std::make_shared<AwsS3StorageHandler>(region, bucket, basePath, key, secret);
+		logger->InfoFormat("getFileRepository() return AWS S3 bucket:[%s]", bucket.c_str());
 	}
 	else
 	{
+		logger->ErrorFormat("getFileRepository() invalid repoType:[%s]", repoType.c_str());
 		return nullptr;
 	}
 
@@ -38,10 +43,12 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 	if (!vm["Storage.password"].empty() && isSecure)
 	{
 		fileRepDB = CreateSecureFileRepositorySQLiteDB(storageHander, dbPath, vm["Storage.password"].as<std::string>(), minSizeToBulk, bulkSize);
+		logger->InfoFormat("getFileRepository() returning Encrypted and Obfuscated FileRepository");
 	}
 	else
 	{
 		fileRepDB = CreateFileRepositorySQLiteDB(storageHander, dbPath, minSizeToBulk, bulkSize);
+		logger->InfoFormat("getFileRepository() returning Clear FileRepository");
 	}
 	
 	return fileRepDB;
