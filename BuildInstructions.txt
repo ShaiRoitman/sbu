@@ -16,7 +16,8 @@ vcpkg install sqlitecpp:x64-windows
 vcpkg install openssl:x64-windows
 vcpkg install poco:x64-windows
 vcpkg install boost:x64-windows
-vcpkg install aws-sdk-cpp[s3]:x64-windows
+vcpkg install aws-sdk-cpp:x64-windows
+vcpkg install aws-sdk-cpp[transfer]:x64-windows
 
 vcpkg install sqlite3:x64-windows-static
 vcpkg install sqlitecpp:x64-windows-static

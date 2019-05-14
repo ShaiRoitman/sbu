@@ -9,6 +9,8 @@
 #include "Poco/Crypto/CryptoStream.h"
 #include "Poco/StreamCopier.h"
 
+#include "FileRepositoryStorageHandler.h"
+
 using namespace Poco::Crypto;
 using namespace boost::filesystem;
 using namespace SQLite;
@@ -39,7 +41,7 @@ static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.S
 class SecureFileRepositoryDB : public FileRepositoryDB
 {
 public:
-	SecureFileRepositoryDB(std::shared_ptr<FileSystemStorageHandler> fileHandler, boost::filesystem::path dbPath, const std::string& password)
+	SecureFileRepositoryDB(std::shared_ptr<IStorageHandler> fileHandler, boost::filesystem::path dbPath, const std::string& password)
 		: FileRepositoryDB(fileHandler, dbPath, LLONG_MAX, LLONG_MAX)
 	{
 		CipherFactory& factory = CipherFactory::defaultFactory();
@@ -79,15 +81,15 @@ private:
 };
 
 std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
+	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
-	boost::filesystem::path dataRootPath,
 	const std::string& password,
 	long minSizeToBulk,
 	long bulkSize)
 {
-	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] dataRootPath:[%s]", dbPath.string().c_str(), dataRootPath.string().c_str());
+	logger->DebugFormat("Creating SecureFileRepositoryDB dbPath:[%s] ", dbPath.string().c_str());
 	return std::make_shared<SecureFileRepositoryDB>(
-		std::make_shared<FileSystemStorageHandler>(dataRootPath),
+		storageHander, 
 		dbPath,
 		password);
 }

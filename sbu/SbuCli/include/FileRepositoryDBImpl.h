@@ -5,28 +5,17 @@
 #include "ZipWrapper.h"
 #include <map>
 
-class FileSystemStorageHandler : public IStorageHandler
-{
-public:
-	FileSystemStorageHandler(boost::filesystem::path dataRootPath);
-	virtual bool CopyFileToRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path srcFilePath) override;
-	virtual bool CopyFileFromRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path dstFilePath) override;
-
-public:
-	boost::filesystem::path dataRootPath;
-};
-
 class FileRepositoryDB : public IFileRepositoryDB
 {
 public:
-	FileRepositoryDB(std::shared_ptr<FileSystemStorageHandler> fileHandler, boost::filesystem::path dbPath, long long smallFileThreshold, long long bulkSize);
+	FileRepositoryDB(std::shared_ptr<IStorageHandler> fileHandler, boost::filesystem::path dbPath, long long smallFileThreshold, long long bulkSize);
 	virtual RepoHandle AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest) final;
 	virtual bool HasFile(const RepoHandle& handle) final;
 	virtual bool GetFile(const RepoHandle& handle, boost::filesystem::path outFilePath) final;
 	virtual void Complete() final;
 
 protected:
-	std::shared_ptr<FileSystemStorageHandler> fileHandler;
+	std::shared_ptr<IStorageHandler> fileHandler;
 private:
 	bool GetFileLocalPath(const RepoHandle& handle, boost::filesystem::path* path);
 	void SendMultiFile();

@@ -21,13 +21,13 @@ public:
 };
 
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(
+	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
-	boost::filesystem::path dataRootPath,
 	long minSizeToBulk,
 	long bulkSize);
 std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
-	boost::filesystem::path dbPath, 
-	boost::filesystem::path dataRootPath, 
+	std::shared_ptr<IStorageHandler> storageHander,
+	boost::filesystem::path dbPath,
 	const std::string& password,
 	long minSizeToBulk,
 	long bulkSize);

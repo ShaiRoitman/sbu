@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include "FileRepositoryDBImpl.h"
+#include "FileRepositoryStorageHandler.h"
 
 #include "Poco/TemporaryFile.h"
 
@@ -12,39 +13,13 @@ using namespace SQLite;
 
 static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.FileRepositoryDB");
 
-FileSystemStorageHandler::FileSystemStorageHandler(boost::filesystem::path dataRootPath)
-{
-	logger->DebugFormat("FileSystemStorageHandler::FileSystemStorageHandler() dataRootPath:[%s]", dataRootPath.string().c_str());
-	this->dataRootPath = dataRootPath;
-}
-
-bool FileSystemStorageHandler::CopyFileToRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path srcFilePath)
-{
-	auto repoFilePath = this->dataRootPath / handle;
-	boost::filesystem::create_directories(repoFilePath.branch_path());
-	bool retValue = copy_file_logged(srcFilePath, repoFilePath);
-	logger->InfoFormat("FileRepositoryDB::CopyFileToRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), srcFilePath.string().c_str());
-	return retValue;
-}
-
-bool FileSystemStorageHandler::CopyFileFromRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path dstFilePath)
-{
-	auto repoFilePath = this->dataRootPath / handle;
-	boost::filesystem::create_directories(dstFilePath.branch_path());
-	bool retValue = copy_file_logged(repoFilePath, dstFilePath);
-	logger->InfoFormat("FileRepositoryDB::CopyFileFromRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), dstFilePath.string().c_str());
-	return retValue;
-}
-
-
-
-FileRepositoryDB::FileRepositoryDB(std::shared_ptr<FileSystemStorageHandler> fileHandler, boost::filesystem::path dbPath, long long smallFileThreshold, long long bulkSize)
+FileRepositoryDB::FileRepositoryDB(std::shared_ptr<IStorageHandler> fileHandler, boost::filesystem::path dbPath, long long smallFileThreshold, long long bulkSize)
 {
 	this->fileHandler = fileHandler;
 	this->db = getOrCreateDb(dbPath, Text_Resource::FileRepository);
 	this->smallFileBulkThreshold = smallFileThreshold;
 	this->bulkSize = bulkSize;
-	logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] root:[%s]", to_utf8(dbPath).c_str(), to_utf8(fileHandler->dataRootPath).c_str());
+	logger->DebugFormat("FileRepositoryDB::FileRepositoryDB() path:[%s] ", to_utf8(dbPath).c_str());
 
 }
 IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path file, const std::string& digestType, const std::string& digest)
@@ -218,20 +193,20 @@ void FileRepositoryDB::SendMultiFile()
 	this->multiFile = MultiFile();
 }
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(boost::filesystem::path dbPath,
-	boost::filesystem::path dataRootPath,
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(
+	std::shared_ptr<IStorageHandler> storageHander,
+	boost::filesystem::path dbPath,
 	long minSizeToBulk,
 	long bulkSize)
 {
-	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] dataRootPath:[%s] minFileToBulk:[%lld] fileBulkSize:[%lld]", 
+	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] minFileToBulk:[%lld] fileBulkSize:[%lld]", 
 		dbPath.string().c_str(), 
-		dataRootPath.string().c_str(),
 		minSizeToBulk,
 		bulkSize);
 
 	return std::make_shared<FileRepositoryDB>(
-		std::make_shared<FileSystemStorageHandler>(dataRootPath), 
-		dbPath, 
+		storageHander,
+		dbPath,
 		minSizeToBulk, 
 		bulkSize);
 }

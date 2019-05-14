@@ -30,6 +30,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string backupDBPath;
 	std::string step;
 	std::string filerepPassword;
+	std::string awskey, awssecret, awsbucket, awsregion, awsBasePath;
+	std::string storageType;
 	int byID;
 	long minSizeToBulk;
 	long bulkSize;
@@ -45,11 +47,17 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("byID", value(&byID), "Select By ID")
 		("bstep,a", value(&step), "BackupStep : All, Init, Scan, DiffCalc, FileUpload, Complete")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
-		("FileRepository.password", value (&filerepPassword), "If exists uses this password in a SecureFileRepository")
+		("General.StorageType", value(&filerepPassword), "StorageType: FileRepository, SecureFileRepository, AwsS3, SecureAwsS3")
+		("Storage.password", value (&storageType), "If exists uses this password SecureFileRepository or S3 Client side encryption")
 		("FileRepository.name", value(&filerepName)->default_value("FileRepository.db"), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
 		("FileRepository.minSizeToBulk", value(&minSizeToBulk)->default_value(128*1024), "Minimum file size to bulk")
 		("FileRepository.bulkSize", value(&bulkSize)->default_value(5*1024*1024), "bulk Size")
+		("AwsS3Storage.key", value(&awskey), "Access key for the AWS Account")
+		("AwsS3Storage.secret", value(&awssecret), "Secret for the AWS Account")
+		("AwsS3Storage.bucket", value(&awsbucket), "S3 Bucket AWS Account")
+		("AwsS3Storage.region", value(&awsregion), "S3 Bucket region AWS Account")
+		("AwsS3Storage.path", value(&awsBasePath), "S3 BasePath in Bucket AWS Account")
 		("Logging.Console", value(&logging)->default_value("False"), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
 		("Logging.Verbosity", value(&logging_verbosity)->default_value("Information"), "Logging Verbosity - Default Info")

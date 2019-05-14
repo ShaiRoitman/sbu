@@ -5,6 +5,11 @@ find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(sqlite3 CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Poco REQUIRED Foundation Util Crypto Zip)
+find_package(aws-cpp-sdk-core CONFIG REQUIRED transfer)
+find_package(aws-cpp-sdk-s3 CONFIG REQUIRED)
+find_package(aws-cpp-sdk-transfer CONFIG REQUIRED)
+
+
 
 #set(Boost_USE_STATIC_LIBS TRUE)
 #set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -31,5 +36,5 @@ source_group("Sources\\Databases" FILES ${databases})
 
 add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${resources_db})
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES} Poco::Foundation Poco::Util Poco::Crypto Poco::Zip)
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES} Poco::Foundation Poco::Util Poco::Crypto Poco::Zip aws-cpp-sdk-s3 aws-cpp-sdk-core aws-cpp-sdk-transfer)
 

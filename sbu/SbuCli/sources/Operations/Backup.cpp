@@ -62,7 +62,8 @@ public:
 		}
 		else
 		{
-			retValue = ExitCode_GeneralFailure;		}
+			retValue = ExitCode_GeneralFailure;		
+		}
 
 		logger->DebugFormat("Operation:[Scan] dbPath:[%s] retValue:[%d]", dbPath.c_str(), retValue);
 		return retValue;
