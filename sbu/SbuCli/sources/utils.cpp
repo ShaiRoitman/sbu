@@ -37,7 +37,7 @@ std::string return_current_time_and_date()
 	return get_string_from_time_point(now);
 }
 
-std::string return_time_and_date(__time64_t time)
+std::string return_time_and_date(time_t time)
 {
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&time), "%Y-%m-%d %X");

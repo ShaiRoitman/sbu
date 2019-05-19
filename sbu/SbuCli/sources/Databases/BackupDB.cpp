@@ -296,8 +296,8 @@ protected:
 	void InsertDirectoryToEntries(path dir)
 	{
 		static std::string insertQuerySQL = Text_Resource::InsertDirectory;
-		struct _stat64 result;
-		_wstati64(dir.generic_wstring().c_str(), &result);
+		struct stat result;
+		stat(dir.generic_string().c_str(), &result);
 		try {
 			SQLite::Statement insertQuery(*db, insertQuerySQL);
 			insertQuery.bind(":path", to_utf8(relative(dir, root)));

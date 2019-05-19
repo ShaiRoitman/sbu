@@ -13,7 +13,7 @@ std::string getHostName();
 std::string to_utf8(boost::filesystem::path path);
 boost::filesystem::path from_utf8(const std::string& str);
 std::string return_current_time_and_date();
-std::string return_time_and_date(__time64_t);
+std::string return_time_and_date(time_t tp);
 std::string calcHash(boost::filesystem::path path);
 std::string calcHash(const std::string& str);
 
