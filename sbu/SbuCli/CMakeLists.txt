@@ -39,7 +39,7 @@ source_group("Sources\\Operations" FILES ${operations})
 source_group("Sources\\Databases" FILES ${databases})
 source_group("Sources\\StorageHandlers" FILES ${storagehandlers})
 
+link_directories("/home/master/3rdParty/poco/rel/lib")
 add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db})
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} Poco::Foundation Poco::Util Poco::Crypto Poco::Zip aws-cpp-sdk-s3 aws-cpp-sdk-core aws-cpp-sdk-transfer)
-
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP})
