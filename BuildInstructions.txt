@@ -32,17 +32,15 @@ WindowsBuild.cmd
 
 Dependencies
 ------------
-Boost - https://github.com/boostorg/boost
 bootstrap
 b2 --build-type=complete address-model=64
 
-SQlite C++ Wrapper 				https://github.com/SRombauts/SQLiteCpp
-
-Future Dependencies
--------------------
-OpenSSL                    		https://github.com/openssl/openssl
-Log4CXX  						http://git-wip-us.apache.org/repos/asf/logging-log4cxx.git
-SQlite   						https://github.com/smparkes/sqlite
+Boost				https://github.com/boostorg/boost
+AWS SDK				https://github.com/aws/aws-sdk-cpp.git
+SQlite C++ Wrapper 		https://github.com/SRombauts/SQLiteCpp
+OpenSSL                    	https://github.com/openssl/openssl
+SQlite   			https://github.com/smparkes/sqlite
+Poco
 
 Clean
 -----
@@ -50,3 +48,47 @@ git clean -fxd
 git status | grep modi | clu -a 2 | clu --format "git add %%1" | clu --system
 
 
+
+sudo apt-get install libcurl4-openssl-dev
+
+Boost
+-----
+wget https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.tar.bz2
+tar xvjf boost_1_70_0.tar.bz2
+./bootstrap.sh
+./b2
+
+OpenSSL
+-------
+git clone https://github.com/openssl/openssl
+cd openssl
+./config
+make -j 4
+
+Poco
+----
+git clone -b master https://github.com/pocoproject/poco.git
+mkdir rel
+cd rel
+cmake ..
+make -j 4
+
+
+AWS SDK
+-------
+export OPENSSL_ROOT_DIR=~/3rdParty/openssl
+git clone https://github.com/aws/aws-sdk-cpp.git
+cd aws-sdk-cpp
+mkdir release
+cd release
+cmake ..
+make -j 4
+
+SQLiteCPP
+---------
+git clone https://github.com/SRombauts/SQLiteCpp
+cd SQLiteCpp
+mkdir release
+cd release
+cmake ..
+make -j 4
