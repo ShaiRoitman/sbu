@@ -9,6 +9,7 @@ find_package(aws-cpp-sdk-core CONFIG REQUIRED transfer)
 find_package(aws-cpp-sdk-s3 CONFIG REQUIRED)
 find_package(aws-cpp-sdk-transfer CONFIG REQUIRED)
 
+#find_package(AWSSDK REQUIRED COMPONENTS core s3 transfer)
 
 
 #set(Boost_USE_STATIC_LIBS TRUE)
@@ -40,5 +41,5 @@ source_group("Sources\\StorageHandlers" FILES ${storagehandlers})
 
 add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db})
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 OpenSSL::SSL OpenSSL::Crypto ${Boost_LIBRARIES} Poco::Foundation Poco::Util Poco::Crypto Poco::Zip aws-cpp-sdk-s3 aws-cpp-sdk-core aws-cpp-sdk-transfer)
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} Poco::Foundation Poco::Util Poco::Crypto Poco::Zip aws-cpp-sdk-s3 aws-cpp-sdk-core aws-cpp-sdk-transfer)
 

@@ -366,8 +366,8 @@ protected:
 	void HandleFile(path file)
 	{
 		static std::string insertQuerySQL = Text_Resource::InsertFile;
-		struct _stat64 result;
-		_wstati64(file.generic_wstring().c_str(), &result);
+		struct stat result;
+		stat(file.generic_string().c_str(), &result);
 		try {
 			SQLite::Statement insertQuery(*db, insertQuerySQL);
 			insertQuery.bind(":path", to_utf8(relative(file, root)));
