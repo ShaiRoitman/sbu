@@ -92,3 +92,6 @@ mkdir release
 cd release
 cmake ..
 make -j 4
+
+
+cmake -DCMAKE_PREFIX_PATH=/home/master/sbu/sbu/cmake/linux .

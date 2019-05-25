@@ -9,6 +9,7 @@
 #include "Poco/FileChannel.h"
 #include "Poco/AutoPtr.h"
 #include "Poco/Logger.h"
+#include <iostream>
 
 const int bufferSize = 64 * 1024;
 

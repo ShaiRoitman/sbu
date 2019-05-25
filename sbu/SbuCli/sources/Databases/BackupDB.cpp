@@ -1,6 +1,7 @@
 #include "BackupDB.h"
 #include "SQLiteCpp/SQLiteCpp.h"
 #include "utils.h"
+#include <sys/stat.h>
 
 using namespace boost::filesystem;
 using namespace SQLite;
