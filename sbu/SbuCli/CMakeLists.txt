@@ -40,6 +40,9 @@ source_group("Sources\\Databases" FILES ${databases})
 source_group("Sources\\StorageHandlers" FILES ${storagehandlers})
 
 link_directories("/home/master/3rdParty/poco/rel/lib")
+link_directories("/home/master/3rdParty/aws-sdk-cpp/release/aws-cpp-sdk-s3")
+link_directories("/home/master/3rdParty/aws-sdk-cpp/release/aws-cpp-sdk-transfer")
+link_directories("/home/master/3rdParty/aws-sdk-cpp/release/aws-cpp-sdk-core")
 add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db})
 
 target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP})
