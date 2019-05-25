@@ -9,12 +9,6 @@ find_package(aws-cpp-sdk-core CONFIG REQUIRED transfer)
 find_package(aws-cpp-sdk-s3 CONFIG REQUIRED)
 find_package(aws-cpp-sdk-transfer CONFIG REQUIRED)
 
-#find_package(AWSSDK REQUIRED COMPONENTS core s3 transfer)
-
-
-#set(Boost_USE_STATIC_LIBS TRUE)
-#set(OPENSSL_USE_STATIC_LIBS TRUE)
-
 file(GLOB         resources		"resources/*.sql")
 file(GLOB		  resources_db	"resources/databases/*.sql")
 file(GLOB_RECURSE operations	"sources/Operations/*.cpp")
@@ -39,10 +33,8 @@ source_group("Sources\\Operations" FILES ${operations})
 source_group("Sources\\Databases" FILES ${databases})
 source_group("Sources\\StorageHandlers" FILES ${storagehandlers})
 
-link_directories("/home/master/3rdParty/poco/rel/lib")
-link_directories("/home/master/3rdParty/aws-sdk-cpp/release/aws-cpp-sdk-s3")
-link_directories("/home/master/3rdParty/aws-sdk-cpp/release/aws-cpp-sdk-transfer")
-link_directories("/home/master/3rdParty/aws-sdk-cpp/release/aws-cpp-sdk-core")
 add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db})
+
+include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
 
 target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP})
