@@ -1,6 +1,8 @@
 #include "MultiFile.h"
 #include "Poco/TemporaryFile.h"
 #include "Poco/Zip/Compress.h"
+#include <iostream>
+#include <fstream>
 
 static auto logger = LoggerFactory::getLogger("application.MultiFile");
 

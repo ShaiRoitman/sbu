@@ -5,6 +5,7 @@
 #include <codecvt>
 #include <chrono>
 #include <sstream>
+#include <fstream>
 #include "boost/asio/ip/host_name.hpp"
 #include "openssl/sha.h"
 
