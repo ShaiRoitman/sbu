@@ -39,4 +39,4 @@ add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${o
 
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} dl pthread boost_filesystem boost_program_options aws-checksums)
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})
