@@ -17,7 +17,6 @@ public:
 		int retValue = ExitCode_Success;
 		std::string dbPath = vm["BackupDB.path"].as<std::string>();
 		bool doesExists = boost::filesystem::exists(dbPath);
-
 		if (doesExists == false)
 		{
 			std::string name = vm["name"].as<std::string>();
@@ -28,7 +27,6 @@ public:
 				auto backupDB = CreateSQLiteDB(dbPath);
 				backupDB->StartScan(backupdef->rootPath);
 				RepoDB->CopyCurrentStateIntoBackupDB(dbPath, *backupdef);
-
 			}
 			else
 			{

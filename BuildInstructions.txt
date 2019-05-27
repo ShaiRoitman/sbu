@@ -81,7 +81,7 @@ git clone https://github.com/aws/aws-sdk-cpp.git
 cd aws-sdk-cpp
 mkdir release
 cd release
-cmake ..
+cmake -DBUILD_ONLY="s3;core;transfer" ..
 make -j 4
 
 SQLiteCPP
@@ -92,6 +92,15 @@ mkdir release
 cd release
 cmake ..
 make -j 4
+
+Sqlite3
+-------
+git clone https://github.com/alex85k/sqlite3-cmake.git 
+cd sqlite3-cmake
+CMakeLists.txt -> 
+add_definitions(-DSQLITE_ENABLE_COLUMN_METADATA)
+cmake .
+sudo make install
 
 
 cmake -DCMAKE_PREFIX_PATH=/home/master/sbu/sbu/cmake/linux .

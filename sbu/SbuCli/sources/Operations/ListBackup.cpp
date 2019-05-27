@@ -26,7 +26,6 @@ public:
 		{
 			RepoDB->ListBackups(backupdef->id);
 		}
-
 		logger->DebugFormat("Operation:[ListBackups] Name:[%s] retValue:[%d]", name.c_str(), retValue);
 
 		return retValue;
