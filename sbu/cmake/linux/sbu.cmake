@@ -1,4 +1,4 @@
-set (POCO_DEP PocoZip PocoFoundation PocoUtil PocoCrypto)
+set (POCO_DEP PocoZip PocoFoundation PocoUtil PocoCrypto PocoNet)
 set (AWS_DEP aws-cpp-sdk-s3 aws-cpp-sdk-core aws-cpp-sdk-transfer)
 set (SBU_PLATFORM_LIBS boost_filesystem boost_program_options aws-checksums dl pthread)
 

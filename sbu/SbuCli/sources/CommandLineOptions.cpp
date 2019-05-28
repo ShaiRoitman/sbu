@@ -32,6 +32,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string filerepPassword;
 	std::string awskey, awssecret, awsbucket, awsregion, awsBasePath;
 	std::string storageType;
+	int serverPort;
 	int byID;
 	long minSizeToBulk;
 	long bulkSize;
@@ -41,7 +42,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("version", "print version")
 		("config", value(&config_file), "Config file")
 		("General.Workdir", value(&workdir), "working dir of the cmd")
-		("action,a", value(&action), "Actions include : CreateBackupDef, ListBackupDef, Backup, Restore, ListBackup, BackupInfo")
+		("action,a", value(&action), "Actions include : CreateBackupDef, ListBackupDef, Backup, Restore, ListBackup, BackupInfo, HTTPServer")
 		("name,n", value(&name), "Name")
 		("path,p", value(&path), "Path")
 		("byID", value(&byID), "Select By ID")
@@ -61,6 +62,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("Logging.Console", value(&logging)->default_value("False"), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
 		("Logging.Verbosity", value(&logging_verbosity)->default_value("Information"), "Logging Verbosity - Default Info")
+		("HTTPServer.Port", value(&serverPort)->default_value(8080), "HTTP Server port - 8080 default when running action HTTPServer")
 		("Repository.path", value(&repPath)->default_value("RepositoryDB.db"), "RepositoryDB path")
 		("showOnly", "In restore show only the files to be restored")
 		("BackupDB.path", value(&backupDBPath)->default_value("BackupDB.db"), "The name of the Backup database to use")

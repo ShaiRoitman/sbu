@@ -54,7 +54,7 @@ Features
 1. RestoreDB Database for incremental file restore
 2. AWS S3 storage - Done
 3. logging 
-4. RaspberryPi Compile
-5. Ubuntu Compile
+4. RaspberryPi Compile - Done 
+5. Ubuntu Compile - Done
 6. Performance analysis
 7. Postgres / MySQL / Aurora Database connections
