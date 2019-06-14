@@ -20,14 +20,39 @@ using namespace Poco::Net;
 using namespace Poco::Util;
 using namespace std;
 
-static auto logger = LoggerFactory::getLogger("Operations.HTTPServer");
+static auto myLogger = LoggerFactory::getLogger("Operations.HTTPServer");
 
 class HttpUrlRouter
 {
 public:
-	HttpUrlRouter()
+	HttpUrlRouter(boost::program_options::variables_map& params) 
+		: vm (params)
 	{
 		this->count = 0;
+
+		// Returns httpServer::Models::ProgramInformation
+		AddRoute(Verb::HTTP_GET, "/info", nullptr);
+
+		// Returns Array of httpServer::Models::BackupDef 
+		AddRoute(Verb::HTTP_GET, "/backupDef", nullptr);
+
+		// Input httpServer::Models::CreateBackupDef
+		// Returns httpServer::Models::BackupDef;
+		AddRoute(Verb::HTTP_POST, "/backupDef", nullptr);
+
+		// Returns httpServer::Models::BackupDef
+		AddRoute(Verb::HTTP_GET, "/backupDef/{id}", nullptr);
+
+		// Returns httpServer::Models::Backup
+		AddRoute(Verb::HTTP_POST, "/backupDef/{id}/backup", nullptr);
+
+		// Returns httpServer::Models::FullBackupDefInfo
+		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/backup/{bid}", nullptr);
+
+		// Input httpServer::Models::RestoreOptions
+		// Returns httpServer::Models::Backup
+		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/restore", nullptr);
+
 	}
 
 	void HandleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
@@ -37,9 +62,7 @@ public:
 		httpServer::Models::ProgramInformation info;
 		info.hostName = getHostName();
 		info.version = "0.9";
-		
 		auto d = info.getJson();
-
 
 		int k = 0;
 	}
@@ -51,12 +74,16 @@ public:
 
 	class HttpUrlRouterHandler {
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> params, HTTPServerRequest& req, HTTPServerResponse& resp) = 0;
+		virtual void OnRequest(
+			Verb verb, 
+			std::map<string, string> urlPathParams, 
+			std::map<string, string> queryParams, 
+			HTTPServerRequest& req, 
+			HTTPServerResponse& resp) = 0;
 	};
 
 	void AddRoute(Verb verb, const std::string &path, std::shared_ptr<HttpUrlRouterHandler> handler)
 	{
-
 	}
 
 	int TouchCount() 
@@ -71,8 +98,8 @@ public:
 	}
 
 	int count;
+	boost::program_options::variables_map& vm;
 };
-
 
 class MyRequestHandler : public HTTPRequestHandler
 {
@@ -84,8 +111,6 @@ public:
 
 	virtual void handleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
 	{
-
-
 		resp.setStatus(HTTPResponse::HTTP_OK);
 		resp.setContentType("text/html");
 
@@ -112,42 +137,54 @@ private:
 class MyRequestHandlerFactory : public HTTPRequestHandlerFactory
 {
 public:
-	MyRequestHandlerFactory()
+	MyRequestHandlerFactory(boost::program_options::variables_map& params) 
 	{
-		router = std::make_shared<HttpUrlRouter>();
+		router = std::make_shared<HttpUrlRouter>(params);
 	}
 
 	std::shared_ptr<HttpUrlRouter> router;
-
 	virtual HTTPRequestHandler* createRequestHandler(const HTTPServerRequest &)
 	{
 		MyRequestHandler* retValue = new MyRequestHandler(router);
 		return retValue;
 	}
+
 };
 
 class MyServerApp : public ServerApplication
 {
-protected:
-	int main(const vector<string> &vars)
+public:
+	MyServerApp(boost::program_options::variables_map& params) : 
+		vm(params)
 	{
-		MyRequestHandlerFactory* requestFactory = new MyRequestHandlerFactory();
+	}
+
+protected:
+	int main(const vector<string> &vars) 
+	{
+		MyRequestHandlerFactory* requestFactory = new MyRequestHandlerFactory(this->vm);
 		Poco::ThreadPool threadPool;
 		HTTPServerParams* httpServerParams = new HTTPServerParams();
-		ServerSocket serverSocket(9090);
+		int serverPort = vm["HTTPServer.Port"].as<int>();
 
+		ServerSocket serverSocket(serverPort);
 		HTTPServer s(requestFactory, threadPool, serverSocket, httpServerParams);
 
 		s.start();
-		cout << endl << "Server started" << endl;
+		myLogger->InfoFormat("Server Started Port [%d]", serverPort);
+		cout << endl << "Server started [" << return_current_time_and_date() << "] " << endl;
 
 		waitForTerminationRequest();  // wait for CTRL-C or kill
 
-		cout << endl << "Shutting down..." << endl;
+		cout << endl << "Shutting down... [" << return_current_time_and_date() << "] " << endl; 
+		myLogger->Info("Server Shutting down");
 		s.stop();
+		myLogger->Info("Server Down");
 
 		return Application::EXIT_OK;
 	}
+
+	boost::program_options::variables_map& vm;
 };
 
 class HTTPServerOperation : public Operation
@@ -158,17 +195,16 @@ public:
 	{
 		int retValue = ExitCode_Success;
 
-		MyServerApp app;
+		MyServerApp app(vm);
 		std::vector<std::string> args;
 		args.push_back("HTTPServer");
 		retValue =  app.run(args);
 
-		logger->DebugFormat("Operation:[HTTPServer] retValue:[%d]", retValue);
+		myLogger->InfoFormat("Operation:[HTTPServer] retValue:[%d]", retValue);
 		return retValue;
 
 	}
 };
-
 
 std::shared_ptr<Operation> HTTPServerFactory()
 {
