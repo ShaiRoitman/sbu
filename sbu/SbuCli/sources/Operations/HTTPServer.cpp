@@ -25,7 +25,65 @@ static auto myLogger = LoggerFactory::getLogger("Operations.HTTPServer");
 class HttpUrlRouter
 {
 public:
-	HttpUrlRouter(boost::program_options::variables_map& params) 
+	enum Verb {
+		HTTP_GET,
+		HTTP_POST,
+	};
+
+	enum HandleStatus {
+		Missing,
+		Success,
+		Error,
+	};
+
+	class HttpUrlRouterHandler {
+	public:
+		virtual void OnRequest(
+			Verb verb,
+			std::map<string, string> urlPathParams,
+			std::map<string, string> queryParams,
+			HTTPServerRequest& req,
+			HTTPServerResponse& resp) = 0;
+	};
+
+	class Route {
+	public:
+		Route(Verb verb, const std::string path, std::shared_ptr<HttpUrlRouterHandler> handler) :
+			path(path), handler(handler)
+		{
+			switch (verb) {
+			case Verb::HTTP_GET:
+				this->verb = "GET";
+				break;
+			case Verb::HTTP_POST:
+				this->verb = "POST";
+				break;
+			}
+		}
+
+		HandleStatus HandleRequest(HTTPServerRequest& req, HTTPServerResponse& resp)
+		{
+			if (req.getMethod() != this->verb)
+			{
+				return HandleStatus::Missing;
+			}
+
+			auto reqURI = req.getURI();
+
+
+
+			std::map<string, string> urlParams;
+			std::map<string, string> queryParams;
+
+			return HandleStatus::Success;
+		}
+
+		std::string verb;
+		const std::string path;
+		std::shared_ptr<HttpUrlRouterHandler> handler;
+	};
+
+	HttpUrlRouter(boost::program_options::variables_map& params)
 		: vm (params)
 	{
 		this->count = 0;
@@ -55,35 +113,24 @@ public:
 
 	}
 
-	void HandleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
+	HandleStatus HandleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
 	{
-		auto verb = req.getMethod();
-		auto uri = req.getURI();
-		httpServer::Models::ProgramInformation info;
-		info.hostName = getHostName();
-		info.version = "0.9";
-		auto d = info.getJson();
+		HandleStatus retValue = HandleStatus::Missing;
+		list<std::shared_ptr<Route>>::iterator iter;
+		for (iter = routes.begin(); iter != routes.end() && retValue == HandleStatus::Missing; ++iter)
+		{
+			auto currentRoute = *iter;
+			if (currentRoute->HandleRequest(req, resp) != HandleStatus::Missing)
+				break;
+		}
 
-		int k = 0;
+		return retValue;
 	}
-
-	enum Verb {
-		HTTP_GET,
-		HTTP_POST,
-	};
-
-	class HttpUrlRouterHandler {
-	public:
-		virtual void OnRequest(
-			Verb verb, 
-			std::map<string, string> urlPathParams, 
-			std::map<string, string> queryParams, 
-			HTTPServerRequest& req, 
-			HTTPServerResponse& resp) = 0;
-	};
 
 	void AddRoute(Verb verb, const std::string &path, std::shared_ptr<HttpUrlRouterHandler> handler)
 	{
+		std::shared_ptr<Route> newRoute = std::make_shared<Route>(verb, path, handler);
+		routes.push_back(newRoute);
 	}
 
 	int TouchCount() 
@@ -99,6 +146,7 @@ public:
 
 	int count;
 	boost::program_options::variables_map& vm;
+	list<std::shared_ptr<Route>> routes;
 };
 
 class MyRequestHandler : public HTTPRequestHandler
