@@ -103,19 +103,16 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		}),
 			vm);
 
-		if (!vm["help"].empty())
+		if (!vm["help"].empty() || !vm["version"].empty())
 		{
 			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version << std::endl;
 			std::cout << std::string("Written by ") << std::string(g_developer_name) << std::endl;
 			std::cout << desc << std::endl;
-			return ExitCode_HelpCalled;
-		}
 
-		if (!vm["version"].empty())
-		{
-			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version << std::endl;
-			std::cout << std::string("Written by ") << std::string(g_developer_name) << std::endl;
-			return ExitCode_VersionCalled;
+			if (!vm["help"].empty())
+				return ExitCode_HelpCalled;
+			else
+				return ExitCode_VersionCalled;
 		}
 
 		if (vm["action"].empty())

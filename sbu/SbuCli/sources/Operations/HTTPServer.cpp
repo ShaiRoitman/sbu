@@ -14,6 +14,7 @@
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
 #include <Poco/Util/ServerApplication.h>
+#include "httpServer.h"
 
 using namespace Poco::Net;
 using namespace Poco::Util;
@@ -21,39 +22,107 @@ using namespace std;
 
 static auto logger = LoggerFactory::getLogger("Operations.HTTPServer");
 
+class HttpUrlRouter
+{
+public:
+	HttpUrlRouter()
+	{
+		this->count = 0;
+	}
+
+	void HandleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
+	{
+		auto verb = req.getMethod();
+		auto uri = req.getURI();
+		httpServer::Models::ProgramInformation info;
+		info.hostName = getHostName();
+		info.version = "0.9";
+		
+		auto d = info.getJson();
+
+
+		int k = 0;
+	}
+
+	enum Verb {
+		HTTP_GET,
+		HTTP_POST,
+	};
+
+	class HttpUrlRouterHandler {
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> params, HTTPServerRequest& req, HTTPServerResponse& resp) = 0;
+	};
+
+	void AddRoute(Verb verb, const std::string &path, std::shared_ptr<HttpUrlRouterHandler> handler)
+	{
+
+	}
+
+	int TouchCount() 
+	{
+		count++;
+		return count;
+	}
+
+	int GetCount()
+	{
+		return count;
+	}
+
+	int count;
+};
+
+
 class MyRequestHandler : public HTTPRequestHandler
 {
 public:
+	MyRequestHandler(std::shared_ptr<HttpUrlRouter> router)
+	{
+		this->router = router;
+	}
+
 	virtual void handleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
 	{
+
+
 		resp.setStatus(HTTPResponse::HTTP_OK);
 		resp.setContentType("text/html");
 
 		ostream& out = resp.send();
 		out << "<h1>Hello world!</h1>"
-			<< "<p>Count: " << ++count << "</p>"
+			<< "<p>Count: " << this->router->TouchCount() << "</p>"
 			<< "<p>Host: " << req.getHost() << "</p>"
 			<< "<p>Method: " << req.getMethod() << "</p>"
 			<< "<p>URI: " << req.getURI() << "</p>";
+
+		this->router->HandleRequest(req, resp);
+
 		out.flush();
 
 		cout << endl
-			<< "Response sent for count=" << count
+			<< "Response sent for count=" << this->router->GetCount()
 			<< " and URI=" << req.getURI() << endl;
 	}
 
 private:
-	static int count;
+	std::shared_ptr<HttpUrlRouter> router;
 };
-
-int MyRequestHandler::count = 0;
 
 class MyRequestHandlerFactory : public HTTPRequestHandlerFactory
 {
 public:
+	MyRequestHandlerFactory()
+	{
+		router = std::make_shared<HttpUrlRouter>();
+	}
+
+	std::shared_ptr<HttpUrlRouter> router;
+
 	virtual HTTPRequestHandler* createRequestHandler(const HTTPServerRequest &)
 	{
-		return new MyRequestHandler;
+		MyRequestHandler* retValue = new MyRequestHandler(router);
+		return retValue;
 	}
 };
 
@@ -62,8 +131,12 @@ class MyServerApp : public ServerApplication
 protected:
 	int main(const vector<string> &vars)
 	{
+		MyRequestHandlerFactory* requestFactory = new MyRequestHandlerFactory();
 		Poco::ThreadPool threadPool;
-		HTTPServer s(new MyRequestHandlerFactory, threadPool, ServerSocket(9090), new HTTPServerParams);
+		HTTPServerParams* httpServerParams = new HTTPServerParams();
+		ServerSocket serverSocket(9090);
+
+		HTTPServer s(requestFactory, threadPool, serverSocket, httpServerParams);
 
 		s.start();
 		cout << endl << "Server started" << endl;

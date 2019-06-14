@@ -8,9 +8,18 @@ info:
 host: sbu.swagger.io
 basePath: /
 schemes:
-  - https
   - http
 paths:
+  /info:
+    get:
+      summary: Return the version of the system
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/ProgramInformation'
   /backupDef:
     get:
       summary: Retrieves all defined backup defs
@@ -37,7 +46,7 @@ paths:
           description: BackupDef object that needs to be added
           required: true
           schema:
-            $ref: '#/definitions/BackupDef'
+            $ref: '#/definitions/CreateBackupDef'
       responses:
         '200':
           description: Success
@@ -75,12 +84,6 @@ paths:
           name: id
           type: string
           required: true
-        - in: body
-          name: body
-          description: Create a new Backup
-          required: true
-          schema:
-            $ref: '#/definitions/Backup'
       responses:
         '200':
           description: Success
@@ -121,7 +124,7 @@ paths:
           required: true
         - in: body
           name: body
-          description: Create a new Backup
+          description: Restore Backup
           required: true
           schema:
             $ref: '#/definitions/RestoreOptions'
@@ -133,6 +136,21 @@ paths:
         '405':
           description: Invalid input
 definitions:
+  ProgramInformation:
+    type: object
+    properties:
+      version:
+        type: string
+      hostname:
+        type: string
+  CreateBackupDef:
+    type: object
+    properties:
+      name:
+        type: string
+      path:
+        type: string
+        format: path
   BackupDef:
     type: object
     properties:
