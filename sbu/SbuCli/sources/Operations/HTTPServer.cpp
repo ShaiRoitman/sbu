@@ -16,6 +16,7 @@
 #include <Poco/Util/ServerApplication.h>
 #include "boost/regex.hpp"
 #include "httpServer.h"
+#include "Operations.h"
 
 using namespace Poco::Net;
 using namespace Poco::Util;
@@ -40,6 +41,7 @@ public:
 	class HttpUrlRouterHandler {
 	public:
 		virtual void OnRequest(
+			boost::program_options::variables_map& config,
 			Verb verb,
 			std::map<string, string> urlPathParams,
 			std::map<string, string> queryParams,
@@ -62,7 +64,7 @@ public:
 			}
 		}
 
-		HandleStatus HandleRequest(HTTPServerRequest& req, HTTPServerResponse& resp)
+		HandleStatus HandleRequest(boost::program_options::variables_map& config, HTTPServerRequest& req, HTTPServerResponse& resp)
 		{
 			if (req.getMethod() != this->verb)
 			{
@@ -75,12 +77,11 @@ public:
 			boost::smatch what;
 			if (boost::regex_search(reqURI, what, expr))
 			{
+				boost::program_options::variables_map requestConfig(config);
 				std::map<string, string> urlParams;
 				std::map<string, string> queryParams;
-				this->handler->OnRequest(Verb::HTTP_GET, urlParams, queryParams, req, resp);
+				this->handler->OnRequest(requestConfig, Verb::HTTP_GET, urlParams, queryParams, req, resp);
 			}
-
-
 
 			return HandleStatus::Success;
 		}
@@ -93,7 +94,7 @@ public:
 	class GetInfoHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 			httpServer::Models::ProgramInformation info;
 			info.hostName = getHostName();
@@ -108,7 +109,7 @@ public:
 	class GetBackupDefHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 		}
 	};
@@ -116,7 +117,7 @@ public:
 	class PostBackupDefHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 		}
 	};
@@ -124,7 +125,7 @@ public:
 	class GetBackupDefIDHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 		}
 	};
@@ -132,7 +133,7 @@ public:
 	class GetBackupDefBackupHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 		}
 	};
@@ -140,7 +141,7 @@ public:
 	class GetBackupDefBackupIDHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 		}
 	};
@@ -148,7 +149,7 @@ public:
 	class GetBackupDefRestoreHandler : public HttpUrlRouterHandler
 	{
 	public:
-		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
 		{
 		}
 	};
@@ -190,7 +191,7 @@ public:
 		for (iter = routes.begin(); iter != routes.end() && retValue == HandleStatus::Missing; ++iter)
 		{
 			auto currentRoute = *iter;
-			if (currentRoute->HandleRequest(req, resp) != HandleStatus::Missing)
+			if (currentRoute->HandleRequest(this->vm, req, resp) != HandleStatus::Missing)
 				break;
 		}
 
