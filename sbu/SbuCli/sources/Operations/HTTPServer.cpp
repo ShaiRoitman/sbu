@@ -90,7 +90,7 @@ public:
 		std::shared_ptr<HttpUrlRouterHandler> handler;
 	};
 
-	class InfoHandler : public HttpUrlRouterHandler
+	class GetInfoHandler : public HttpUrlRouterHandler
 	{
 	public:
 		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
@@ -102,7 +102,54 @@ public:
 			auto output = info.getJson();
 			out << output;
 			out.flush();
+		}
+	};
 
+	class GetBackupDefHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class PostBackupDefHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefIDHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefBackupHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefBackupIDHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefRestoreHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
 		}
 	};
 
@@ -112,27 +159,27 @@ public:
 		this->count = 0;
 
 		// Returns httpServer::Models::ProgramInformation
-		AddRoute(Verb::HTTP_GET, "/info", std::make_shared<InfoHandler>());
+		AddRoute(Verb::HTTP_GET, "/info", std::make_shared<GetInfoHandler>());
 
 		// Returns Array of httpServer::Models::BackupDef 
-		AddRoute(Verb::HTTP_GET, "/backupDef", nullptr);
+		AddRoute(Verb::HTTP_GET, "/backupDef", std::make_shared<GetBackupDefHandler>());
 
 		// Input httpServer::Models::CreateBackupDef
 		// Returns httpServer::Models::BackupDef;
-		AddRoute(Verb::HTTP_POST, "/backupDef", nullptr);
+		AddRoute(Verb::HTTP_POST, "/backupDef", std::make_shared<PostBackupDefHandler>());
 
 		// Returns httpServer::Models::BackupDef
-		AddRoute(Verb::HTTP_GET, "/backupDef/{id}", nullptr);
+		AddRoute(Verb::HTTP_GET, "/backupDef/{id}", std::make_shared<GetBackupDefIDHandler>());
 
 		// Returns httpServer::Models::Backup
-		AddRoute(Verb::HTTP_POST, "/backupDef/{id}/backup", nullptr);
+		AddRoute(Verb::HTTP_POST, "/backupDef/{id}/backup", std::make_shared<GetBackupDefBackupHandler>());
 
 		// Returns httpServer::Models::FullBackupDefInfo
-		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/backup/{bid}", nullptr);
+		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/backup/{bid}", std::make_shared<GetBackupDefBackupIDHandler>());
 
 		// Input httpServer::Models::RestoreOptions
 		// Returns httpServer::Models::Backup
-		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/restore", nullptr);
+		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/restore", std::make_shared<GetBackupDefRestoreHandler>());
 
 	}
 
