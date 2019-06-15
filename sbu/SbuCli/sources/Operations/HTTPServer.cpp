@@ -14,6 +14,7 @@
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
 #include <Poco/Util/ServerApplication.h>
+#include "boost/regex.hpp"
 #include "httpServer.h"
 
 using namespace Poco::Net;
@@ -70,10 +71,16 @@ public:
 
 			auto reqURI = req.getURI();
 
+			boost::regex expr(this->path);
+			boost::smatch what;
+			if (boost::regex_search(reqURI, what, expr))
+			{
+				std::map<string, string> urlParams;
+				std::map<string, string> queryParams;
+				this->handler->OnRequest(Verb::HTTP_GET, urlParams, queryParams, req, resp);
+			}
 
 
-			std::map<string, string> urlParams;
-			std::map<string, string> queryParams;
 
 			return HandleStatus::Success;
 		}
@@ -83,13 +90,29 @@ public:
 		std::shared_ptr<HttpUrlRouterHandler> handler;
 	};
 
+	class InfoHandler : public HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+			httpServer::Models::ProgramInformation info;
+			info.hostName = getHostName();
+			info.version = "0.9";
+			ostream& out = resp.send();
+			auto output = info.getJson();
+			out << output;
+			out.flush();
+
+		}
+	};
+
 	HttpUrlRouter(boost::program_options::variables_map& params)
 		: vm (params)
 	{
 		this->count = 0;
 
 		// Returns httpServer::Models::ProgramInformation
-		AddRoute(Verb::HTTP_GET, "/info", nullptr);
+		AddRoute(Verb::HTTP_GET, "/info", std::make_shared<InfoHandler>());
 
 		// Returns Array of httpServer::Models::BackupDef 
 		AddRoute(Verb::HTTP_GET, "/backupDef", nullptr);
@@ -162,16 +185,7 @@ public:
 		resp.setStatus(HTTPResponse::HTTP_OK);
 		resp.setContentType("text/html");
 
-		ostream& out = resp.send();
-		out << "<h1>Hello world!</h1>"
-			<< "<p>Count: " << this->router->TouchCount() << "</p>"
-			<< "<p>Host: " << req.getHost() << "</p>"
-			<< "<p>Method: " << req.getMethod() << "</p>"
-			<< "<p>URI: " << req.getURI() << "</p>";
-
 		this->router->HandleRequest(req, resp);
-
-		out.flush();
 
 		cout << endl
 			<< "Response sent for count=" << this->router->GetCount()
