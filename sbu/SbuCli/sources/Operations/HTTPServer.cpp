@@ -36,6 +36,7 @@ public:
 		Missing,
 		Success,
 		Error,
+		Busy,
 	};
 
 	class HttpUrlRouterHandler {
@@ -91,97 +92,10 @@ public:
 		std::shared_ptr<HttpUrlRouterHandler> handler;
 	};
 
-	class GetInfoHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-			httpServer::Models::ProgramInformation info;
-			info.hostName = getHostName();
-			info.version = "0.9";
-			ostream& out = resp.send();
-			auto output = info.getJson();
-			out << output;
-			out.flush();
-		}
-	};
-
-	class GetBackupDefHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-		}
-	};
-
-	class PostBackupDefHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-		}
-	};
-
-	class GetBackupDefIDHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-		}
-	};
-
-	class GetBackupDefBackupHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-		}
-	};
-
-	class GetBackupDefBackupIDHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-		}
-	};
-
-	class GetBackupDefRestoreHandler : public HttpUrlRouterHandler
-	{
-	public:
-		virtual void OnRequest(boost::program_options::variables_map& config, Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
-		{
-		}
-	};
-
 	HttpUrlRouter(boost::program_options::variables_map& params)
 		: vm (params)
 	{
 		this->count = 0;
-
-		// Returns httpServer::Models::ProgramInformation
-		AddRoute(Verb::HTTP_GET, "/info", std::make_shared<GetInfoHandler>());
-
-		// Returns Array of httpServer::Models::BackupDef 
-		AddRoute(Verb::HTTP_GET, "/backupDef", std::make_shared<GetBackupDefHandler>());
-
-		// Input httpServer::Models::CreateBackupDef
-		// Returns httpServer::Models::BackupDef;
-		AddRoute(Verb::HTTP_POST, "/backupDef", std::make_shared<PostBackupDefHandler>());
-
-		// Returns httpServer::Models::BackupDef
-		AddRoute(Verb::HTTP_GET, "/backupDef/{id}", std::make_shared<GetBackupDefIDHandler>());
-
-		// Returns httpServer::Models::Backup
-		AddRoute(Verb::HTTP_POST, "/backupDef/{id}/backup", std::make_shared<GetBackupDefBackupHandler>());
-
-		// Returns httpServer::Models::FullBackupDefInfo
-		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/backup/{bid}", std::make_shared<GetBackupDefBackupIDHandler>());
-
-		// Input httpServer::Models::RestoreOptions
-		// Returns httpServer::Models::Backup
-		AddRoute(Verb::HTTP_GET, "/backupDef/{id}/restore", std::make_shared<GetBackupDefRestoreHandler>());
-
 	}
 
 	HandleStatus HandleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
@@ -230,14 +144,31 @@ public:
 
 	virtual void handleRequest(HTTPServerRequest &req, HTTPServerResponse &resp)
 	{
-		resp.setStatus(HTTPResponse::HTTP_OK);
-		resp.setContentType("text/html");
+		try {
+			auto requestHandleStatus = this->router->HandleRequest(req, resp);
+			if (requestHandleStatus == HttpUrlRouter::HandleStatus::Success)
+			{
+				resp.setStatus(HTTPResponse::HTTP_OK);
+				resp.setContentType("application/json");
+			}
+			else
+			{
+				resp.setStatus(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+				resp.setContentType("text/html");
+			}
+		}
+		catch (std::exception ex)
+		{
+			resp.setStatus(HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+			resp.setContentType("text/html");
+			auto& outputResponse = resp.send();
+			outputResponse << ex.what() << endl;
 
-		this->router->HandleRequest(req, resp);
+		}
 
-		cout << endl
-			<< "Response sent for count=" << this->router->GetCount()
-			<< " and URI=" << req.getURI() << endl;
+		cout	<< endl
+				<< "Response sent for count=" << this->router->GetCount()
+				<< " and URI=" << req.getURI() << endl;
 	}
 
 private:
@@ -246,10 +177,103 @@ private:
 
 class MyRequestHandlerFactory : public HTTPRequestHandlerFactory
 {
+	class GetInfoHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(boost::program_options::variables_map& config, HttpUrlRouter::Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+			httpServer::Models::ProgramInformation info;
+			info.hostName = getHostName();
+			info.version = "0.9";
+			ostream& out = resp.send();
+			auto output = info.getJson();
+			out << output;
+			out.flush();
+		}
+	};
+
+	class GetBackupDefHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(
+			boost::program_options::variables_map& config,
+			HttpUrlRouter::Verb verb,
+			std::map<string, string> urlPathParams,
+			std::map<string, string> queryParams,
+			HTTPServerRequest & req,
+			HTTPServerResponse & resp) override
+		{
+
+		}
+	};
+
+	class PostBackupDefHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(boost::program_options::variables_map& config, HttpUrlRouter::Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefIDHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(boost::program_options::variables_map& config, HttpUrlRouter::Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefBackupHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(boost::program_options::variables_map& config, HttpUrlRouter::Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefBackupIDHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(boost::program_options::variables_map& config, HttpUrlRouter::Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
+	class GetBackupDefRestoreHandler : public HttpUrlRouter::HttpUrlRouterHandler
+	{
+	public:
+		virtual void OnRequest(boost::program_options::variables_map& config, HttpUrlRouter::Verb verb, std::map<string, string> urlPathParams, std::map<string, string> queryParams, HTTPServerRequest & req, HTTPServerResponse & resp) override
+		{
+		}
+	};
+
 public:
 	MyRequestHandlerFactory(boost::program_options::variables_map& params) 
 	{
 		router = std::make_shared<HttpUrlRouter>(params);
+
+		// Returns httpServer::Models::ProgramInformation
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/info", std::make_shared<GetInfoHandler>());
+
+		// Returns Array of httpServer::Models::BackupDef 
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef", std::make_shared<GetBackupDefHandler>());
+
+		// Input httpServer::Models::CreateBackupDef
+		// Returns httpServer::Models::BackupDef;
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_POST, "/backupDef", std::make_shared<PostBackupDefHandler>());
+
+		// Returns httpServer::Models::BackupDef
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef/{id}", std::make_shared<GetBackupDefIDHandler>());
+
+		// Returns httpServer::Models::Backup
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_POST, "/backupDef/{id}/backup", std::make_shared<GetBackupDefBackupHandler>());
+
+		// Returns httpServer::Models::FullBackupDefInfo
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef/{id}/backup/{bid}", std::make_shared<GetBackupDefBackupIDHandler>());
+
+		// Input httpServer::Models::RestoreOptions
+		// Returns httpServer::Models::Backup
+		router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef/{id}/restore", std::make_shared<GetBackupDefRestoreHandler>());
 	}
 
 	std::shared_ptr<HttpUrlRouter> router;

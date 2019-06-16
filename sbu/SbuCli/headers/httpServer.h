@@ -50,6 +50,12 @@ namespace httpServer
 			Hostname hostname;
 		};
 
+		class BackupDefs
+		{
+		public:
+			std::vector<BackupDef> backupdefs;
+		};
+
 		class Backup
 		{
 			Id id;
