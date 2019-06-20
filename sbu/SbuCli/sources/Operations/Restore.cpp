@@ -14,7 +14,7 @@ public:
 	class Strategy
 	{
 	public:
-
+		std::function<void(boost::filesystem::path& destination)> altToCopy;
 	};
 	
 	RestoreOperation() {}
@@ -44,11 +44,7 @@ public:
 		restoreParameters.ShowOnly(showOnly);
 		if (showOnly)
 		{
-			restoreParameters.altToCopyFunc = 
-				[](boost::filesystem::path& destination)
-			{
-				std::cout << "Restore -> [" << destination << "]" << std::endl;
-			};
+			restoreParameters.altToCopyFunc = this->strategy->altToCopy;
 		}
 
 		if (!vm["byID"].empty())
@@ -79,6 +75,11 @@ std::shared_ptr<Operation> RestoreFactory()
 {
 	auto retValue = std::make_shared<RestoreOperation>();
 	retValue->strategy = std::make_shared<RestoreOperation::Strategy>();
+	retValue->strategy->altToCopy = [](boost::filesystem::path& destination)
+	{
+		std::cout << "Restore -> [" << destination << "]" << std::endl;
+	};
+
 	return retValue;
 
 }
