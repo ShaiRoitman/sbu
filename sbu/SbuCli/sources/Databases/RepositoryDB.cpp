@@ -111,9 +111,8 @@ public:
 		return retValue;
 	}
 
-	virtual std::list<BackupDef> GetBackupDefs() override
+	virtual void ListBackupDefs(std::function<void(const IRepositoryDB::BackupDef& backupdef)> iter) override
 	{
-		std::list<BackupDef> retValue;
 		SQLite::Statement selectBackupDefs(*db, "SELECT ID, Name, Hostname, RootPath, Added FROM BackupDefs");
 
 		while (selectBackupDefs.executeStep())
@@ -125,9 +124,8 @@ public:
 			newValue.rootPath = from_utf8(selectBackupDefs.getColumn("RootPath").getString());
 			newValue.added = get_time_point(selectBackupDefs.getColumn("Added").getString());
 
-			retValue.push_back(newValue);
+			iter(newValue);
 		}
-		return retValue;
 	}
 
 	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) override

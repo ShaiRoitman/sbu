@@ -25,14 +25,9 @@ public:
 
 		logger->DebugFormat("Operation:[ListBackupDefs]");
 		auto RepoDB = getRepository(vm);
-		auto backupdefs = RepoDB->GetBackupDefs();
-		for (auto iter = backupdefs.begin(); iter != backupdefs.end(); ++iter)
+		if (this->strategy != nullptr && this->strategy->backupDefIter != nullptr)
 		{
-			auto backupdef = *iter;
-			if (this->strategy != nullptr && this->strategy->backupDefIter != nullptr)
-			{
-				this->strategy->backupDefIter(backupdef);
-			}
+			RepoDB->ListBackupDefs(this->strategy->backupDefIter);
 		}
 
 		logger->DebugFormat("Operation:[ListBackupDefs] retValue:[%d]", retValue);
