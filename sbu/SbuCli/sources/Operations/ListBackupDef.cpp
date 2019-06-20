@@ -11,15 +11,14 @@ static auto logger = LoggerFactory::getLogger("Operations.ListBackupDef");
 class ListBackupDefsOperation : public Operation
 {
 public:
-	ListBackupDefsOperation() {}
-	void Print(IRepositoryDB::BackupDef& backupdef)
+	class Strategy
 	{
-		std::cout << backupdef.id << ",";
-		std::cout << backupdef.name << ",";
-		std::cout << backupdef.hostName << ",";
-		std::cout << backupdef.rootPath << ",";
-		std::cout << get_string_from_time_point(backupdef.added) << std::endl;
-	}
+	public:
+		std::function<void(const IRepositoryDB::BackupDef& backupdef)> backupDefIter;
+	};
+	
+	ListBackupDefsOperation() {}
+
 	int Operate(boost::program_options::variables_map& vm)
 	{
 		int retValue = ExitCode_Success;
@@ -30,15 +29,31 @@ public:
 		for (auto iter = backupdefs.begin(); iter != backupdefs.end(); ++iter)
 		{
 			auto backupdef = *iter;
-			Print(backupdef);
+			if (this->strategy != nullptr && this->strategy->backupDefIter != nullptr)
+			{
+				this->strategy->backupDefIter(backupdef);
+			}
 		}
 
 		logger->DebugFormat("Operation:[ListBackupDefs] retValue:[%d]", retValue);
 		return retValue;
 	}
+public:
+	std::shared_ptr<Strategy> strategy;
 };
 
 std::shared_ptr<Operation> ListBackupDefsFactory()
 {
-	return std::make_shared<ListBackupDefsOperation>();
+	auto retValue = std::make_shared<ListBackupDefsOperation>();
+	retValue->strategy = std::make_shared<ListBackupDefsOperation::Strategy>();
+	retValue->strategy->backupDefIter =
+		[](const IRepositoryDB::BackupDef& backupdef)
+	{
+		std::cout << backupdef.id << ",";
+		std::cout << backupdef.name << ",";
+		std::cout << backupdef.hostName << ",";
+		std::cout << backupdef.rootPath << ",";
+		std::cout << get_string_from_time_point(backupdef.added) << std::endl;
+	};
+	return retValue;
 }

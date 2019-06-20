@@ -11,6 +11,12 @@ static auto logger = LoggerFactory::getLogger("Operations.Restore");
 class RestoreOperation : public Operation
 {
 public:
+	class Strategy
+	{
+	public:
+
+	};
+	
 	RestoreOperation() {}
 	int Operate(boost::program_options::variables_map& vm)
 	{
@@ -34,7 +40,16 @@ public:
 		{
 			showOnly = true;
 		}
+
 		restoreParameters.ShowOnly(showOnly);
+		if (showOnly)
+		{
+			restoreParameters.altToCopyFunc = 
+				[](boost::filesystem::path& destination)
+			{
+				std::cout << "Restore -> [" << destination << "]" << std::endl;
+			};
+		}
 
 		if (!vm["byID"].empty())
 		{
@@ -56,9 +71,14 @@ public:
 		return retValue;
 
 	}
+public:
+	std::shared_ptr<Strategy> strategy;
 };
+
 std::shared_ptr<Operation> RestoreFactory()
 {
-	return std::make_shared<RestoreOperation>();
+	auto retValue = std::make_shared<RestoreOperation>();
+	retValue->strategy = std::make_shared<RestoreOperation::Strategy>();
+	return retValue;
 
 }

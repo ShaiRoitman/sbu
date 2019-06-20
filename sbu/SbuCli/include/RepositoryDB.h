@@ -87,6 +87,7 @@ public:
 		std::chrono::system_clock::time_point dateToRestore;
 		bool shouldCopy;
 		Integer byID;
+		std::function<void(boost::filesystem::path& path)> altToCopyFunc;
 	};
 
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) = 0;
@@ -95,9 +96,13 @@ public:
 	virtual std::list<BackupDef> GetBackupDefs() = 0;
 
 	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
-	virtual void ListBackups(Integer id) = 0;
+	virtual void ListBackups(Integer id, std::function<void(const IRepositoryDB::BackupInfo& backup)> function) = 0;
 	virtual BackupInfo DeleteBackup(Integer backupId) = 0;
-	virtual void ListBackupInfo(Integer id) = 0;
+	virtual void ListBackupInfo(Integer id, 
+		std::function<
+		void(const std::string& status,
+			 const std::string& path,
+			 const std::string& type)> function) = 0;
 
 	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
 

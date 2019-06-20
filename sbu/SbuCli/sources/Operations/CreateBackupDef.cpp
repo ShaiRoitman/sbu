@@ -11,16 +11,13 @@ static auto logger = LoggerFactory::getLogger("Operations.CreateBackupDef");
 class CreateBackupDefOperation : public Operation
 {
 public:
-	CreateBackupDefOperation() {}
-
-	void Print(std::shared_ptr<IRepositoryDB::BackupDef> backupdef)
+	class Strategy
 	{
-		std::cout << backupdef->id << ",";
-		std::cout << backupdef->name << ",";
-		std::cout << backupdef->hostName << ",";
-		std::cout << backupdef->rootPath << ",";
-		std::cout << get_string_from_time_point(backupdef->added) << std::endl;
-	}
+	public:
+		std::function<void(std::shared_ptr<IRepositoryDB::BackupDef> backupdef)> OnCreatedDef;
+	};
+
+	CreateBackupDefOperation() {}
 
 	virtual int Operate(boost::program_options::variables_map& vm)
 	{
@@ -34,7 +31,10 @@ public:
 		auto RepoDB = getRepository(vm);
 		try {
 			auto backupdef = RepoDB->AddBackupDef(name, boost::filesystem::path(path));
-			Print(backupdef);
+			if (this->strategy != nullptr && this->strategy->OnCreatedDef != nullptr)
+			{
+				this->strategy->OnCreatedDef(backupdef);
+			}
 		}
 		catch (sbu_alreadyexists ex)
 		{
@@ -45,9 +45,23 @@ public:
 		logger->InfoFormat("Operation :[CreateBackupDef] Name:[%s] Path:[%s] retValue:[%d]", name.c_str(), path.c_str(), retValue);
 		return retValue;
 	}
+public:
+	std::shared_ptr<Strategy> strategy;
 };
 
 std::shared_ptr<Operation> CreateBackupDefFactory()
 {
-	return std::make_shared<CreateBackupDefOperation>();
+	auto retValue = std::make_shared<CreateBackupDefOperation>();
+	retValue->strategy = std::make_shared<CreateBackupDefOperation::Strategy>();
+	retValue->strategy->OnCreatedDef = 
+		[] (std::shared_ptr<IRepositoryDB::BackupDef> backupdef)
+	{
+		std::cout << backupdef->id << ",";
+		std::cout << backupdef->name << ",";
+		std::cout << backupdef->hostName << ",";
+		std::cout << backupdef->rootPath << ",";
+		std::cout << get_string_from_time_point(backupdef->added) << std::endl;
+	};
+
+	return retValue;
 }

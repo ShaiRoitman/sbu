@@ -11,6 +11,12 @@ static auto logger = LoggerFactory::getLogger("Operations.Backup");
 class BackupOperation : public Operation
 {
 public:
+	class Strategy
+	{
+	public:
+		std::function<void(const IRepositoryDB::BackupInfo& backup)> successFunc;
+	};
+
 	BackupOperation() {}
 	int Init(boost::program_options::variables_map& vm)
 	{
@@ -139,6 +145,10 @@ public:
 			auto backupdef = RepoDB->GetBackupDef(name);
 
 			auto backupInfo = RepoDB->CreateBackupInfo(*backupdef);
+			if (this->strategy != nullptr && this->strategy->successFunc != nullptr)
+			{
+				this->strategy->successFunc(backupInfo);
+			}
 			RepoDB->CopyBackupDBStateIntoRepoAndComplete(dbPath, backupInfo);
 		}
 		else
@@ -164,6 +174,10 @@ public:
 		{
 			std::shared_ptr<IFileRepositoryDB> fileRepDB = getFileRepository(vm);
 			auto backupInfo = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
+			if (this->strategy != nullptr && this->strategy->successFunc != nullptr)
+			{
+				this->strategy->successFunc(backupInfo);
+			}
 		}
 
 		logger->DebugFormat("Operation:[Backup] Name:[%s] Step [All] retValue:[%d]", name.c_str(), retValue);
@@ -197,6 +211,8 @@ public:
 		logger->DebugFormat("Operation:[Backup] Step [%s] retValue:[%d]", step.c_str(), retValue);
 		return retValue;
 	}
+private:
+	std::shared_ptr<Strategy> strategy;
 };
 
 std::shared_ptr<Operation> BackupFactory()

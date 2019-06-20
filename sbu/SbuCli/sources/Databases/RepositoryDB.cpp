@@ -167,15 +167,7 @@ public:
 		return retValue;
 	}
 
-	void Print(IRepositoryDB::BackupInfo& backup)
-	{
-		std::cout << backup.id << ",";
-		std::cout << backup.status << ",";
-		std::cout << get_string_from_time_point(backup.started) << ",";
-		std::cout << get_string_from_time_point(backup.lastUpdated) << std::endl;
-	}
-
-	virtual void ListBackups(Integer id) override
+	virtual void ListBackups(Integer id, std::function<void(const IRepositoryDB::BackupInfo& backup)> function) override
 	{
 		SQLite::Statement selectQuery(*db, "SELECT ID, BackupDefID, Started, LastStatusUpdate, Status FROM Backups WHERE BackupDefID=:id");
 		selectQuery.bind(":id", id);
@@ -188,22 +180,24 @@ public:
 			newValue.started = get_time_point(selectQuery.getColumn("Started").getString());
 			newValue.lastUpdated = get_time_point(selectQuery.getColumn("LastStatusUpdate").getString());
 			newValue.status = selectQuery.getColumn("Status").getString();
-
-			Print(newValue);
+			function(newValue);
 		}
 	}
 
-	virtual void ListBackupInfo(Integer id)
+	virtual void ListBackupInfo(Integer id,
+		std::function<
+		void(const std::string& status,
+			const std::string& path,
+			const std::string& type)> function) override
 	{
 		SQLite::Statement selectQuery(*db, "SELECT Status, Path, Type FROM Files WHERE BackupID=:id ORDER BY Status, Path  ");
 		selectQuery.bind(":id", id);
 		while (selectQuery.executeStep())
 		{
-			std::cout << 
-				selectQuery.getColumn("Status").getString() <<
-				" : " << from_utf8(selectQuery.getColumn("Path").getString()) << 
-				" : " << selectQuery.getColumn("Type").getString() <<
-				std::endl;
+			function(
+				selectQuery.getColumn("Status").getString(),
+				selectQuery.getColumn("Path").getString(),
+				selectQuery.getColumn("Type").getString());
 		}
 	}
 
@@ -230,7 +224,10 @@ public:
 					}
 					else
 					{
-						std::cout << "Restore -> [" << destination << "]" << std::endl;
+						if (restoreParams.altToCopyFunc != nullptr)
+						{
+							restoreParams.altToCopyFunc(destination);
+						}
 					}
 				}
 				else
