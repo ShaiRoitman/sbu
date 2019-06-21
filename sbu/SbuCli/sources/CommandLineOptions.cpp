@@ -6,8 +6,7 @@
 
 using namespace boost::program_options;
 
-const std::string g_version = "0.9";
-const std::string g_developer_name = "Shai Roitman";
+#include "sbu.h"
 
 int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 {
@@ -105,8 +104,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 
 		if (!vm["help"].empty() || !vm["version"].empty())
 		{
-			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_version << std::endl;
-			std::cout << std::string("Written by ") << std::string(g_developer_name) << std::endl;
+			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_Version << std::endl;
+			std::cout << std::string("Written by ") << std::string(g_DeveloperName) << std::endl;
 			std::cout << desc << std::endl;
 
 			if (!vm["help"].empty())

@@ -9,6 +9,10 @@
 #include "Operations.h"
 #include "ExitCodes.h"
 
+extern const std::string g_DeveloperName = "Shai Roitman";
+extern const std::string g_Version = "0.9";
+extern const std::string g_CopyWrite = "Shai Roitman - 2019";
+
 int main(int argc, const char* argv[])
 {
 	std::map<std::string, Operation::Factory> operations;

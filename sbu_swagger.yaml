@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  description: This is a server for smart backup utility
+  description: HTTP Server for Smart Backup Utility
   version: 1.0.0
   title: Smart Backup Utility
   contact:
@@ -12,7 +12,7 @@ schemes:
 paths:
   /info:
     get:
-      summary: Return the version of the system
+      summary: Return the information of the system
       produces: 
         - application/json
       responses:
@@ -22,7 +22,7 @@ paths:
             $ref: '#/definitions/ProgramInformation'
   /backupDef:
     get:
-      summary: Retrieves all defined backup defs
+      summary: Retrieves currently defined backup definitions objects
       consumes:
         - application/json
       produces:
@@ -150,7 +150,6 @@ definitions:
         type: string
       path:
         type: string
-        format: path
   BackupDef:
     type: object
     properties:
