@@ -11,6 +11,7 @@ git clone https://github.com/Microsoft/vcpkg.git
 .\bootstrap-vcpkg.bat
 .\vcpkg integrate install
 
+vcpkg install nlohmann-json:x64-windows
 vcpkg install sqlite3:x64-windows
 vcpkg install sqlitecpp:x64-windows
 vcpkg install openssl:x64-windows
@@ -102,5 +103,8 @@ add_definitions(-DSQLITE_ENABLE_COLUMN_METADATA)
 cmake .
 sudo make install
 
+httpModels
+----------
+Generate swagger CodeGen pistache insert into httpModels
 
 cmake -DCMAKE_PREFIX_PATH=/home/master/sbu/sbu/cmake/linux .

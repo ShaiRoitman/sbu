@@ -1,5 +1,6 @@
 file(GLOB_RECURSE cmakes "${PROJECT_SOURCE_DIR}/CMakeLists.cmake")
 
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem program_options log)
 find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(sqlite3 CONFIG REQUIRED)
@@ -15,7 +16,9 @@ file(GLOB_RECURSE operations	"sources/Operations/*.cpp")
 file(GLOB_RECURSE databases		"sources/Databases/*.cpp")
 file(GLOB_RECURSE storagehandlers	"sources/StorageHandlers/*.cpp")
 file(GLOB sources				"sources/*.cpp")
+file(GLOB httpModelssources		"httpModels/*.cpp")
 file(GLOB_RECURSE include		"include/*.h")
+file(GLOB httpModelsHeaders		"httpModels/*.h")
 file(GLOB_RECURSE includestoragehandlers	"include/StorageHandlers/*.h")
 file(GLOB_RECURSE external		"headers/*.h")
 
@@ -23,6 +26,7 @@ include_directories("include")
 include_directories("headers")
 
 source_group("Headers" FILES ${external})
+source_group("Headers\\HttpModels" FILES ${httpModelsHeaders})
 source_group("Includes" FILES ${include})
 source_group("Includes\\StorageHandlers" FILES ${includestoragehandlers})
 source_group("Resources" FILES ${resources})
@@ -32,11 +36,12 @@ source_group("Sources" FILES ${sources})
 source_group("Sources\\Operations" FILES ${operations})
 source_group("Sources\\Databases" FILES ${databases})
 source_group("Sources\\StorageHandlers" FILES ${storagehandlers})
+source_group("Sources\\HttpModels" FILES ${httpModelssources})
 
 include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
 
-add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db})
+add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db} ${httpModelssources})
 
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 nlohmann_json::nlohmann_json ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})
