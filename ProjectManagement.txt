@@ -40,6 +40,7 @@ Items To Do
 2.5 Progress Report UX
 3. Error Handling
 3.5 Refactor, Beautify.
+4. HTTP Server
 
 Publish
 
@@ -58,3 +59,16 @@ Features
 5. Ubuntu Compile - Done
 6. Performance analysis
 7. Postgres / MySQL / Aurora Database connections
+
+--------------------------------------------------
+
+ToDo 22/06/2019
+---------------
+1. Http Server
+2. Test Test Test
+3. Error Handling
+4. Logging
+5. Cross Platform Compile ( Windows, Ubuntu, RaspberryPi )
+6. Create Dockers
+7. Helm Charts for Kubernetes
+
