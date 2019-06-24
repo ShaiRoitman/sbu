@@ -40,7 +40,7 @@ source_group("Sources\\HttpModels" FILES ${httpModelssources})
 
 include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
 
-add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${storagehandlers} ${resources_db} ${httpModelssources})
+add_executable (sbu ${sources} ${include} ${external} ${cmakes} ${resources} ${operations} ${databases} ${httpModelsHeaders} ${storagehandlers} ${resources_db} ${httpModelssources})
 
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)
 

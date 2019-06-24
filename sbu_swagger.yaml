@@ -31,9 +31,7 @@ paths:
         '200':
           description: Success
           schema:
-            type: array
-            items: 
-              $ref: '#/definitions/BackupDef'
+            $ref: '#/definitions/BackupDefs'
     post:
       summary: Create a new backup def
       consumes:
@@ -56,7 +54,7 @@ paths:
           description: Invalid input
   /backupDef/{id}:
     get:
-      summary: Retrieve the backupDef
+      summary: Retrieve the backup definition
       parameters: 
         - in: path
           name: id
@@ -71,6 +69,8 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/FullBackupDefInfo'
+        '404':
+          description: ID not found
   /backupDef/{id}/backup:
     post:
       summary: Create a new backup
@@ -89,8 +89,10 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/Backup'
-        '405':
-          description: Invalid input
+        '404':
+          description: ID not found
+        '500':
+          description: General server failure
   /backupDef/{id}/backup/{bid}:
     get:
       summary: Retrieve backup information
@@ -115,6 +117,8 @@ paths:
             $ref: '#/definitions/BackupInfo'
         '405':
           description: Invalid input
+        '500':
+          description: General server failure
   /backupDef/{id}/restore:
     post:
       parameters:
@@ -135,6 +139,8 @@ paths:
             $ref: '#/definitions/Backup'
         '405':
           description: Invalid input
+        '500':
+          description: General server failure
 definitions:
   ProgramInformation:
     type: object
@@ -166,6 +172,13 @@ definitions:
         format: date-time
       hostName:
         type: string
+  BackupDefs:
+    type: object
+    properties:
+      backupdefs:
+        type: array
+        items: 
+          $ref: '#/definitions/BackupDef'
   Backup:
     type: object
     properties:
