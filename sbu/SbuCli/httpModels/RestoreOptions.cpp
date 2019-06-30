@@ -24,6 +24,7 @@ RestoreOptions::RestoreOptions()
     m_IdIsSet = false;
     m_date = "";
     m_dateIsSet = false;
+    m_ConfigIsSet = false;
     
 }
 
@@ -48,6 +49,10 @@ nlohmann::json RestoreOptions::toJson() const
     {
         val["date"] = ModelBase::toJson(m_date);
     }
+    if(m_ConfigIsSet)
+    {
+        val["config"] = ModelBase::toJson(m_Config);
+    }
     
 
     return val;
@@ -62,6 +67,16 @@ void RestoreOptions::fromJson(nlohmann::json& val)
     if(val.find("date") != val.end())
     {
         setDate(val.at("date"));
+        
+    }
+    if(val.find("config") != val.end())
+    {
+        if(!val["config"].is_null())
+        {
+            std::shared_ptr<Configuration> newItem(new Configuration());
+            newItem->fromJson(val["config"]);
+            setConfig( newItem );
+        }
         
     }
     
@@ -101,6 +116,23 @@ bool RestoreOptions::dateIsSet() const
 void RestoreOptions::unsetdate()
 {
     m_dateIsSet = false;
+}
+std::shared_ptr<Configuration> RestoreOptions::getConfig() const
+{
+    return m_Config;
+}
+void RestoreOptions::setConfig(std::shared_ptr<Configuration> value)
+{
+    m_Config = value;
+    m_ConfigIsSet = true;
+}
+bool RestoreOptions::configIsSet() const
+{
+    return m_ConfigIsSet;
+}
+void RestoreOptions::unsetConfig()
+{
+    m_ConfigIsSet = false;
 }
 
 }

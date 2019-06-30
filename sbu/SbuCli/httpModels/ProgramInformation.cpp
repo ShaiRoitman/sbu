@@ -24,6 +24,7 @@ ProgramInformation::ProgramInformation()
     m_VersionIsSet = false;
     m_Hostname = "";
     m_HostnameIsSet = false;
+    m_ConfigIsSet = false;
     
 }
 
@@ -48,6 +49,10 @@ nlohmann::json ProgramInformation::toJson() const
     {
         val["hostname"] = ModelBase::toJson(m_Hostname);
     }
+    if(m_ConfigIsSet)
+    {
+        val["config"] = ModelBase::toJson(m_Config);
+    }
     
 
     return val;
@@ -63,6 +68,16 @@ void ProgramInformation::fromJson(nlohmann::json& val)
     if(val.find("hostname") != val.end())
     {
         setHostname(val.at("hostname"));
+        
+    }
+    if(val.find("config") != val.end())
+    {
+        if(!val["config"].is_null())
+        {
+            std::shared_ptr<Configuration> newItem(new Configuration());
+            newItem->fromJson(val["config"]);
+            setConfig( newItem );
+        }
         
     }
     
@@ -102,6 +117,23 @@ bool ProgramInformation::hostnameIsSet() const
 void ProgramInformation::unsetHostname()
 {
     m_HostnameIsSet = false;
+}
+std::shared_ptr<Configuration> ProgramInformation::getConfig() const
+{
+    return m_Config;
+}
+void ProgramInformation::setConfig(std::shared_ptr<Configuration> value)
+{
+    m_Config = value;
+    m_ConfigIsSet = true;
+}
+bool ProgramInformation::configIsSet() const
+{
+    return m_ConfigIsSet;
+}
+void ProgramInformation::unsetConfig()
+{
+    m_ConfigIsSet = false;
 }
 
 }

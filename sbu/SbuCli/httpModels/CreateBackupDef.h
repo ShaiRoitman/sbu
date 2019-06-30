@@ -21,6 +21,7 @@
 
 #include "ModelBase.h"
 
+#include "Configuration.h"
 #include <string>
 
 namespace io {
@@ -63,12 +64,21 @@ public:
     void setPath(std::string value);
     bool pathIsSet() const;
     void unsetPath();
+    /// <summary>
+    /// 
+    /// </summary>
+    std::shared_ptr<Configuration> getConfig() const;
+    void setConfig(std::shared_ptr<Configuration> value);
+    bool configIsSet() const;
+    void unsetConfig();
 
 protected:
     std::string m_Name;
     bool m_NameIsSet;
     std::string m_Path;
     bool m_PathIsSet;
+    std::shared_ptr<Configuration> m_Config;
+    bool m_ConfigIsSet;
 };
 
 }

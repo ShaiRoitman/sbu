@@ -21,6 +21,7 @@
 
 #include "ModelBase.h"
 
+#include "Configuration.h"
 #include <string>
 
 namespace io {
@@ -63,12 +64,21 @@ public:
     void setDate(std::string value);
     bool dateIsSet() const;
     void unsetdate();
+    /// <summary>
+    /// 
+    /// </summary>
+    std::shared_ptr<Configuration> getConfig() const;
+    void setConfig(std::shared_ptr<Configuration> value);
+    bool configIsSet() const;
+    void unsetConfig();
 
 protected:
     int64_t m_Id;
     bool m_IdIsSet;
     std::string m_date;
     bool m_dateIsSet;
+    std::shared_ptr<Configuration> m_Config;
+    bool m_ConfigIsSet;
 };
 
 }

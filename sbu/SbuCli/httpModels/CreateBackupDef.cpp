@@ -24,6 +24,7 @@ CreateBackupDef::CreateBackupDef()
     m_NameIsSet = false;
     m_Path = "";
     m_PathIsSet = false;
+    m_ConfigIsSet = false;
     
 }
 
@@ -48,6 +49,10 @@ nlohmann::json CreateBackupDef::toJson() const
     {
         val["path"] = ModelBase::toJson(m_Path);
     }
+    if(m_ConfigIsSet)
+    {
+        val["config"] = ModelBase::toJson(m_Config);
+    }
     
 
     return val;
@@ -63,6 +68,16 @@ void CreateBackupDef::fromJson(nlohmann::json& val)
     if(val.find("path") != val.end())
     {
         setPath(val.at("path"));
+        
+    }
+    if(val.find("config") != val.end())
+    {
+        if(!val["config"].is_null())
+        {
+            std::shared_ptr<Configuration> newItem(new Configuration());
+            newItem->fromJson(val["config"]);
+            setConfig( newItem );
+        }
         
     }
     
@@ -102,6 +117,23 @@ bool CreateBackupDef::pathIsSet() const
 void CreateBackupDef::unsetPath()
 {
     m_PathIsSet = false;
+}
+std::shared_ptr<Configuration> CreateBackupDef::getConfig() const
+{
+    return m_Config;
+}
+void CreateBackupDef::setConfig(std::shared_ptr<Configuration> value)
+{
+    m_Config = value;
+    m_ConfigIsSet = true;
+}
+bool CreateBackupDef::configIsSet() const
+{
+    return m_ConfigIsSet;
+}
+void CreateBackupDef::unsetConfig()
+{
+    m_ConfigIsSet = false;
 }
 
 }

@@ -21,6 +21,7 @@
 
 #include "ModelBase.h"
 
+#include "Configuration.h"
 #include <string>
 
 namespace io {
@@ -63,12 +64,21 @@ public:
     void setHostname(std::string value);
     bool hostnameIsSet() const;
     void unsetHostname();
+    /// <summary>
+    /// 
+    /// </summary>
+    std::shared_ptr<Configuration> getConfig() const;
+    void setConfig(std::shared_ptr<Configuration> value);
+    bool configIsSet() const;
+    void unsetConfig();
 
 protected:
     std::string m_Version;
     bool m_VersionIsSet;
     std::string m_Hostname;
     bool m_HostnameIsSet;
+    std::shared_ptr<Configuration> m_Config;
+    bool m_ConfigIsSet;
 };
 
 }
