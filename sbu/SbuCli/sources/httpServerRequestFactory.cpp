@@ -2,6 +2,12 @@
 #include "sbu.h"
 #include "factories.h"
 
+#include "..\httpModels\ProgramInformation.h"
+#include "..\httpModels\BackupDefs.h"
+#include "..\httpModels\BackupInfo.h"
+#include "..\httpModels\FullBackupDefInfo.h"
+#include "..\httpModels\CreateBackupDef.h"
+
 using namespace Poco::Net;
 using namespace std;
 
@@ -31,7 +37,6 @@ void MyRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &req, Poco::Ne
 		resp.setContentType("text/html");
 		auto& outputResponse = resp.send();
 		outputResponse << ex.what() << endl;
-
 	}
 
 	cout << endl
@@ -106,10 +111,19 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::BackupDef bodyValue;
+		io::swagger::server::model::CreateBackupDef body;
+		auto RepoDB = getRepository(config);
+		auto backupInfo = RepoDB->AddBackupDef(body.getName(), body.getPath());
+
+		io::swagger::server::model::BackupDef retValue;
+		retValue.setId(backupInfo->id);
+		retValue.setName(backupInfo->name);
+		retValue.setHostName(backupInfo->hostName);
+		retValue.setAdded(get_string_from_time_point(backupInfo->added));
+		retValue.setPath(backupInfo->rootPath.string());
 
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = retValue.toJson().dump();
 		out << output;
 		out.flush();
 	}

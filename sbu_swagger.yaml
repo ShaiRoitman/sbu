@@ -10,6 +10,16 @@ basePath: /
 schemes:
   - http
 paths:
+  /help:
+    get:
+      summary: Returns help information for this site
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/HelpInformation'
   /info:
     get:
       summary: Return the information of the system
@@ -22,7 +32,34 @@ paths:
             $ref: '#/definitions/ProgramInformation'
   /backupDef:
     get:
-      summary: Retrieves currently defined backup definitions objects
+      summary: Retrieves currently defined backup definitions objects with optional filtering
+      parameters: 
+        - in: query
+          name: host
+          type: string
+          description: substring of the hostname
+          required: false
+        - in: query
+          name: path
+          type: string
+          description: substring of the path
+          required: false
+        - in: query
+          name: name
+          type: string
+          description: substring of the name
+          required: false
+        - in: query
+          name: regex
+          type: boolean
+          description: use substrings as regex patterns
+          required: false
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/Configuration'
       consumes:
         - application/json
       produces:
@@ -60,6 +97,12 @@ paths:
           name: id
           type: string
           required: true
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/Configuration'
       consumes:
         - application/json
       produces:
@@ -84,6 +127,18 @@ paths:
           name: id
           type: string
           required: true
+        - in: query
+          name: step
+          type: string
+          enum: [Init,Scan,DiffCalc,FileUpload,Complete]
+          default: Complete
+          required: false
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/Configuration'
       responses:
         '200':
           description: Success
@@ -110,6 +165,12 @@ paths:
           name: bid
           type: string
           required: true
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/Configuration'
       responses:
         '200':
           description: Success
@@ -126,6 +187,12 @@ paths:
           name: id
           type: string
           required: true
+        - in: query
+          name: displayOnly
+          type: boolean
+          description: return only the files to be restored
+          required: false
+          default: false
         - in: body
           name: body
           description: Restore Backup
@@ -142,6 +209,14 @@ paths:
         '500':
           description: General server failure
 definitions:
+  HelpInformation:
+    type: object
+    additionalProperties: true
+  Configuration:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
   ProgramInformation:
     type: object
     properties:
@@ -149,6 +224,8 @@ definitions:
         type: string
       hostname:
         type: string
+      config:
+        $ref: '#/definitions/Configuration'
   CreateBackupDef:
     type: object
     properties:
@@ -156,6 +233,8 @@ definitions:
         type: string
       path:
         type: string
+      config:
+        $ref: '#/definitions/Configuration'
   BackupDef:
     type: object
     properties:
@@ -254,4 +333,5 @@ definitions:
       date:
         type: string
         format: date-time
-
+      config:
+        $ref: '#/definitions/Configuration'

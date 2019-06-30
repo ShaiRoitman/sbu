@@ -5,11 +5,6 @@
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPRequestHandlerFactory.h>
 
-#include "..\httpModels\ProgramInformation.h"
-#include "..\httpModels\BackupDefs.h"
-#include "..\httpModels\BackupInfo.h"
-#include "..\httpModels\FullBackupDefInfo.h"
-
 class MyRequestHandler : public Poco::Net::HTTPRequestHandler
 {
 public:
