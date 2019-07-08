@@ -2,6 +2,7 @@
 #include "sbu.h"
 #include "factories.h"
 
+#include "..\httpModels\HelpInformation.h"
 #include "..\httpModels\ProgramInformation.h"
 #include "..\httpModels\BackupDefs.h"
 #include "..\httpModels\BackupInfo.h"
@@ -44,15 +45,30 @@ void MyRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &req, Poco::Ne
 		<< " and URI=" << req.getURI() << endl;
 }
 
+class HelpInfoHandler : public HttpUrlRouter::HttpUrlRouterHandler
+{
+public:
+	virtual void OnRequest(
+		boost::program_options::variables_map& config,
+		HttpUrlRouter::Verb verb,
+		std::map<string, string> urlPathParams,
+		std::map<string, string> queryParams,
+		HTTPServerRequest & req,
+		HTTPServerResponse & resp) override
+	{
+
+	}
+};
+
 class GetInfoHandler : public HttpUrlRouter::HttpUrlRouterHandler
 {
 public:
 	virtual void OnRequest(
-		boost::program_options::variables_map& config, 
-		HttpUrlRouter::Verb verb, 
-		std::map<string, string> urlPathParams, 
-		std::map<string, string> queryParams, 
-		HTTPServerRequest & req, 
+		boost::program_options::variables_map& config,
+		HttpUrlRouter::Verb verb,
+		std::map<string, string> urlPathParams,
+		std::map<string, string> queryParams,
+		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
 		io::swagger::server::model::ProgramInformation bodyValue;
@@ -212,6 +228,9 @@ public:
 MyRequestHandlerFactory::MyRequestHandlerFactory(boost::program_options::variables_map& params)
 {
 	router = std::make_shared<HttpUrlRouter>(params);
+
+	// Returns httpServer::Models::HelpInformation
+	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/help", std::make_shared<HelpInfoHandler>());
 
 	// Returns httpServer::Models::ProgramInformation
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/info", std::make_shared<GetInfoHandler>());

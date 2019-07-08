@@ -71,4 +71,6 @@ ToDo 22/06/2019
 5. Cross Platform Compile ( Windows, Ubuntu, RaspberryPi )
 6. Create Dockers
 7. Helm Charts for Kubernetes
+Publish
+8. postgres SQL Support
 

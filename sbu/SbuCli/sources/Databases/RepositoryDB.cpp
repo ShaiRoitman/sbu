@@ -27,15 +27,17 @@ public:
 
 	void LogBackupDef(const std::string& prefix,std::shared_ptr<BackupDef> def)
 	{
-		logger->DebugFormat("[%s] ID:[%d] Name:[%s] RootPath:[%s] Host:[%s] Added:[%s]",
-			prefix.c_str(),
-			def->id,
-			def->name.c_str(),
-			def->rootPath.string().c_str(),
-			def->hostName.c_str(),
-			get_string_from_time_point(def->added).c_str()
-		);
-
+		if (def != nullptr)
+		{
+			logger->DebugFormat("[%s] ID:[%d] Name:[%s] RootPath:[%s] Host:[%s] Added:[%s]",
+				prefix.c_str(),
+				def->id,
+				def->name.c_str(),
+				def->rootPath.string().c_str(),
+				def->hostName.c_str(),
+				get_string_from_time_point(def->added).c_str()
+			);
+		}
 	}
 
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
@@ -80,16 +82,17 @@ public:
 			retValue->rootPath = from_utf8(query.getColumn("RootPath").getString());
 			retValue->hostName = query.getColumn("Hostname").getString();
 			retValue->added = get_time_point(query.getColumn("Added").getString());
+
+			logger->InfoFormat("RepositoryDB::GetBackupDef() name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
+				name.c_str(),
+				retValue->id,
+				retValue->rootPath.string().c_str(),
+				retValue->hostName.c_str(),
+				get_string_from_time_point(retValue->added).c_str());
+
 		}
 
-		logger->InfoFormat("RepositoryDB::GetBackupDef() name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
-			name.c_str(),
-			retValue->id,
-			retValue->rootPath.string().c_str(),
-			retValue->hostName.c_str(),
-			get_string_from_time_point(retValue->added).c_str());
-
-		LogBackupDef("RepositoryDB::GetBackupDef() Added ", retValue);
+		LogBackupDef("RepositoryDB::GetBackupDef() Get ", retValue);
 
 		return retValue;
 	}

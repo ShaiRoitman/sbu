@@ -1,4 +1,5 @@
 #include "factories.h"
+#include "sbu_exceptions.h"
 #include "FileRepositoryDB.h"
 #include "StorageHandlers/AwsS3StorageHandler.h"
 #include "StorageHandlers/FileRepositoryStorageHandler.h"
@@ -13,6 +14,12 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 	boost::filesystem::path dbPath = vm["FileRepository.name"].as<std::string>();
 	long minSizeToBulk = vm["FileRepository.minSizeToBulk"].as<long>();
 	long bulkSize = vm["FileRepository.bulkSize"].as<long>();
+
+	if (vm["General.StorageType"].empty())
+	{
+		logger->ErrorFormat("getFileRepository() Missing StorageType");
+		throw sbu_missingParameter();
+	}
 
 	auto repoType = vm["General.StorageType"].as<std::string>();
 

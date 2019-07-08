@@ -45,16 +45,13 @@ class SbuCmdLine:
             cmdLineArgs.append("--config")
             cmdLineArgs.append(self.configFile)
         if (self.repositoryPath != None):
+            cmdLineArgs.append("--General.StorageType")
+            cmdLineArgs.append("FileRepository")
             cmdLineArgs.append("--FileRepository.path")
             cmdLineArgs.append(self.repositoryPath)
-            cmdLineArgs.append("--FileRepository.name")
-            cmdLineArgs.append("fileRepository.db")
         if (self.workDir != None):
             cmdLineArgs.append("--General.Workdir")
             cmdLineArgs.append(self.workDir)
-
-        cmdLineArgs.append("--Repository.path")
-        cmdLineArgs.append("RepoDB.db")
 
         return cmdLineArgs
 
