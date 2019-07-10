@@ -92,6 +92,7 @@ public:
 
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) = 0;
 	virtual std::shared_ptr<BackupDef> GetBackupDef(const std::string& name) = 0;
+	virtual std::shared_ptr<BackupDef> GetBackupDef(Integer id) = 0;
 	virtual bool DeleteBackupDef(Integer id) = 0;
 
 	virtual void ListBackupDefs(std::function<void(const IRepositoryDB::BackupDef& backupdef)> iter) = 0;

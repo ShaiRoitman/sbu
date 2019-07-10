@@ -69,6 +69,34 @@ public:
 		return retValue;
 	}
 
+	virtual std::shared_ptr<BackupDef> GetBackupDef(Integer id)
+	{
+		SQLite::Statement query(*db, "SELECT ID,Name,Hostname,RootPath,Added FROM BackupDefs WHERE ID=:id");
+		query.bind(":id", id);
+		std::shared_ptr<BackupDef> retValue = nullptr;
+		if (query.executeStep())
+		{
+			retValue = std::make_shared<BackupDef>();
+			retValue->id = query.getColumn("ID").getInt();
+			retValue->name = query.getColumn("Name").getString();
+			retValue->rootPath = from_utf8(query.getColumn("RootPath").getString());
+			retValue->hostName = query.getColumn("Hostname").getString();
+			retValue->added = get_time_point(query.getColumn("Added").getString());
+
+			logger->InfoFormat("RepositoryDB::GetBackupDef(Integer) name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
+				retValue->name.c_str(),
+				retValue->id,
+				retValue->rootPath.string().c_str(),
+				retValue->hostName.c_str(),
+				get_string_from_time_point(retValue->added).c_str());
+
+		}
+
+		LogBackupDef("RepositoryDB::GetBackupDef(Integer) Get ", retValue);
+
+		return retValue;
+	}
+
 	virtual std::shared_ptr<BackupDef> GetBackupDef(const std::string& name)
 	{
 		SQLite::Statement query(*db, "SELECT ID,Name,Hostname,RootPath,Added FROM BackupDefs WHERE Name=:name");
@@ -83,7 +111,7 @@ public:
 			retValue->hostName = query.getColumn("Hostname").getString();
 			retValue->added = get_time_point(query.getColumn("Added").getString());
 
-			logger->InfoFormat("RepositoryDB::GetBackupDef() name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
+			logger->InfoFormat("RepositoryDB::GetBackupDef(string) name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
 				name.c_str(),
 				retValue->id,
 				retValue->rootPath.string().c_str(),
@@ -92,7 +120,7 @@ public:
 
 		}
 
-		LogBackupDef("RepositoryDB::GetBackupDef() Get ", retValue);
+		LogBackupDef("RepositoryDB::GetBackupDef(string) Get ", retValue);
 
 		return retValue;
 	}

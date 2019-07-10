@@ -9,6 +9,8 @@
 
 typedef long long Integer;
 
+Integer getIntegerFromString(const std::string& string);
+
 std::string getHostName();
 std::string to_utf8(boost::filesystem::path path);
 boost::filesystem::path from_utf8(const std::string& str);

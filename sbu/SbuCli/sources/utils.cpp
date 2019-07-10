@@ -11,6 +11,16 @@
 
 static auto logger = LoggerFactory::getLogger("application.Utils");
 
+Integer getIntegerFromString(const std::string& string)
+{
+	Integer retValue;
+
+	std::stringstream s(string);
+	s >> retValue;
+
+	return retValue;
+}
+
 std::string getHostName()
 {
 	std::string retValue = boost::asio::ip::host_name();

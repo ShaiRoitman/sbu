@@ -8,6 +8,7 @@
 #include "..\httpModels\BackupInfo.h"
 #include "..\httpModels\FullBackupDefInfo.h"
 #include "..\httpModels\CreateBackupDef.h"
+#include "..\httpModels\RestoreOptions.h"
 
 using namespace Poco::Net;
 using namespace std;
@@ -56,6 +57,12 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
+		io::swagger::server::model::HelpInformation outputBody;
+
+		ostream& out = resp.send();
+		auto output = outputBody.toJson().dump();
+		out << output;
+		out.flush();
 
 	}
 };
@@ -71,17 +78,28 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::ProgramInformation bodyValue;
-		bodyValue.setHostname(getHostName());
-		bodyValue.setVersion(g_Version);
+		io::swagger::server::model::ProgramInformation outputBody;
+
+		outputBody.setHostname(getHostName());
+		outputBody.setVersion(g_Version);
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
 };
 
-class GetBackupDefHandler : public HttpUrlRouter::HttpUrlRouterHandler
+class ConfigurationBasedHandler : public HttpUrlRouter::HttpUrlRouterHandler
+{
+protected:
+	void AugmentConfig(boost::program_options::variables_map& config, std::shared_ptr<io::swagger::server::model::Configuration> configParam)
+	{
+		auto params = configParam->toJson();
+		auto val = params["SHia"].get<std::string>();
+	}
+};
+
+class GetBackupDefHandler : public ConfigurationBasedHandler
 {
 public:
 	virtual void OnRequest(
@@ -92,9 +110,16 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::BackupDefs bodyValue;
+		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
+		io::swagger::server::model::BackupDefs outputBody;
+		this->AugmentConfig(config, inputBody);
 
-		auto backupdefs = bodyValue.getBackupdefs();
+		nlohmann::json inputBodyJson;
+		req.stream() >> inputBodyJson;
+		inputBody->fromJson(inputBodyJson);
+
+
+		auto backupdefs = outputBody.getBackupdefs();
 		auto RepoDB = getRepository(config);
 		RepoDB->ListBackupDefs(
 			[&backupdefs](const IRepositoryDB::BackupDef& backupdef)
@@ -110,13 +135,13 @@ public:
 		);
 
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
 };
 
-class PostBackupDefHandler : public HttpUrlRouter::HttpUrlRouterHandler
+class PostBackupDefHandler : public ConfigurationBasedHandler
 {
 public:
 	virtual void OnRequest(
@@ -127,25 +152,31 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::CreateBackupDef body;
+		io::swagger::server::model::CreateBackupDef inputBody;
+		io::swagger::server::model::BackupDef outputBody;
+
+		nlohmann::json inputBodyJson;
+		req.stream() >> inputBodyJson;
+		inputBody.fromJson(inputBodyJson);
+		this->AugmentConfig(config, inputBody.getConfig());
+
 		auto RepoDB = getRepository(config);
-		auto backupInfo = RepoDB->AddBackupDef(body.getName(), body.getPath());
+		auto backupInfo = RepoDB->AddBackupDef(inputBody.getName(), inputBody.getPath());
 
-		io::swagger::server::model::BackupDef retValue;
-		retValue.setId(backupInfo->id);
-		retValue.setName(backupInfo->name);
-		retValue.setHostName(backupInfo->hostName);
-		retValue.setAdded(get_string_from_time_point(backupInfo->added));
-		retValue.setPath(backupInfo->rootPath.string());
+		outputBody.setId(backupInfo->id);
+		outputBody.setName(backupInfo->name);
+		outputBody.setHostName(backupInfo->hostName);
+		outputBody.setAdded(get_string_from_time_point(backupInfo->added));
+		outputBody.setPath(backupInfo->rootPath.string());
 
 		ostream& out = resp.send();
-		auto output = retValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
 };
 
-class GetBackupDefIDHandler : public HttpUrlRouter::HttpUrlRouterHandler
+class GetBackupDefIDHandler : public ConfigurationBasedHandler
 {
 public:
 	virtual void OnRequest(
@@ -156,16 +187,47 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::BackupDef bodyValue;
+		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
+		io::swagger::server::model::FullBackupDefInfo outputBody;
 
+		nlohmann::json inputBodyJson;
+		req.stream() >> inputBodyJson;
+		inputBody->fromJson(inputBodyJson);
+		this->AugmentConfig(config, inputBody);
+
+		Integer id = getIntegerFromString(urlPathParams["Id"]);
+		auto RepoDB = getRepository(config);
+		auto def = RepoDB->GetBackupDef(id);
+		auto backupDef = std::make_shared< io::swagger::server::model::BackupDef>();
+		backupDef->setId(def->id);
+		backupDef->setName(def->name);
+		backupDef->setHostName(def->hostName);
+		backupDef->setAdded(get_string_from_time_point(def->added));
+		backupDef->setPath(def->rootPath.string());
+		outputBody.setDef(backupDef);
+
+		auto backups = outputBody.getBackups();
+		RepoDB->ListBackups(def->id,
+			[&backups](const IRepositoryDB::BackupInfo& backup)
+		{
+			std::shared_ptr<io::swagger::server::model::Backup> backupModel;
+			backupModel->setStatus(backup.status);
+			backupModel->setId(backup.id);
+			backupModel->setStarted(get_string_from_time_point(backup.started));
+			backupModel->setLastStatusUpdate(get_string_from_time_point(backup.lastUpdated));
+			backupModel->setBackupDefId(backup.backupDefId);
+			backups.push_back(backupModel);
+		}
+		);
+		
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
 };
 
-class GetBackupDefBackupHandler : public HttpUrlRouter::HttpUrlRouterHandler
+class PostBackupDefBackupHandler : public ConfigurationBasedHandler
 {
 public:
 	virtual void OnRequest(
@@ -176,16 +238,22 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::BackupInfo bodyValue;
+		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
+		io::swagger::server::model::Backup outputBody;
+
+		nlohmann::json inputBodyJson;
+		req.stream() >> inputBodyJson;
+		inputBody->fromJson(inputBodyJson);
+		this->AugmentConfig(config, inputBody);
 
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
 };
 
-class GetBackupDefBackupIDHandler : public HttpUrlRouter::HttpUrlRouterHandler
+class GetBackupDefBackupIDHandler : public ConfigurationBasedHandler
 {
 public:
 	virtual void OnRequest(
@@ -196,16 +264,24 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::BackupInfo bodyValue;
+		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
+		io::swagger::server::model::BackupInfo outputBody;
+
+		nlohmann::json inputBodyJson;
+		req.stream() >> inputBodyJson;
+		inputBody->fromJson(inputBodyJson);
+		this->AugmentConfig(config, inputBody);
+
+
 
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
 };
 
-class GetBackupDefRestoreHandler : public HttpUrlRouter::HttpUrlRouterHandler
+class PostBackupDefRestoreHandler : public ConfigurationBasedHandler
 {
 public:
 	virtual void OnRequest(
@@ -216,10 +292,16 @@ public:
 		HTTPServerRequest & req,
 		HTTPServerResponse & resp) override
 	{
-		io::swagger::server::model::Backup bodyValue;
+		io::swagger::server::model::RestoreOptions inputBody;
+		io::swagger::server::model::Backup outputBody;
+
+		nlohmann::json inputBodyJson;
+		req.stream() >> inputBodyJson;
+		inputBody.fromJson(inputBodyJson);
+		this->AugmentConfig(config, inputBody.getConfig());
 
 		ostream& out = resp.send();
-		auto output = bodyValue.toJson().dump();
+		auto output = outputBody.toJson().dump();
 		out << output;
 		out.flush();
 	}
@@ -229,31 +311,14 @@ MyRequestHandlerFactory::MyRequestHandlerFactory(boost::program_options::variabl
 {
 	router = std::make_shared<HttpUrlRouter>(params);
 
-	// Returns httpServer::Models::HelpInformation
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/help", std::make_shared<HelpInfoHandler>());
-
-	// Returns httpServer::Models::ProgramInformation
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/info", std::make_shared<GetInfoHandler>());
-
-	// Returns Array of httpServer::Models::BackupDef 
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef", std::make_shared<GetBackupDefHandler>());
-
-	// Input httpServer::Models::CreateBackupDef
-	// Returns httpServer::Models::BackupDef;
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_POST, "/backupDef", std::make_shared<PostBackupDefHandler>());
-
-	// Returns httpServer::Models::BackupDef
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef/{id}", std::make_shared<GetBackupDefIDHandler>());
-
-	// Returns httpServer::Models::Backup
-	router->AddRoute(HttpUrlRouter::Verb::HTTP_POST, "/backupDef/{id}/backup", std::make_shared<GetBackupDefBackupHandler>());
-
-	// Returns httpServer::Models::FullBackupDefInfo
+	router->AddRoute(HttpUrlRouter::Verb::HTTP_POST, "/backupDef/{id}/backup", std::make_shared<PostBackupDefBackupHandler>());
 	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef/{id}/backup/{bid}", std::make_shared<GetBackupDefBackupIDHandler>());
-
-	// Input httpServer::Models::RestoreOptions
-	// Returns httpServer::Models::Backup
-	router->AddRoute(HttpUrlRouter::Verb::HTTP_GET, "/backupDef/{id}/restore", std::make_shared<GetBackupDefRestoreHandler>());
+	router->AddRoute(HttpUrlRouter::Verb::HTTP_POST, "/backupDef/{id}/restore", std::make_shared<PostBackupDefRestoreHandler>());
 }
 
 HTTPRequestHandler* MyRequestHandlerFactory::createRequestHandler(const HTTPServerRequest &request)
