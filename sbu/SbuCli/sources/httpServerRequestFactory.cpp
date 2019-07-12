@@ -99,6 +99,31 @@ protected:
 	}
 };
 
+static std::shared_ptr<io::swagger::server::model::BackupDef> CreateBackupDef(const IRepositoryDB::BackupDef& backupdef)
+{
+	auto retValue = std::make_shared<io::swagger::server::model::BackupDef>();
+	retValue->setId(backupdef.id);
+	retValue->setName(backupdef.name);
+	retValue->setPath(backupdef.rootPath.generic_string());
+	retValue->setAdded(get_string_from_time_point(backupdef.added));
+	retValue->setHostName(backupdef.hostName);
+
+	return retValue;
+}
+
+static std::shared_ptr<io::swagger::server::model::Backup> CreateBackup(const IRepositoryDB::BackupInfo& backup)
+{
+	auto retValue = std::make_shared<io::swagger::server::model::Backup>();
+
+	retValue->setStatus(backup.status);
+	retValue->setId(backup.id);
+	retValue->setStarted(get_string_from_time_point(backup.started));
+	retValue->setLastStatusUpdate(get_string_from_time_point(backup.lastUpdated));
+	retValue->setBackupDefId(backup.backupDefId);
+
+	return retValue;
+}
+
 class GetBackupDefHandler : public ConfigurationBasedHandler
 {
 public:
@@ -124,12 +149,7 @@ public:
 		RepoDB->ListBackupDefs(
 			[&backupdefs](const IRepositoryDB::BackupDef& backupdef)
 		{
-			auto backupdefJson = std::make_shared<io::swagger::server::model::BackupDef>();
-			backupdefJson->setId(backupdef.id);
-			backupdefJson->setName(backupdef.name);
-			backupdefJson->setPath(backupdef.rootPath.generic_string());
-			backupdefJson->setAdded(get_string_from_time_point(backupdef.added));
-			backupdefJson->setHostName(backupdef.hostName);
+			auto backupdefJson = CreateBackupDef(backupdef);
 			backupdefs.push_back(backupdefJson);
 		}
 		);
@@ -153,7 +173,7 @@ public:
 		HTTPServerResponse & resp) override
 	{
 		io::swagger::server::model::CreateBackupDef inputBody;
-		io::swagger::server::model::BackupDef outputBody;
+		std::shared_ptr<io::swagger::server::model::BackupDef> outputBody;
 
 		nlohmann::json inputBodyJson;
 		req.stream() >> inputBodyJson;
@@ -162,15 +182,10 @@ public:
 
 		auto RepoDB = getRepository(config);
 		auto backupInfo = RepoDB->AddBackupDef(inputBody.getName(), inputBody.getPath());
-
-		outputBody.setId(backupInfo->id);
-		outputBody.setName(backupInfo->name);
-		outputBody.setHostName(backupInfo->hostName);
-		outputBody.setAdded(get_string_from_time_point(backupInfo->added));
-		outputBody.setPath(backupInfo->rootPath.string());
+		outputBody = CreateBackupDef(*backupInfo);
 
 		ostream& out = resp.send();
-		auto output = outputBody.toJson().dump();
+		auto output = outputBody->toJson().dump();
 		out << output;
 		out.flush();
 	}
@@ -198,28 +213,19 @@ public:
 		Integer id = getIntegerFromString(urlPathParams["Id"]);
 		auto RepoDB = getRepository(config);
 		auto def = RepoDB->GetBackupDef(id);
-		auto backupDef = std::make_shared< io::swagger::server::model::BackupDef>();
-		backupDef->setId(def->id);
-		backupDef->setName(def->name);
-		backupDef->setHostName(def->hostName);
-		backupDef->setAdded(get_string_from_time_point(def->added));
-		backupDef->setPath(def->rootPath.string());
+		auto backupDef = CreateBackupDef(*def);
+
 		outputBody.setDef(backupDef);
 
 		auto backups = outputBody.getBackups();
 		RepoDB->ListBackups(def->id,
 			[&backups](const IRepositoryDB::BackupInfo& backup)
 		{
-			std::shared_ptr<io::swagger::server::model::Backup> backupModel;
-			backupModel->setStatus(backup.status);
-			backupModel->setId(backup.id);
-			backupModel->setStarted(get_string_from_time_point(backup.started));
-			backupModel->setLastStatusUpdate(get_string_from_time_point(backup.lastUpdated));
-			backupModel->setBackupDefId(backup.backupDefId);
+			auto backupModel = CreateBackup(backup);
 			backups.push_back(backupModel);
 		}
 		);
-		
+
 		ostream& out = resp.send();
 		auto output = outputBody.toJson().dump();
 		out << output;
