@@ -10,6 +10,8 @@
 #include "..\httpModels\CreateBackupDef.h"
 #include "..\httpModels\RestoreOptions.h"
 
+#include "Operations.h"
+
 using namespace Poco::Net;
 using namespace std;
 
@@ -143,7 +145,6 @@ public:
 		req.stream() >> inputBodyJson;
 		inputBody->fromJson(inputBodyJson);
 
-
 		auto backupdefs = outputBody.getBackupdefs();
 		auto RepoDB = getRepository(config);
 		RepoDB->ListBackupDefs(
@@ -251,6 +252,16 @@ public:
 		req.stream() >> inputBodyJson;
 		inputBody->fromJson(inputBodyJson);
 		this->AugmentConfig(config, inputBody);
+
+		Integer id = getIntegerFromString(urlPathParams["Id"]);
+		auto RepoDB = getRepository(config);
+		auto def = RepoDB->GetBackupDef(id);
+
+		config.insert(std::make_pair("action", boost::program_options::variable_value("Backup", false)));
+		config.insert(std::make_pair("name", boost::program_options::variable_value(def->name, false)));
+
+		auto operation = BackupFactory();
+		operation->Operate(config);
 
 		ostream& out = resp.send();
 		auto output = outputBody.toJson().dump();
