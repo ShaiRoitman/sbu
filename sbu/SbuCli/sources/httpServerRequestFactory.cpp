@@ -12,6 +12,7 @@
 
 #include "Operations.h"
 #include "Operations/BackupOperation.h"
+#include "Operations/RestoreOperation.h"
 
 using namespace Poco::Net;
 using namespace std;
@@ -220,7 +221,8 @@ public:
 		outputBody.setDef(backupDef);
 
 		auto backups = outputBody.getBackups();
-		RepoDB->ListBackups(def->id,
+		RepoDB->ListBackups(
+			def->id,
 			[&backups](const IRepositoryDB::BackupInfo& backup)
 		{
 			auto backupModel = CreateBackup(backup);
@@ -324,6 +326,14 @@ public:
 		req.stream() >> inputBodyJson;
 		inputBody.fromJson(inputBodyJson);
 		this->AugmentConfig(config, inputBody.getConfig());
+
+		std::shared_ptr<RestoreOperation::Strategy> strategy = std::make_shared<RestoreOperation::Strategy>();
+		strategy->altToCopy = [](boost::filesystem::path& destination)
+		{
+		};
+		auto operation = std::make_shared<RestoreOperation>(strategy);
+
+		operation->Operate(config);
 
 		ostream& out = resp.send();
 		auto output = outputBody.toJson().dump();
