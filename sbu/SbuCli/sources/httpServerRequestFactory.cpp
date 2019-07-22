@@ -11,6 +11,7 @@
 #include "..\httpModels\RestoreOptions.h"
 
 #include "Operations.h"
+#include "Operations/BackupOperation.h"
 
 using namespace Poco::Net;
 using namespace std;
@@ -246,7 +247,7 @@ public:
 		HTTPServerResponse & resp) override
 	{
 		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
-		io::swagger::server::model::Backup outputBody;
+		std::shared_ptr<io::swagger::server::model::Backup> outputBody;
 
 		nlohmann::json inputBodyJson;
 		req.stream() >> inputBodyJson;
@@ -260,11 +261,18 @@ public:
 		config.insert(std::make_pair("action", boost::program_options::variable_value("Backup", false)));
 		config.insert(std::make_pair("name", boost::program_options::variable_value(def->name, false)));
 
-		auto operation = BackupFactory();
+		std::shared_ptr<BackupOperation::Strategy> strategy = std::make_shared< BackupOperation::Strategy>();
+		strategy->successFunc = [&outputBody](const IRepositoryDB::BackupInfo& backup)
+		{
+			outputBody = CreateBackup(backup);
+		};
+
+		auto operation = std::make_shared<BackupOperation>(strategy);
+
 		operation->Operate(config);
 
 		ostream& out = resp.send();
-		auto output = outputBody.toJson().dump();
+		auto output = outputBody->toJson().dump();
 		out << output;
 		out.flush();
 	}
