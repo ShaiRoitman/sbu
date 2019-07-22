@@ -299,8 +299,6 @@ public:
 		inputBody->fromJson(inputBodyJson);
 		this->AugmentConfig(config, inputBody);
 
-
-
 		ostream& out = resp.send();
 		auto output = outputBody.toJson().dump();
 		out << output;
