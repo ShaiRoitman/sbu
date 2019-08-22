@@ -141,11 +141,11 @@ public:
 	{
 		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
 		io::swagger::server::model::BackupDefs outputBody;
-		this->AugmentConfig(config, inputBody);
 
 		nlohmann::json inputBodyJson;
 		req.stream() >> inputBodyJson;
 		inputBody->fromJson(inputBodyJson);
+		this->AugmentConfig(config, inputBody);
 
 		auto backupdefs = outputBody.getBackupdefs();
 		auto RepoDB = getRepository(config);
@@ -256,9 +256,10 @@ public:
 		inputBody->fromJson(inputBodyJson);
 		this->AugmentConfig(config, inputBody);
 
-		Integer id = getIntegerFromString(urlPathParams["Id"]);
+		Integer id = getIntegerFromString(urlPathParams["id"]);
 		auto RepoDB = getRepository(config);
 		auto def = RepoDB->GetBackupDef(id);
+		auto backupDef = CreateBackupDef(*def);
 
 		config.insert(std::make_pair("action", boost::program_options::variable_value("Backup", false)));
 		config.insert(std::make_pair("name", boost::program_options::variable_value(def->name, false)));
@@ -293,11 +294,16 @@ public:
 	{
 		auto inputBody = std::make_shared<io::swagger::server::model::Configuration>();
 		io::swagger::server::model::BackupInfo outputBody;
-
 		nlohmann::json inputBodyJson;
 		req.stream() >> inputBodyJson;
 		inputBody->fromJson(inputBodyJson);
 		this->AugmentConfig(config, inputBody);
+
+		Integer id = getIntegerFromString(urlPathParams["id"]);
+		auto RepoDB = getRepository(config);
+		auto def = RepoDB->GetBackupDef(id);
+		Integer bid = getIntegerFromString(urlPathParams["bid"]);
+
 
 		ostream& out = resp.send();
 		auto output = outputBody.toJson().dump();

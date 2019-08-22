@@ -10,7 +10,7 @@ find_package(aws-cpp-sdk-transfer CONFIG REQUIRED)
 
 file(GLOB		resources		"resources/*.sql")
 file(GLOB		resources_db	"resources/databases/*.sql")
-file(GLOB		cmakes			"${PROJECT_SOURCE_DIR}/CMakeLists.cmake")
+file(GLOB		cmakes			"${PROJECT_SOURCE_DIR}/CMakeLists.cmake" "../../sbu_swagger.yaml")
 
 set (resources_files ${resources} ${resources_db} ${cmakes})
 
