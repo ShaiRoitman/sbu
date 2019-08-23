@@ -72,5 +72,5 @@ ToDo 22/06/2019
 6. Create Dockers
 7. Helm Charts for Kubernetes
 Publish
-8. postgres SQL Support
+8. postgres/mysql SQL Support
 

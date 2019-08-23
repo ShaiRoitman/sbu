@@ -21,6 +21,7 @@
 
 #include "ModelBase.h"
 
+#include "Object.h"
 #include <map>
 
 namespace io {

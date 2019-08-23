@@ -106,5 +106,8 @@ sudo make install
 httpModels
 ----------
 Generate swagger CodeGen pistache insert into httpModels
+copy pistache-server-server-generated.zip\pistache-server-server\model to httpModels
+Create Object.h file
+fix Modelbase.h to #include "nlohmann/json.hpp"
 
 cmake -DCMAKE_PREFIX_PATH=/home/master/sbu/sbu/cmake/linux .

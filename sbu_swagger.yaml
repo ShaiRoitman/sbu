@@ -1,28 +1,32 @@
 swagger: '2.0'
 info:
+  title: Smart Backup Utility
   description: HTTP Server for Smart Backup Utility
   version: 1.0.0
-  title: Smart Backup Utility
   contact:
+    url: http://sbu.roitman.info
     email: Shai@Roitman.info
-host: sbu.swagger.io
+    name: Shai Roitman
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+host: sbu.roitman.info
 basePath: /
 schemes:
   - http
 paths:
-  /help:
-    get:
-      summary: Returns help information for this site
-      produces: 
-        - application/json
-      responses:
-        '200':
-          description: Success
-          schema:
-            $ref: '#/definitions/HelpInformation'
   /info:
     get:
       summary: Return the information of the system
+      parameters:
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/ConfigurationBody'
+      consumes:
+        - application/json
       produces: 
         - application/json
       responses:
@@ -30,6 +34,48 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/ProgramInformation'
+        '400':
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/ErrorInformation'
+  /help:
+    get:
+      summary: Returns help for this application
+      parameters:
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/ConfigurationBody'
+      consumes:
+        - application/json
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/HelpInformation'
+  /quit:
+    get:
+      summary: Closes the application
+      parameters:
+        - in: body
+          name: body
+          description: Configuration
+          required: false
+          schema:
+            $ref: '#/definitions/ConfigurationBody'
+      consumes:
+        - application/json
+      produces: 
+        - application/json
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/CloseInformation'
   /backupDef:
     get:
       summary: Retrieves currently defined backup definitions objects with optional filtering
@@ -59,7 +105,7 @@ paths:
           description: Configuration
           required: false
           schema:
-            $ref: '#/definitions/Configuration'
+            $ref: '#/definitions/ConfigurationBody'
       consumes:
         - application/json
       produces:
@@ -87,7 +133,7 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/BackupDef'
-        '405':
+        '400':
           description: Invalid input
   /backupDef/{id}:
     get:
@@ -102,7 +148,7 @@ paths:
           description: Configuration
           required: false
           schema:
-            $ref: '#/definitions/Configuration'
+            $ref: '#/definitions/ConfigurationBody'
       consumes:
         - application/json
       produces:
@@ -138,7 +184,7 @@ paths:
           description: Configuration
           required: false
           schema:
-            $ref: '#/definitions/Configuration'
+            $ref: '#/definitions/ConfigurationBody'
       responses:
         '200':
           description: Success
@@ -170,7 +216,7 @@ paths:
           description: Configuration
           required: false
           schema:
-            $ref: '#/definitions/Configuration'
+            $ref: '#/definitions/ConfigurationBody'
       responses:
         '200':
           description: Success
@@ -182,6 +228,7 @@ paths:
           description: General server failure
   /backupDef/{id}/restore:
     post:
+      summary: Restores backup
       parameters:
         - in: path
           name: id
@@ -209,6 +256,12 @@ paths:
         '500':
           description: General server failure
 definitions:
+  ErrorInformation:
+    type: object
+    additionalProperties: true
+  CloseInformation:
+    type: object
+    additionalProperties: true
   HelpInformation:
     type: object
     additionalProperties: true
@@ -217,6 +270,11 @@ definitions:
     items:
       type: object
       additionalProperties: true
+  ConfigurationBody:
+    type: object
+    properties:
+      config:
+        $ref: '#/definitions/Configuration'
   ProgramInformation:
     type: object
     properties:
