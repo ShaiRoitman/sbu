@@ -1,15 +1,7 @@
 #include "httpServerRequestFactory.h"
+#include "httpServerUtils.h"
 #include "sbu.h"
 #include "factories.h"
-
-#include "../httpModels/HelpInformation.h"
-#include "../httpModels/ProgramInformation.h"
-#include "../httpModels/BackupDefs.h"
-#include "../httpModels/BackupInfo.h"
-#include "../httpModels/FullBackupDefInfo.h"
-#include "../httpModels/CreateBackupDef.h"
-#include "../httpModels/RestoreOptions.h"
-#include "../httpModels/ConfigurationBody.h"
 
 #include "Operations.h"
 #include "Operations/BackupOperation.h"
@@ -17,68 +9,6 @@
 
 using namespace Poco::Net;
 using namespace std;
-
-static void Convert(const IRepositoryDB::BackupDef& backupdef, std::shared_ptr<io::swagger::server::model::BackupDef> retValue)
-{
-	retValue->setId(backupdef.id);
-	retValue->setName(backupdef.name);
-	retValue->setPath(backupdef.rootPath.generic_string());
-	retValue->setAdded(get_string_from_time_point(backupdef.added));
-	retValue->setHostName(backupdef.hostName);
-}
-static void Convert(const IRepositoryDB::BackupInfo& backup, std::shared_ptr<io::swagger::server::model::Backup> retValue)
-{
-	retValue->setStatus(backup.status);
-	retValue->setId(backup.id);
-	retValue->setStarted(get_string_from_time_point(backup.started));
-	retValue->setLastStatusUpdate(get_string_from_time_point(backup.lastUpdated));
-	retValue->setBackupDefId(backup.backupDefId);
-}
-static std::shared_ptr<io::swagger::server::model::BackupDef> CreateBackupDef(const IRepositoryDB::BackupDef& backupdef)
-{
-	auto retValue = std::make_shared<io::swagger::server::model::BackupDef>();
-	Convert(backupdef, retValue);
-	return retValue;
-}
-static std::shared_ptr<io::swagger::server::model::Backup> CreateBackup(const IRepositoryDB::BackupInfo& backup)
-{
-	auto retValue = std::make_shared<io::swagger::server::model::Backup>();
-	Convert(backup, retValue);
-	return retValue;
-}
-
-MyRequestHandler::MyRequestHandler(std::shared_ptr<HttpUrlRouter> router)
-{
-	this->router = router;
-}
-
-void MyRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &req, Poco::Net::HTTPServerResponse &resp)
-{
-	try {
-		auto requestHandleStatus = this->router->HandleRequest(req, resp);
-		if (requestHandleStatus == HttpUrlRouter::HandleStatus::Success)
-		{
-			resp.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
-			resp.setContentType("application/json");
-		}
-		else
-		{
-			resp.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-			resp.setContentType("text/html");
-		}
-	}
-	catch (std::exception ex)
-	{
-		resp.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
-		resp.setContentType("text/html");
-		auto& outputResponse = resp.send();
-		outputResponse << ex.what() << endl;
-	}
-
-	cout << endl
-		<< "Response sent for count=" << this->router->GetCount()
-		<< " and URI=" << req.getURI() << endl;
-}
 
 template<typename InputBodyType, typename OutputBodyType>
 class ConfigurationBasedHandler : public HttpUrlRouter::HttpUrlRouterHandler
@@ -299,8 +229,6 @@ public:
 
 		auto outputInfo = outputBody->getInfo();
 		Convert(*def, outputInfo->getDef());
-		
-
 	}
 };
 
@@ -327,6 +255,39 @@ public:
 		operation->Operate(config);
 	}
 };
+
+MyRequestHandler::MyRequestHandler(std::shared_ptr<HttpUrlRouter> router)
+{
+	this->router = router;
+}
+
+void MyRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &req, Poco::Net::HTTPServerResponse &resp)
+{
+	try {
+		auto requestHandleStatus = this->router->HandleRequest(req, resp);
+		if (requestHandleStatus == HttpUrlRouter::HandleStatus::Success)
+		{
+			resp.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+			resp.setContentType("application/json");
+		}
+		else
+		{
+			resp.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+			resp.setContentType("text/html");
+		}
+	}
+	catch (std::exception ex)
+	{
+		resp.setStatus(Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR);
+		resp.setContentType("text/html");
+		auto& outputResponse = resp.send();
+		outputResponse << ex.what() << endl;
+	}
+
+	cout << endl
+		<< "Response sent for count=" << this->router->GetCount()
+		<< " and URI=" << req.getURI() << endl;
+}
 
 MyRequestHandlerFactory::MyRequestHandlerFactory(boost::program_options::variables_map& params)
 {
