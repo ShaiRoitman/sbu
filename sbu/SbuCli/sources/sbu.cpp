@@ -11,7 +11,7 @@
 
 extern const std::string g_DeveloperName = "Shai Roitman";
 extern const std::string g_Version = "0.9";
-extern const std::string g_CopyWrite = "Shai Roitman - 2019";
+extern const std::string g_CopyRight= "Shai Roitman - 2019";
 
 int main(int argc, const char* argv[])
 {

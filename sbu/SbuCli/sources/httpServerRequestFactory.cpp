@@ -296,6 +296,11 @@ public:
 		auto RepoDB = getRepository(config);
 		auto def = RepoDB->GetBackupDef(id);
 		Integer bid = getIntegerFromString(urlPathParams["bid"]);
+
+		auto outputInfo = outputBody->getInfo();
+		Convert(*def, outputInfo->getDef());
+		
+
 	}
 };
 
