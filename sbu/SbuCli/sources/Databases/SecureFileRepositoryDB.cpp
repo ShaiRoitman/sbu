@@ -1,5 +1,4 @@
 #include "FileRepositoryDBImpl.h"
-#include "SQLiteCpp/SQLiteCpp.h"
 #include "utils.h"
 
 #include "Poco/Crypto/Cipher.h"
@@ -11,7 +10,6 @@
 
 using namespace Poco::Crypto;
 using namespace boost::filesystem;
-using namespace SQLite;
 
 static void PocoTransform(boost::filesystem::path source, boost::filesystem::path dest, Poco::Crypto::CryptoTransform* transform)
 {
@@ -78,7 +76,7 @@ private:
 	std::string password;
 };
 
-std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
+std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
 	const std::string& password,

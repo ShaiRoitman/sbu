@@ -115,4 +115,4 @@ public:
 
 };
 
-std::shared_ptr<IRepositoryDB> CreateRepositorySQLiteDB(boost::filesystem::path dbPath);
+std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath);

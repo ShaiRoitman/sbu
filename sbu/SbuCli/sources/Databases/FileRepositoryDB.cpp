@@ -1,5 +1,4 @@
 #include "FileRepositoryDB.h"
-#include "SQLiteCpp/SQLiteCpp.h"
 #include "utils.h"
 
 #include "FileRepositoryDBImpl.h"
@@ -7,7 +6,6 @@
 #include "Poco/TemporaryFile.h"
 
 using namespace boost::filesystem;
-using namespace SQLite;
 
 
 static std::shared_ptr<ILogger> logger = LoggerFactory::getLogger("application.FileRepositoryDB");
@@ -193,7 +191,7 @@ void FileRepositoryDB::SendMultiFile()
 	this->multiFile = MultiFile();
 }
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
 	long minSizeToBulk,

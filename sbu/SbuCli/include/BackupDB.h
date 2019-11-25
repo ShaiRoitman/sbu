@@ -21,4 +21,4 @@ public:
 	virtual void Complete() = 0;
 };
 
-std::shared_ptr<IBackupDB> CreateSQLiteDB(boost::filesystem::path dbPath);
+std::shared_ptr<IBackupDB> CreateDB(boost::filesystem::path dbPath);

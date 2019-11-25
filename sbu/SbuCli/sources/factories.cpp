@@ -49,12 +49,12 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 
 	if (!vm["Storage.password"].empty() && isSecure)
 	{
-		fileRepDB = CreateSecureFileRepositorySQLiteDB(storageHander, dbPath, vm["Storage.password"].as<std::string>(), minSizeToBulk, bulkSize);
+		fileRepDB = CreateSecureFileRepositoryDB(storageHander, dbPath, vm["Storage.password"].as<std::string>(), minSizeToBulk, bulkSize);
 		logger->InfoFormat("getFileRepository() returning Encrypted and Obfuscated FileRepository");
 	}
 	else
 	{
-		fileRepDB = CreateFileRepositorySQLiteDB(storageHander, dbPath, minSizeToBulk, bulkSize);
+		fileRepDB = CreateFileRepositoryDB(storageHander, dbPath, minSizeToBulk, bulkSize);
 		logger->InfoFormat("getFileRepository() returning Clear FileRepository");
 	}
 	
@@ -64,7 +64,7 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 std::shared_ptr<IRepositoryDB> getRepository(boost::program_options::variables_map& vm)
 {
 	std::string repoDB = vm["Repository.path"].as<std::string>();
-	auto RepoDB = CreateRepositorySQLiteDB(repoDB);;
+	auto RepoDB = CreateRepositoryDB(repoDB);;
 
 	return RepoDB;
 }

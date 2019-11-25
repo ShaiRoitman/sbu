@@ -392,7 +392,7 @@ private:
 	path root;
 };
 
-std::shared_ptr<IBackupDB> CreateSQLiteDB(boost::filesystem::path dbPath)
+std::shared_ptr<IBackupDB> CreateDB(boost::filesystem::path dbPath)
 {
 	logger->DebugFormat("Creating BackupDB dbPath:[%s]", dbPath.string().c_str());
 	return std::make_shared<BackupDB>(dbPath);

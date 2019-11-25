@@ -20,12 +20,12 @@ public:
 	virtual bool CopyFileFromRepository(const IFileRepositoryDB::RepoHandle& handle, boost::filesystem::path dstFilePath) = 0;
 };
 
-std::shared_ptr<IFileRepositoryDB> CreateFileRepositorySQLiteDB(
+std::shared_ptr<IFileRepositoryDB> CreateFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
 	long minSizeToBulk,
 	long bulkSize);
-std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositorySQLiteDB(
+std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
 	const std::string& password,

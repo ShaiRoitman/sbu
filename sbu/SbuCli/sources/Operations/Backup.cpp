@@ -31,7 +31,7 @@ int BackupOperation::Init(boost::program_options::variables_map& vm)
 		auto backupdef = RepoDB->GetBackupDef(name);
 		if (backupdef != nullptr)
 		{
-			auto backupDB = CreateSQLiteDB(dbPath);
+			auto backupDB = CreateDB(dbPath);
 			backupDB->StartScan(backupdef->rootPath);
 			RepoDB->CopyCurrentStateIntoBackupDB(dbPath, *backupdef);
 		}
@@ -62,7 +62,7 @@ int BackupOperation::Scan(boost::program_options::variables_map& vm)
 	bool doesExists = boost::filesystem::exists(dbPath);
 	if (doesExists)
 	{
-		auto backupDB = CreateSQLiteDB(dbPath);
+		auto backupDB = CreateDB(dbPath);
 		backupDB->ContinueScan();
 	}
 	else
@@ -85,7 +85,7 @@ int BackupOperation::DiffCalc(boost::program_options::variables_map& vm)
 	bool doesExists = boost::filesystem::exists(dbPath);
 	if (doesExists)
 	{
-		auto backupDB = CreateSQLiteDB(dbPath);
+		auto backupDB = CreateDB(dbPath);
 		backupDB->StartDiffCalc();
 		backupDB->ContinueDiffCalc();
 	}
@@ -109,7 +109,7 @@ int BackupOperation::FileUpload(boost::program_options::variables_map& vm)
 	bool doesExists = boost::filesystem::exists(dbPath);
 	if (doesExists)
 	{
-		auto backupDB = CreateSQLiteDB(dbPath);
+		auto backupDB = CreateDB(dbPath);
 		std::shared_ptr<IFileRepositoryDB> fileRepDB = getFileRepository(vm);
 		backupDB->StartUpload(fileRepDB);
 		backupDB->ContinueUpload(fileRepDB);
@@ -134,7 +134,7 @@ int BackupOperation::Complete(boost::program_options::variables_map& vm)
 	bool doesExists = boost::filesystem::exists(dbPath);
 	if (doesExists)
 	{
-		auto backupDB = CreateSQLiteDB(dbPath);
+		auto backupDB = CreateDB(dbPath);
 		backupDB->ContinueScan();
 		backupDB->ContinueDiffCalc();
 		std::shared_ptr<IFileRepositoryDB> fileRepDB = getFileRepository(vm);

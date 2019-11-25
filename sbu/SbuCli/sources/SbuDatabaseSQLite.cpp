@@ -31,7 +31,7 @@ public:
 		return column.getInt();
 	}
 
-	virtual bool isNull() const override 
+	virtual bool isNull() const override
 	{
 		return column.isNull();
 	}
@@ -137,7 +137,7 @@ public:
 	std::shared_ptr<SQLite::Database> db;
 };
 
-std::shared_ptr<ISbuDBDatabase> CreateSQLiteDB(boost::filesystem::path dbPath, const char* initScript)
+std::shared_ptr<ISbuDBDatabase> CreateDB(boost::filesystem::path dbPath, const char* initScript)
 {
 	return std::make_shared<SqliteSbuDBDatabase>(dbPath, initScript);
 }
