@@ -64,11 +64,10 @@ Features
 
 ToDo 22/06/2019
 ---------------
-1. Http Server
 2. Test Test Test
 3. Error Handling
 4. Logging
-5. Cross Platform Compile ( Windows, Ubuntu, RaspberryPi )
+5. Cross Platform Compile ( Windows, Ubuntu, RaspberryPi, Docker )
 6. Create Dockers
 7. Helm Charts for Kubernetes
 Publish

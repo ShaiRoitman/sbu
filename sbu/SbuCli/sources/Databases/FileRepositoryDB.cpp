@@ -48,13 +48,13 @@ IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path 
 					logger->ErrorFormat("FileRepositoryDB::AddFile() key [%s] Failed", key.c_str());
 				}
 
-				SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
-				insertQuery.bind(":path", to_utf8(key));
-				insertQuery.bind(":size", fileSize);
-				insertQuery.bind(":added", return_current_time_and_date());
-				insertQuery.bind(":digestType", digestType);
-				insertQuery.bind(":digestValue", key);
-				insertQuery.exec();
+				auto insertQuery = db->CreateStatement("INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
+				insertQuery->bind(":path", to_utf8(key));
+				insertQuery->bind(":size", fileSize);
+				insertQuery->bind(":added", return_current_time_and_date());
+				insertQuery->bind(":digestType", digestType);
+				insertQuery->bind(":digestValue", key);
+				insertQuery->exec();
 			}
 		}
 		else
@@ -114,23 +114,23 @@ void FileRepositoryDB::Complete()
 bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesystem::path* path)
 {
 	std::string key = handle;
-	SQLite::Statement query(*db, "SELECT Path,HostDigest FROM Files WHERE DigestValue=:key");
-	query.bind(":key", key);
+	auto query = db->CreateStatement("SELECT Path,HostDigest FROM Files WHERE DigestValue=:key");
+	query->bind(":key", key);
 	bool retValue = false;
-	if (query.executeStep())
+	if (query->executeStep())
 	{
 		if (path != nullptr)
 		{
-			auto pathColumn = query.getColumn("Path");
-			if (pathColumn.isNull() == false)
+			auto pathColumn = query->getColumn("Path");
+			if (pathColumn->isNull() == false)
 			{
 				auto tempFileName = Poco::TemporaryFile::tempName();
-				this->fileHandler->CopyFileFromRepository(pathColumn.getString(), tempFileName);
+				this->fileHandler->CopyFileFromRepository(pathColumn->getString(), tempFileName);
 				*path = tempFileName;
 			}
 			else
 			{
-				auto hostDigest = query.getColumn("HostDigest").getString();
+				auto hostDigest = query->getColumn("HostDigest")->getString();
 				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
 				{
 					auto ziptempFileName = Poco::TemporaryFile::tempName();
@@ -151,7 +151,7 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 void FileRepositoryDB::SendMultiFile()
 {
 	this->multiFile.Close();
-	Transaction transaction(*db);
+	auto transaction = db->CreateTransaction();
 	logger->DebugFormat("FileRepositoryDB::SendMultiFile()");
 
 	auto digest = calcHash(this->multiFile.zipFile);
@@ -162,13 +162,13 @@ void FileRepositoryDB::SendMultiFile()
 	{
 		auto currEntry = (*iter).second;
 		
-		SQLite::Statement insertQuery(*db, "INSERT INTO Files (Size, Added, DigestType, DigestValue, HostDigest) VALUES (:size,:added,:digestType,:digestValue,:hostDigest)");
-		insertQuery.bind(":size", currEntry.size);
-		insertQuery.bind(":added", return_current_time_and_date());
-		insertQuery.bind(":digestType", "SHA1");
-		insertQuery.bind(":digestValue", currEntry.digest);
-		insertQuery.bind(":hostDigest", digest);
-		insertQuery.exec();
+		auto insertQuery = db->CreateStatement("INSERT INTO Files (Size, Added, DigestType, DigestValue, HostDigest) VALUES (:size,:added,:digestType,:digestValue,:hostDigest)");
+		insertQuery->bind(":size", currEntry.size);
+		insertQuery->bind(":added", return_current_time_and_date());
+		insertQuery->bind(":digestType", "SHA1");
+		insertQuery->bind(":digestValue", currEntry.digest);
+		insertQuery->bind(":hostDigest", digest);
+		insertQuery->exec();
 	}
 
 
@@ -180,14 +180,15 @@ void FileRepositoryDB::SendMultiFile()
 		logger->ErrorFormat("FileRepositoryDB::AddFile() key:[%s] Failed", key.c_str());
 	}
 
-	SQLite::Statement insertQuery(*db, "INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
-	insertQuery.bind(":path", to_utf8(digest));
-	insertQuery.bind(":size", fileSize);
-	insertQuery.bind(":added", return_current_time_and_date());
-	insertQuery.bind(":digestType", "SHA1");
-	insertQuery.bind(":digestValue", digest);
-	insertQuery.exec();
-	transaction.commit();
+	auto insertQuery = db->CreateStatement("INSERT INTO Files (Path, Size, Added, DigestType, DigestValue) VALUES (:path,:size,:added,:digestType,:digestValue)");
+	insertQuery->bind(":path", to_utf8(digest));
+	insertQuery->bind(":size", fileSize);
+	insertQuery->bind(":added", return_current_time_and_date());
+	insertQuery->bind(":digestType", "SHA1");
+	insertQuery->bind(":digestValue", digest);
+	insertQuery->exec();
+
+	transaction->commit();
 
 	this->multiFile = MultiFile();
 }

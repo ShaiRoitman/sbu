@@ -1,6 +1,6 @@
 #include "FileRepositoryDB.h"
 #include "Loggers.h"
-#include "SQLiteCpp/SQLiteCpp.h"
+#include "SbuDatabase.h"
 #include "MultiFile.h"
 #include "ZipWrapper.h"
 #include <map>
@@ -19,7 +19,7 @@ protected:
 private:
 	bool GetFileLocalPath(const RepoHandle& handle, boost::filesystem::path* path);
 	void SendMultiFile();
-	std::shared_ptr<SQLite::Database> db;
+	std::shared_ptr<ISbuDBDatabase> db;
 	boost::filesystem::path dataRootPath;
 
 	long long smallFileBulkThreshold;

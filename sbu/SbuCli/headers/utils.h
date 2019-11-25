@@ -5,7 +5,7 @@
 #include <boost/filesystem.hpp>
 #include "Loggers.h"
 #include "Text_Resources.h"
-#include "SQLiteCpp/Database.h"
+#include "SbuDatabase.h"
 
 typedef long long Integer;
 
@@ -23,7 +23,8 @@ std::string get_string_from_time_point(std::chrono::system_clock::time_point tp)
 std::chrono::system_clock::time_point get_time_point(const std::string& timePoint);
 bool copy_file_logged(boost::filesystem::path srcPath, boost::filesystem::path outFilePath);
 
-std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript);
+std::shared_ptr<ISbuDBDatabase> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript);
+
 class Resource
 {
 public:

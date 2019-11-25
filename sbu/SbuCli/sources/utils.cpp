@@ -8,6 +8,7 @@
 #include <fstream>
 #include "boost/asio/ip/host_name.hpp"
 #include "openssl/sha.h"
+#include "SbuDatabaseSQLite.h"
 
 static auto logger = LoggerFactory::getLogger("application.Utils");
 
@@ -175,26 +176,8 @@ std::string calcHash(const std::string& str)
 	return digest;
 }
 
-
-std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
+std::shared_ptr<ISbuDBDatabase> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
 {
-	std::shared_ptr<SQLite::Database> db = nullptr;
-	bool dbexists = false;
-	try
-	{
-		dbexists = exists(dbPath);
-		db = std::make_shared<SQLite::Database>(dbPath.string(), SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
-
-		if (!dbexists)
-		{
-			db->exec(initScript);
-		}
-	}
-	catch (std::exception ex)
-	{
-		logger->ErrorFormat("getOrCreateDb() dbPath:[%s] Failed to open exception:[%s]", dbPath.string().c_str(), ex.what());
-	}
-
-	logger->InfoFormat("getOrCreateDb() dbPath:[%s], dbExists:[%d] initScript [%s]", dbPath.string().c_str(), dbexists, "");
-	return db;
+	return CreateSQLiteDB(dbPath, initScript);
 }
+
