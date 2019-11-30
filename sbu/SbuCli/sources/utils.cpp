@@ -178,6 +178,6 @@ std::string calcHash(const std::string& str)
 
 std::shared_ptr<ISbuDBDatabase> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
 {
-	return CreateDB(dbPath, initScript);
+	return CreateSQLiteDB(dbPath, initScript);
 }
 

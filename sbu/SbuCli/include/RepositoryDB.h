@@ -3,6 +3,8 @@
 #include <boost/filesystem.hpp>
 #include <string>
 #include <chrono>
+#include <limits.h>
+
 #include "FileRepositoryDB.h"
 #include "BackupDB.h"
 #include "utils.h"

@@ -53,6 +53,6 @@ include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
 add_executable (sbu ${headers_files} ${include_files} ${sources_files} ${resources_files})
 
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)
-message ( ${Boost_LIBRARIES} )
+message ( "${Boost_LIBRARIES}" )
 
 target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})

@@ -91,7 +91,7 @@ public:
 	SQLite::Transaction transaction;
 };
 
-std::shared_ptr<SQLite::Database> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript)
+std::shared_ptr<SQLite::Database> getOrCreateSQLiteDb(boost::filesystem::path dbPath, const char* initScript)
 {
 	std::shared_ptr<SQLite::Database> db = nullptr;
 	bool dbexists = false;
@@ -119,7 +119,7 @@ class SqliteSbuDBDatabase : public ISbuDBDatabase
 public:
 	SqliteSbuDBDatabase(boost::filesystem::path dbPath, const char* initScript)
 	{
-		this->db = getOrCreateDb(dbPath, initScript);
+		this->db = getOrCreateSQLiteDb(dbPath, initScript);
 	}
 
 	virtual std::shared_ptr <ISbuDBStatement> CreateStatement(const std::string& statement) override
@@ -137,7 +137,7 @@ public:
 	std::shared_ptr<SQLite::Database> db;
 };
 
-std::shared_ptr<ISbuDBDatabase> CreateDB(boost::filesystem::path dbPath, const char* initScript)
+std::shared_ptr<ISbuDBDatabase> CreateSQLiteDB(boost::filesystem::path dbPath, const char* initScript)
 {
 	return std::make_shared<SqliteSbuDBDatabase>(dbPath, initScript);
 }
