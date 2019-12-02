@@ -16,6 +16,8 @@ RUN git clone https://github.com/aws/aws-sdk-cpp.git
 RUN git clone https://github.com/SRombauts/SQLiteCpp
 RUN git clone https://github.com/alex85k/sqlite3-cmake.git
 
+COPY SQLite3.CMakeLists.txt /git/sqlite3-cmake
+
 ENV WORKING_CPU 4
 ENV OPENSSL_ROOT_DIR /git/openssl
 
@@ -23,17 +25,21 @@ ENV OPENSSL_ROOT_DIR /git/openssl
 WORKDIR /git/openssl
 RUN ./config
 RUN make -j $WORKING_CPU
+RUN make install
+
 
 RUN mkdir /git/aws-sdk-cpp/release
 WORKDIR /git/aws-sdk-cpp/release
 RUN cmake -DBUILD_ONLY="s3;core;transfer" ..
 RUN make -j $WORKING_CPU
+RUN make install
 
 
 RUN mkdir /git/SQLiteCpp/release
 WORKDIR /git/SQLiteCpp/release
 RUN cmake ..
 RUN make -j $WORKING_CPU
+RUN make install
 
 WORKDIR /git/sqlite3-cmake
 RUN cmake -DSQLITE_ENABLE_COLUMN_METADATA=Y .
@@ -42,7 +48,8 @@ RUN make install
 RUN mkdir /git/poco/releaseBuild
 WORKDIR /git/poco/releaseBuild
 RUN cmake ..
-RUN make 
+RUN make
+RUN make install 
 
 WORKDIR /git
 RUN git clone http://github.com/ShaiRoitman/CompileToCppVar
