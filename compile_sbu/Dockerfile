@@ -16,9 +16,9 @@ RUN git clone https://github.com/aws/aws-sdk-cpp.git
 RUN git clone https://github.com/SRombauts/SQLiteCpp
 RUN git clone https://github.com/alex85k/sqlite3-cmake.git
 
-COPY SQLite3.CMakeLists.txt /git/sqlite3-cmake
+COPY SQLite3.CMakeLists.txt /git/sqlite3-cmake/CMakeLists.txt
 
-ENV WORKING_CPU 4
+ENV WORKING_CPU 6
 ENV OPENSSL_ROOT_DIR /git/openssl
 
 
@@ -48,7 +48,7 @@ RUN make install
 RUN mkdir /git/poco/releaseBuild
 WORKDIR /git/poco/releaseBuild
 RUN cmake ..
-RUN make
+RUN make -j $WORKING_CPU
 RUN make install 
 
 WORKDIR /git
@@ -56,7 +56,6 @@ RUN git clone http://github.com/ShaiRoitman/CompileToCppVar
 WORKDIR /git/CompileToCppVar
 RUN cmake .
 RUN make -j $WORKING_CPU
-
 
 WORKDIR /sbu
 
