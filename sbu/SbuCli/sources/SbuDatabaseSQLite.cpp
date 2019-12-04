@@ -46,17 +46,20 @@ public:
 
 	virtual std::shared_ptr<ISbuDBColumn> getColumn(const char* columnName) override
 	{
+		logger->DebugFormat("SqliteSbuDBStatement::getColumn() columnName:[%s]", columnName);
 		auto retValue = std::make_shared<SqliteSbuDBColumn>(statement, columnName);
 		return retValue;
 	}
 
 	virtual void bind(const char* apName, const std::string&    aValue) override
 	{
+		logger->DebugFormat("SqliteSbuDBStatement::bind() columnName:[%s] value:[%s]", apName, aValue.c_str());
 		statement.bind(apName, aValue);
 	}
 
 	virtual void bind(const char* apName, long long aValue) override
 	{
+		logger->DebugFormat("SqliteSbuDBStatement::bind() columnName:[%s] long value:[%lld]", apName, aValue);
 		statement.bind(apName, aValue);
 	}
 
@@ -82,9 +85,17 @@ public:
 class SqliteSbuDBTransaction : public ISbuDBTransaction
 {
 public:
-	SqliteSbuDBTransaction(SQLite::Database& t) : transaction(t) {}
+	SqliteSbuDBTransaction(SQLite::Database& t) : transaction(t) 
+	{
+		logger->DebugFormat("SqliteSbuDBTransaction::SqliteSbuDBTransaction()");
+	}
+	virtual ~SqliteSbuDBTransaction()
+	{
+		logger->DebugFormat("SqliteSbuDBTransaction::~SqliteSbuDBTransaction()");
+	}
 	virtual void commit() override
 	{
+		logger->DebugFormat("SqliteSbuDBTransaction::commit()");
 		transaction.commit();
 	}
 
