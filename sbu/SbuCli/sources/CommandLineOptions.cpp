@@ -104,12 +104,16 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		{
 			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_Version << std::endl;
 			std::cout << std::string("Written by ") << std::string(g_DeveloperName) << std::endl;
-			std::cout << desc << std::endl;
 
 			if (!vm["help"].empty())
+			{
+				std::cout << desc << std::endl;
 				return ExitCode_HelpCalled;
+			}
 			else
+			{
 				return ExitCode_VersionCalled;
+			}
 		}
 
 		if (vm["action"].empty())
