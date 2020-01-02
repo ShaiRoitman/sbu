@@ -1,3 +1,5 @@
+include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
+
 find_package(Boost REQUIRED COMPONENTS filesystem program_options log)
 find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(sqlite3 CONFIG REQUIRED)
@@ -49,7 +51,6 @@ source_group("Sources\\Databases" FILES ${databases})
 source_group("Sources\\StorageHandlers" FILES ${storagehandlers})
 source_group("Sources\\HttpModels" FILES ${httpModelssources})
 
-include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
 add_executable (sbu ${headers_files} ${include_files} ${sources_files} ${resources_files})
 
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)

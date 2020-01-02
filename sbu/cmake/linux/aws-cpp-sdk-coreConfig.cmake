@@ -1,1 +1,1 @@
-include_directories(/home/master/3rdParty/aws-sdk-cpp/aws-cpp-sdk-core/include)
+include_directories(/git/aws-sdk-cpp/aws-cpp-sdk-core/include)
