@@ -3,7 +3,7 @@
 export CompileTOCPP=/git/CompileToCppVar/CompileToCppVariable
 
 export FILENAME="SbuCli/headers/Text_Resources.h"
-export ROOT_PATH=/sbu/SbuCli/resources/
+export ROOT_PATH=/sbu/sbu/SbuCli/resources/
 
 echo Creating $FILENAME
 echo namespace Text_Resource { > $FILENAME
