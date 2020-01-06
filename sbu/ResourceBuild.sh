@@ -1,9 +1,8 @@
 #!/bin/bash
 
-export CompileTOCPP=/git/CompileToCppVar/CompileToCppVariable
+source variables.sh
 
 export FILENAME="SbuCli/headers/Text_Resources.h"
-export ROOT_PATH=/sbu/sbu/SbuCli/resources/
 
 echo Creating $FILENAME
 echo namespace Text_Resource { > $FILENAME

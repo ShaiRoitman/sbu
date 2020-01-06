@@ -1,1 +1,1 @@
-include_directories(/git/aws-sdk-cpp/aws-cpp-sdk-s3/include)
+include_directories(${GIT_ROOT}/aws-sdk-cpp/aws-cpp-sdk-s3/include)
