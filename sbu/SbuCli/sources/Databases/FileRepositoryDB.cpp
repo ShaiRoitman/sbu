@@ -112,7 +112,7 @@ void FileRepositoryDB::Complete()
 bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesystem::path* path)
 {
 	std::string key = handle;
-	auto query = db->CreateStatement("SELECT Path,HostDigest FROM Files WHERE DigestValue=:key");
+	auto query = db->CreateStatement("SELECT Path,MultiFileHostDigest FROM Files WHERE DigestValue=:key");
 	query->bind(":key", key);
 	bool retValue = false;
 	if (query->executeStep())
@@ -128,7 +128,7 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 			}
 			else
 			{
-				auto hostDigest = query->getColumn("HostDigest")->getString();
+				auto hostDigest = query->getColumn("MultiFileHostDigest")->getString();
 				if (this->zipFiles.find(hostDigest) == this->zipFiles.end())
 				{
 					auto ziptempFileName = Poco::TemporaryFile::tempName();
@@ -160,7 +160,7 @@ void FileRepositoryDB::SendMultiFile()
 	{
 		auto currEntry = (*iter).second;
 		
-		auto insertQuery = db->CreateStatement("INSERT INTO Files (Size, Added, DigestType, DigestValue, HostDigest) VALUES (:size,:added,:digestType,:digestValue,:hostDigest)");
+		auto insertQuery = db->CreateStatement("INSERT INTO Files (Size, Added, DigestType, DigestValue, MultiFileHostDigest) VALUES (:size,:added,:digestType,:digestValue,:hostDigest)");
 		insertQuery->bind(":size", currEntry.size);
 		insertQuery->bind(":added", return_current_time_and_date());
 		insertQuery->bind(":digestType", "SHA1");

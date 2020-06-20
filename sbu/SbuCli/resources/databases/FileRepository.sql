@@ -8,21 +8,21 @@ BEGIN TRANSACTION;
 
 -- Table: Files
 CREATE TABLE Files (
-    ID          INTEGER PRIMARY KEY AUTOINCREMENT,
-    Path        TEXT,
-	Added       DATETIME,
-	Size		BIGINT,
-    DigestType  TEXT,
-    DigestValue TEXT,
-	HostDigest  TEXT
+    ID						INTEGER PRIMARY KEY AUTOINCREMENT,
+    Path					TEXT,
+	Added					DATETIME,
+	Size					BIGINT,
+    DigestType				TEXT,
+    DigestValue				TEXT,
+	MultiFileHostDigest		TEXT
 );
 
 CREATE INDEX digestValueIndex ON Files (
     DigestValue ASC
 );
 
-CREATE INDEX hostDigestIndex ON Files (
-    HostDigest ASC
+CREATE INDEX multiFileHostDigestIndex ON Files (
+    MultiFileHostDigest ASC
 );
 
 
