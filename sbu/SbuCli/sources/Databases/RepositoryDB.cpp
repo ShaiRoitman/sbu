@@ -92,6 +92,8 @@ public:
 
 		LogBackupDef("RepositoryDB::GetBackupDef(Integer) Get ", retValue);
 
+		logger->DebugFormat("RepositoryDB::GetBackupDef() id:[%d]", id);
+
 		return retValue;
 	}
 
@@ -137,6 +139,7 @@ public:
 
 		transaction->commit();
 
+		logger->DebugFormat("RepositoryDB::DeleteBackupDef() id:[%d]", id);
 		return retValue;
 	}
 
@@ -152,6 +155,12 @@ public:
 			newValue.hostName = selectBackupDefs->getColumn("Hostname")->getString();
 			newValue.rootPath = from_utf8(selectBackupDefs->getColumn("RootPath")->getString());
 			newValue.added = get_time_point(selectBackupDefs->getColumn("Added")->getString());
+
+			logger->DebugFormat("RepositoryDB::ListBackupDefs() id:[%d] name:[%s] hostname:[%s] rootPath:[%s]",
+				newValue.id,
+				newValue.name.c_str(),
+				newValue.hostName.c_str(),
+				newValue.rootPath.c_str());
 
 			iter(newValue);
 		}
@@ -207,6 +216,12 @@ public:
 			newValue.started = get_time_point(selectQuery->getColumn("Started")->getString());
 			newValue.lastUpdated = get_time_point(selectQuery->getColumn("LastStatusUpdate")->getString());
 			newValue.status = selectQuery->getColumn("Status")->getString();
+
+			logger->DebugFormat("RepositoryDB::ListBackups() id:[%d] backupDefId:[%d] status:[%s]",
+				newValue.id,
+				newValue.backupDefId,
+				newValue.status.c_str());
+
 			function(newValue);
 		}
 	}
@@ -219,12 +234,14 @@ public:
 	{
 		auto selectQuery = db->CreateStatement("SELECT Status, Path, Type FROM Files WHERE BackupID=:id ORDER BY Status, Path  ");
 		selectQuery->bind(":id", id);
+		auto status = selectQuery->getColumn("Status")->getString();
+		auto path = selectQuery->getColumn("Path")->getString();
+		auto type = selectQuery->getColumn("Type")->getString();
+
 		while (selectQuery->executeStep())
 		{
-			function(
-				selectQuery->getColumn("Status")->getString(),
-				selectQuery->getColumn("Path")->getString(),
-				selectQuery->getColumn("Type")->getString());
+			logger->DebugFormat("RepositoryDB::ListBackupInfo() Status:[%d] Path:[%s] Type:[%s]", status.c_str(), path.c_str(), type.c_str());
+			function(status, path, type);
 		}
 	}
 
@@ -241,8 +258,9 @@ public:
 				auto type = selectQuery->getColumn("Type")->getString();
 				auto path = from_utf8(selectQuery->getColumn("Path")->getString());
 				auto fileHandle = selectQuery->getColumn("FileHandle")->getString();
-
 				auto destination = restoreParams.rootDest / path;
+
+				logger->DebugFormat("RepositoryDB::Restore() path:[%s] fileHandle:[%s] destination:[%s]", path.c_str(), fileHandle.c_str(), destination.c_str());
 				if (type == "File")
 				{
 					if (restoreParams.shouldCopy)
@@ -309,6 +327,7 @@ public:
 
 	void CopyCurrentStateIntoBackupDB(boost::filesystem::path backupDBPath, const BackupDef& backupDef) override
 	{
+		logger->DebugFormat("RepositoryDB::CopyCurrentStateIntoBackupDB() backupDBPath:[%s] Attaching", backupDBPath.c_str());
 		auto attach= db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
 		attach->bind(":backupDB", backupDBPath.string().c_str());
 		attach->exec();
@@ -317,6 +336,7 @@ public:
 		currentStateQuery->bind(":backupDefID", backupDef.id);
 		currentStateQuery->exec();
 
+		logger->DebugFormat("RepositoryDB::CopyCurrentStateIntoBackupDB() backupDBPath:[%s] Detaching", backupDBPath.c_str());
 		auto detach = db->CreateStatement("DETACH DATABASE BackupDB");
 		detach->exec();
 	}
@@ -324,6 +344,7 @@ public:
 private:
 	void CopyBackupDBStateIntoRepoAndComplete(boost::filesystem::path backupDBPath, BackupInfo& retValue) override
 	{
+		logger->DebugFormat("RepositoryDB::CopyBackupDBStateIntoRepoAndComplete() backupDBPath:[%s] Attaching", backupDBPath.c_str());
 		auto attach =db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
 		attach->bind(":backupDB", backupDBPath.string().c_str());
 		attach->exec();
@@ -332,6 +353,7 @@ private:
 		copyBackupStateQuery->bind(":backupID", retValue.id);
 		copyBackupStateQuery->exec();
 
+		logger->DebugFormat("RepositoryDB::CopyBackupDBStateIntoRepoAndComplete() backupDBPath:[%s] Detaching", backupDBPath.c_str());
 		auto detach = db->CreateStatement("DETACH DATABASE BackupDB");
 		detach->exec();
 
@@ -339,9 +361,9 @@ private:
 
 	}
 
-	void UpdatedBackup(const std::string& Status, BackupInfo& retValue)
+	void UpdatedBackup(const std::string& status, BackupInfo& retValue)
 	{
-		retValue.status = Status;
+		retValue.status = status;
 		retValue.lastUpdated = std::chrono::system_clock::now();
 
 		auto updateBackup = db->CreateStatement("UPDATE Backups SET LastStatusUpdate=:lastUpdated, Status=:status WHERE ID=:id");
@@ -349,6 +371,7 @@ private:
 		updateBackup->bind(":status", retValue.status);
 		updateBackup->bind(":id", retValue.id);
 		updateBackup->exec();
+		logger->DebugFormat("RepositoryDB::UpdatedBackup() Status:[%s]", status.c_str());
 	}
 
 	std::shared_ptr<IBackupDB> getBackupDB()

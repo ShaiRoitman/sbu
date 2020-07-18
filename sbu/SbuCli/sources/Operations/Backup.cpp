@@ -37,6 +37,7 @@ int BackupOperation::Init(boost::program_options::variables_map& vm)
 		}
 		else
 		{
+			logger->DebugFormat("Operation:[Backup] Failed due to parameter name not provided");
 			retValue = ExitCode_GeneralFailure;
 		}
 

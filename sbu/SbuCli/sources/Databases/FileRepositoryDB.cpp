@@ -70,7 +70,9 @@ IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path 
 }
 bool FileRepositoryDB::HasFile(const RepoHandle& handle)
 {
-	return this->GetFileLocalPath(handle, nullptr);
+	bool retValue = this->GetFileLocalPath(handle, nullptr);
+	logger->DebugFormat("FileRepositoryDB::HasFile() handle:[%s], retValue:[%d]", handle.c_str(), retValue);
+	return retValue;
 }
 bool FileRepositoryDB::GetFile(const RepoHandle& handle, boost::filesystem::path outFilePath)
 {
@@ -144,6 +146,7 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 		retValue = true;
 	}
 
+	logger->DebugFormat("FileRepositoryDB::GetFileLocalPath() handle:[%s] path:[%s] retValue:[%d]", handle.c_str(), (path == nullptr) ? L"null" : path->c_str(), retValue);
 	return retValue;
 }
 void FileRepositoryDB::SendMultiFile()

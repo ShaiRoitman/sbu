@@ -114,6 +114,7 @@ public:
 
 	virtual void ContinueDiffCalc() override
 	{
+		logger->DebugFormat("BackupDB::ContinueDiffCalc()");
 		auto shouldRunStage = db->CreateStatement("SELECT FileUploadComplete FROM GeneralInfo WHERE DiffComplete IS NOT NULL");
 		if (shouldRunStage->executeStep())
 		{
@@ -283,6 +284,7 @@ protected:
 		updateStartedQuery->bind(":started", return_current_time_and_date());
 		updateStartedQuery->bind(":id", id);
 		updateStartedQuery->exec();
+		logger->DebugFormat("BackupDB::UpdatedStarted() id:[%d]", id);
 	}
 
 	void UpdatedCompleted(Integer id)
@@ -291,11 +293,13 @@ protected:
 		updateCompletedQuery->bind(":completed", return_current_time_and_date());
 		updateCompletedQuery->bind(":id", id);
 		updateCompletedQuery->exec();
+		logger->DebugFormat("BackupDB::UpdatedCompleted() id:[%d]", id);
 	}
 
 	void InsertDirectoryToEntries(path dir)
 	{
 		static std::string insertQuerySQL = Text_Resource::InsertDirectory;
+		logger->DebugFormat("BackupDB::InsertDirectoryToEntries() dir:[%ws]", dir.c_str());
 		struct stat result;
 		stat(dir.generic_string().c_str(), &result);
 		try {
@@ -318,7 +322,7 @@ protected:
 
 	void ScanDirectory(path dir)
 	{
-		logger->DebugFormat("BackupDB::ScanDirectory() path:[%s]", dir.string().c_str());
+		logger->DebugFormat("BackupDB::ScanDirectory() path:[%ws]", dir.string().c_str());
 		try {
 			directory_iterator it{ dir };
 			while (it != directory_iterator())
@@ -365,6 +369,7 @@ protected:
 
 	void HandleFile(path file)
 	{
+		logger->DebugFormat("BackupDB::HandleFile() file:[%ws]", file.c_str());
 		static std::string insertQuerySQL = Text_Resource::InsertFile;
 		struct stat result;
 		stat(file.generic_string().c_str(), &result);
