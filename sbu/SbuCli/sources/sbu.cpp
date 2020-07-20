@@ -13,7 +13,7 @@
 
 extern const std::string g_DeveloperName = "Shai Roitman";
 extern const std::string g_Version = "0.9";
-extern const std::string g_CopyRight= "Shai Roitman - 2019";
+extern const std::string g_CopyRight = "Shai Roitman - 2019";
 
 int main(int argc, const char* argv[])
 {
@@ -41,36 +41,28 @@ int main(int argc, const char* argv[])
 	}
 	logger->InfoFormat("Working Directory [%s]", boost::filesystem::current_path().string().c_str());
 
-	try {
-		if (retValue == ExitCode_Success)
-		{
-			std::string action = options.vm["action"].as<std::string>();
-			logger->DebugFormat("Application action:[%s]", action.c_str());
+	if (retValue == ExitCode_Success)
+	{
+		std::string action = options.vm["action"].as<std::string>();
+		logger->DebugFormat("Application action:[%s]", action.c_str());
 
-			if (operations.find(action) != operations.end())
-			{
-				try {
-					auto factory = operations[action]();
-					retValue = factory->Operate(options.vm);
-				}
-				catch (std::exception ex)
-				{
-					logger->ErrorFormat("Fail to run action:[%s] got exception:[%s]", action.c_str(), ex.what());
-					retValue = ExitCode_GeneralFailure;
-				}
+		if (operations.find(action) != operations.end())
+		{
+			try {
+				auto factory = operations[action]();
+				retValue = factory->Operate(options.vm);
 			}
-			else
+			catch (std::exception ex)
 			{
-				logger->ErrorFormat("Fail to run missing action:[%s]", action.c_str());
-				retValue = ExitCode_InvalidAction;
+				logger->ErrorFormat("Fail to run action:[%s] got exception:[%s]", action.c_str(), ex.what());
+				retValue = ExitCode_GeneralFailure;
 			}
 		}
-	}
-	catch (std::exception ex)
-	{
-		logger->ErrorFormat("main() failed exception:[%s]", ex.what());
-		std::cout << boost::stacktrace::stacktrace();
-		throw;
+		else
+		{
+			logger->ErrorFormat("Fail to run missing action:[%s]", action.c_str());
+			retValue = ExitCode_InvalidAction;
+		}
 	}
 
 	logger->InfoFormat("main(): Application Ended retValue:[%d]", retValue);
