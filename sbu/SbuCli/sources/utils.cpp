@@ -9,6 +9,8 @@
 #include "boost/asio/ip/host_name.hpp"
 #include "openssl/sha.h"
 #include "SbuDatabaseSQLite.h"
+#include <signal.h>
+#include <boost/stacktrace.hpp>
 
 static auto logger = LoggerFactory::getLogger("application.Utils");
 
@@ -181,3 +183,13 @@ std::shared_ptr<ISbuDBDatabase> getOrCreateDb(boost::filesystem::path dbPath, co
 	return CreateSQLiteDB(dbPath, initScript);
 }
 
+void my_signal_handler(int signum) {
+	::signal(signum, SIG_DFL);
+	boost::stacktrace::safe_dump_to("./backtrace.dump");
+	::raise(SIGABRT);
+}
+void register_stacktrace_handler()
+{
+	::signal(SIGSEGV, &my_signal_handler);
+	::signal(SIGABRT, &my_signal_handler);
+}

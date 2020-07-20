@@ -19,6 +19,9 @@ std::string return_time_and_date(time_t tp);
 std::string calcHash(boost::filesystem::path path);
 std::string calcHash(const std::string& str);
 
+void register_stacktrace_handler();
+
+
 std::string get_string_from_time_point(std::chrono::system_clock::time_point tp);
 std::chrono::system_clock::time_point get_time_point(const std::string& timePoint);
 bool copy_file_logged(boost::filesystem::path srcPath, boost::filesystem::path outFilePath);
