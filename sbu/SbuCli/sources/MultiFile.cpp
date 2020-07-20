@@ -28,10 +28,18 @@ Poco::UInt64 MultiFile::GetSize()
 }
 bool MultiFile::Close()
 {
+	logger->DebugFormat("MultiFile::Close()");
 	bool retValue = false;
 	if (this->zip != nullptr)
 	{
-		zip->commit();
+		try {
+			zip->commit();
+		}
+		catch (std::exception ex)
+		{
+			logger->DebugFormat("MultiFile::Close() Failed to commit ex:[%s]", ex.what());
+			throw;
+		}
 		zip = nullptr;
 		retValue = true;
 	}
@@ -77,7 +85,7 @@ bool MultiFile::HasFile(const std::string& digest)
 		retValue = true;
 	}
 
-	logger->DebugFormat("MultiFile::HasFile() filename [%s], digest [%s] retValue ", this->zipFile.c_str(), digest, retValue);
+	logger->DebugFormat("MultiFile::HasFile() filename:[%s], digest:[%s] retValue:[%d]", this->zipFile.c_str(), digest, retValue);
 	return retValue;
 }
 

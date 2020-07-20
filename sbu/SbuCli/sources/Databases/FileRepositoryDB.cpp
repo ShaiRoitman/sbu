@@ -35,7 +35,12 @@ IFileRepositoryDB::RepoHandle FileRepositoryDB::AddFile(boost::filesystem::path 
 				this->multiFile.AddFile(file, digest);
 				if (this->multiFile.GetSize() > this->bulkSize)
 				{
+					logger->DebugFormat("FileRepositoryDB::AddFile() zipFile is large enough sending fileSize:[%d] zipfileSize:[%d]", fileSize, this->multiFile.GetSize());
 					this->SendMultiFile();
+				}
+				else
+				{
+					logger->DebugFormat("FileRepositoryDB::AddFile() zipFile is not enough fileSize:[%d]", fileSize);
 				}
 			}
 			else
@@ -151,7 +156,9 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 }
 void FileRepositoryDB::SendMultiFile()
 {
+	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Closing db:[%p]", *db);
 	this->multiFile.Close();
+	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Creating Translaction db:[%p]", *db);
 	auto transaction = db->CreateTransaction();
 	logger->DebugFormat("FileRepositoryDB::SendMultiFile()");
 
