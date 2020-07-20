@@ -28,7 +28,7 @@ public:
 
 	void UpdateAction(const std::string& action)
 	{
-		auto updateQuery = db->CreateStatement("Update GeneralInfo Set LastAction=:action");
+		auto updateQuery = db->CreateStatement("UPDATE GeneralInfo SET LastAction=:action");
 		updateQuery->bind(":action", action);
 		updateQuery->exec();
 
@@ -42,7 +42,7 @@ public:
 
 		AddToExecutionLog("Start Scan", to_utf8(dir.generic_wstring()));
 
-		auto insertQuery = db->CreateStatement("INSERT INTO GeneralInfo (RootPath, Created, LastAction) Values (:root ,:created, :lastAction)");
+		auto insertQuery = db->CreateStatement("INSERT INTO GeneralInfo (RootPath, Created, LastAction) VALUES (:root ,:created, :lastAction)");
 
 		insertQuery->bind(":root", to_utf8(dir));
 		insertQuery->bind(":created", return_current_time_and_date());
@@ -67,7 +67,7 @@ public:
 
 		this->UpdateAction("ContinueScan");
 		AddToExecutionLog("Continue Scan", "");
-		auto query = db->CreateStatement("SELECT ID,Path from NextScan");
+		auto query = db->CreateStatement("SELECT ID,Path FROM NextScan");
 		while (query->executeStep())
 		{
 			Integer id = query->getColumn("ID")->getInt64();
@@ -77,7 +77,7 @@ public:
 			query->reset();
 		}
 
-		auto completeStage = db->CreateStatement("UPDATE GeneralInfo Set ScanComplete=:date");
+		auto completeStage = db->CreateStatement("UPDATE GeneralInfo SET ScanComplete=:date");
 		completeStage->bind(":date", return_current_time_and_date());
 		completeStage->exec();
 
@@ -88,7 +88,7 @@ public:
 	virtual bool IsScanDone() override
 	{
 		bool retValue = true;
-		auto query = db->CreateStatement("SELECT ID,Path from NextScan");
+		auto query = db->CreateStatement("SELECT ID,Path FROM NextScan");
 		if (query->executeStep())
 			retValue = false;
 
@@ -153,7 +153,7 @@ public:
 			auto addUpdated = db->CreateStatement(Text_Resource::AddUpdated);
 			addUpdated->exec();
 
-			auto completeStage = db->CreateStatement("UPDATE GeneralInfo Set DiffComplete=:date");
+			auto completeStage = db->CreateStatement("UPDATE GeneralInfo SET DiffComplete=:date");
 			completeStage->bind(":date", return_current_time_and_date());
 			completeStage->exec();
 
@@ -202,25 +202,25 @@ public:
 
 			auto transaction = db->CreateTransaction();
 
-			auto updateEntries = db->CreateStatement("Update Entries SET StartUpload=:start, EndUpload=:end, FileHandle=:handle WHERE Path=:path");
+			auto updateEntries = db->CreateStatement("UPDATE Entries SET StartUpload=:start, EndUpload=:end, FileHandle=:handle WHERE Path=:path");
 			updateEntries->bind(":start", get_string_from_time_point(start));
 			updateEntries->bind(":end", get_string_from_time_point(end));
 			updateEntries->bind(":handle", fileHandle);
 			updateEntries->bind(":path", to_utf8(filePath));
 			updateEntries->exec();
 
-			auto updateCurrent = db->CreateStatement("Update NextState SET FileHandle=:handle, UploadState=:state WHERE Path=:path");
+			auto updateCurrent = db->CreateStatement("UPDATE NextState SET FileHandle=:handle, UploadState=:state WHERE Path=:path");
 			updateCurrent->bind(":handle", fileHandle);
 			updateCurrent->bind(":state", "Uploaded");
 			updateCurrent->bind(":path", to_utf8(filePath));
 			updateCurrent->exec();
 
-			auto completeStage = db->CreateStatement("UPDATE GeneralInfo Set FileUploadComplete=:date");
-			completeStage->bind(":date", return_current_time_and_date());
-			completeStage->exec();
-
 			transaction->commit();
 		}
+
+		auto completeStage = db->CreateStatement("UPDATE GeneralInfo SET FileUploadComplete=:date");
+		completeStage->bind(":date", return_current_time_and_date());
+		completeStage->exec();
 
 		fileDB->Complete();
 	}
@@ -238,7 +238,7 @@ public:
 
 	virtual void Complete() override
 	{
-		auto completeStage = db->CreateStatement("UPDATE GeneralInfo Set FinalizationComplete=:date");
+		auto completeStage = db->CreateStatement("UPDATE GeneralInfo SET FinalizationComplete=:date");
 		completeStage->bind(":date", return_current_time_and_date());
 		completeStage->exec();
 
@@ -249,7 +249,7 @@ public:
 protected:
 	void AddToExecutionLog(const std::string& comment, const std::string& argument)
 	{
-		auto insertQuery = db->CreateStatement("INSERT INTO ExecutionLog (EventTime, Comment, Argument) Values (:time, :comment, :arg)");
+		auto insertQuery = db->CreateStatement("INSERT INTO ExecutionLog (EventTime, Comment, Argument) VALUES (:time, :comment, :arg)");
 
 		auto currentTime = return_current_time_and_date();
 
@@ -267,7 +267,7 @@ protected:
 
 	void AddDirectoryToScan(path dir)
 	{
-		auto insertQuery = db->CreateStatement("INSERT INTO Scan (Path, Added) Values (:path,:added)");
+		auto insertQuery = db->CreateStatement("INSERT INTO Scan (Path, Added) VALUES (:path,:added)");
 		auto added = return_current_time_and_date();
 		insertQuery->bind(":path", to_utf8(dir));
 		insertQuery->bind(":added", added);
@@ -280,7 +280,7 @@ protected:
 
 	void UpdatedStarted(Integer id)
 	{
-		auto updateStartedQuery =db->CreateStatement("Update Scan Set Started=:started WHERE ID=:id");
+		auto updateStartedQuery =db->CreateStatement("UPDATE Scan SET Started=:started WHERE ID=:id");
 		updateStartedQuery->bind(":started", return_current_time_and_date());
 		updateStartedQuery->bind(":id", id);
 		updateStartedQuery->exec();
@@ -289,7 +289,7 @@ protected:
 
 	void UpdatedCompleted(Integer id)
 	{
-		auto updateCompletedQuery =db->CreateStatement("Update Scan Set Completed=:completed WHERE ID=:id");
+		auto updateCompletedQuery =db->CreateStatement("UPDATE Scan SET Completed=:completed WHERE ID=:id");
 		updateCompletedQuery->bind(":completed", return_current_time_and_date());
 		updateCompletedQuery->bind(":id", id);
 		updateCompletedQuery->exec();
@@ -299,7 +299,7 @@ protected:
 	void InsertDirectoryToEntries(path dir)
 	{
 		static std::string insertQuerySQL = Text_Resource::InsertDirectory;
-		logger->DebugFormat("BackupDB::InsertDirectoryToEntries() dir:[%ws]", dir.c_str());
+		logger->DebugFormat("BackupDB::InsertDirectoryToEntries() dir:[%ws]", dir.string().c_str());
 		struct stat result;
 		stat(dir.generic_string().c_str(), &result);
 		try {
@@ -322,7 +322,7 @@ protected:
 
 	void ScanDirectory(path dir)
 	{
-		logger->DebugFormat("BackupDB::ScanDirectory() path:[%ws]", dir.string().c_str());
+		logger->DebugFormat("BackupDB::ScanDirectory() path:[%s]", dir.string().c_str());
 		try {
 			directory_iterator it{ dir };
 			while (it != directory_iterator())
@@ -369,7 +369,7 @@ protected:
 
 	void HandleFile(path file)
 	{
-		logger->DebugFormat("BackupDB::HandleFile() file:[%ws]", file.c_str());
+		logger->DebugFormat("BackupDB::HandleFile() file:[%s]", file.string().c_str());
 		static std::string insertQuerySQL = Text_Resource::InsertFile;
 		struct stat result;
 		stat(file.generic_string().c_str(), &result);

@@ -42,7 +42,7 @@ public:
 	{
 		logger->DebugFormat("Adding BackupDef Name:[%s] RootPath:[%s]", name.c_str(), rootPath.string().c_str());
 		try {
-			auto insertQuery = db->CreateStatement("INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) Values (:name, :host, :root, :added)");
+			auto insertQuery = db->CreateStatement("INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) VALUES (:name, :host, :root, :added)");
 
 			insertQuery->bind(":name", name);
 			insertQuery->bind(":host", getHostName());
