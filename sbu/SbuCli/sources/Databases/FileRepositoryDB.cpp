@@ -204,18 +204,18 @@ void FileRepositoryDB::SendMultiFile()
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
-	long minSizeToBulk,
+	long maxSizeToBulk,
 	long bulkSize)
 {
 	logger->DebugFormat("Creating FileRepositoryDB dbPath:[%s] minFileToBulk:[%lld] fileBulkSize:[%lld]", 
 		dbPath.string().c_str(), 
-		minSizeToBulk,
+		maxSizeToBulk,
 		bulkSize);
 
 	return std::make_shared<FileRepositoryDB>(
 		storageHander,
 		dbPath,
-		minSizeToBulk, 
+		maxSizeToBulk,
 		bulkSize);
 }
 

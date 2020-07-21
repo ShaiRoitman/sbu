@@ -23,11 +23,11 @@ public:
 std::shared_ptr<IFileRepositoryDB> CreateFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
-	long minSizeToBulk,
+	long maxSizeToBulk,
 	long bulkSize);
 std::shared_ptr<IFileRepositoryDB> CreateSecureFileRepositoryDB(
 	std::shared_ptr<IStorageHandler> storageHander,
 	boost::filesystem::path dbPath,
 	const std::string& password,
-	long minSizeToBulk,
+	long maxSizeToBulk,
 	long bulkSize);

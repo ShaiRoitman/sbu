@@ -1,6 +1,5 @@
 #include "BackupDB.h"
 #include "utils.h"
-#include <sys/stat.h>
 #include "SbuDatabaseSQLite.h"
 
 using namespace boost::filesystem;
@@ -300,8 +299,8 @@ protected:
 	{
 		static std::string insertQuerySQL = Text_Resource::InsertDirectory;
 		logger->DebugFormat("BackupDB::InsertDirectoryToEntries() dir:[%ws]", dir.string().c_str());
-		struct stat result;
-		stat(dir.generic_string().c_str(), &result);
+		sbu_stats::Stat result;
+		sbu_stats::stat(dir.generic_string().c_str(), &result);
 		try {
 			auto insertQuery =db->CreateStatement(insertQuerySQL);
 			insertQuery->bind(":path", to_utf8(relative(dir, root)));
@@ -369,28 +368,39 @@ protected:
 
 	void HandleFile(path file)
 	{
-		logger->DebugFormat("BackupDB::HandleFile() file:[%s]", file.string().c_str());
 		static std::string insertQuerySQL = Text_Resource::InsertFile;
-		struct stat result;
-		stat(file.generic_string().c_str(), &result);
-		try {
-			auto insertQuery = db->CreateStatement(insertQuerySQL);
-			insertQuery->bind(":path", to_utf8(relative(file, root)));
-			insertQuery->bind(":type", "File");
-			insertQuery->bind(":added", return_current_time_and_date());
-			insertQuery->bind(":size", result.st_size);
-			insertQuery->bind(":created", return_time_and_date(result.st_ctime));
-			insertQuery->bind(":modified", return_time_and_date(result.st_mtime));
-			insertQuery->bind(":accessed", return_time_and_date(result.st_atime));
-			insertQuery->exec();
-		}
-		catch (std::exception ex)
+		sbu_stats::Stat result;
+		auto statResult = sbu_stats::stat(file.generic_string().c_str(), &result);
+		if (statResult == 0) 
 		{
-			logger->ErrorFormat("BackupDB::ScanDirectory() Handling file:[%s] exception:[%s]",
-				file.string().c_str(), ex.what());
+			logger->DebugFormat("BackupDB::HandleFile() file:[%s] statResult:[%d]", file.string().c_str(), statResult);
+			try {
+				auto insertQuery = db->CreateStatement(insertQuerySQL);
+				insertQuery->bind(":path", to_utf8(relative(file, root)));
+				insertQuery->bind(":type", "File");
+				insertQuery->bind(":added", return_current_time_and_date());
+				insertQuery->bind(":size", result.st_size);
+				insertQuery->bind(":created", return_time_and_date(result.st_ctime));
+				insertQuery->bind(":modified", return_time_and_date(result.st_mtime));
+				insertQuery->bind(":accessed", return_time_and_date(result.st_atime));
+				insertQuery->exec();
+			}
+			catch (std::exception ex)
+			{
+				logger->ErrorFormat("BackupDB::ScanDirectory() Handling file:[%s] exception:[%s]",
+					file.string().c_str(), ex.what());
 
-			AddToExecutionLog("Error In Handling File", to_utf8(file.generic_wstring()));
+				AddToExecutionLog("Error In Handling File", to_utf8(file.generic_wstring()));
+			}
 		}
+		else
+		{
+			logger->ErrorFormat("BackupDB::ScanDirectory() Handling file:[%s] StatResult:[%d]",
+				file.string().c_str(), statResult);
+
+			AddToExecutionLog("Error In Handling File statResult", to_utf8(file.generic_wstring()));
+		}
+
 	}
 private:
 	std::shared_ptr<ISbuDBDatabase> db;

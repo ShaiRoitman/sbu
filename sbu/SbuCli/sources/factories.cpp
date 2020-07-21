@@ -12,7 +12,7 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 	std::shared_ptr<IStorageHandler> storageHander;
 
 	boost::filesystem::path dbPath = vm["FileRepository.name"].as<std::string>();
-	long minSizeToBulk = vm["FileRepository.minSizeToBulk"].as<long>();
+	long maxSizeToBulk = vm["FileRepository.maxSizeToBulk"].as<long>();
 	long bulkSize = vm["FileRepository.bulkSize"].as<long>();
 
 	if (vm["General.StorageType"].empty())
@@ -49,12 +49,12 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 
 	if (!vm["Storage.password"].empty() && isSecure)
 	{
-		fileRepDB = CreateSecureFileRepositoryDB(storageHander, dbPath, vm["Storage.password"].as<std::string>(), minSizeToBulk, bulkSize);
+		fileRepDB = CreateSecureFileRepositoryDB(storageHander, dbPath, vm["Storage.password"].as<std::string>(), maxSizeToBulk, bulkSize);
 		logger->InfoFormat("getFileRepository() returning Encrypted and Obfuscated FileRepository");
 	}
 	else
 	{
-		fileRepDB = CreateFileRepositoryDB(storageHander, dbPath, minSizeToBulk, bulkSize);
+		fileRepDB = CreateFileRepositoryDB(storageHander, dbPath, maxSizeToBulk, bulkSize);
 		logger->InfoFormat("getFileRepository() returning Clear FileRepository");
 	}
 	

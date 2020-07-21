@@ -32,7 +32,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string awskey, awssecret, awsbucket, awsregion, awsBasePath;
 	std::string storageType;
 	int byID;
-	long minSizeToBulk;
+	long maxSizeToBulk;
 	long bulkSize;
 
 	desc.add_options()
@@ -50,7 +50,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("Storage.password", value (&storageType), "If exists uses this password SecureFileRepository or S3 Client side encryption")
 		("FileRepository.name", value(&filerepName)->default_value("FileRepository.db"), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
-		("FileRepository.minSizeToBulk", value(&minSizeToBulk)->default_value(128*1024), "Minimum file size to bulk")
+		("FileRepository.maxSizeToBulk", value(&maxSizeToBulk)->default_value(128*1024), "Minimum file size to bulk")
 		("FileRepository.bulkSize", value(&bulkSize)->default_value(5*1024*1024), "bulk Size")
 		("AwsS3Storage.key", value(&awskey), "Access key for the AWS Account")
 		("AwsS3Storage.secret", value(&awssecret), "Secret for the AWS Account")

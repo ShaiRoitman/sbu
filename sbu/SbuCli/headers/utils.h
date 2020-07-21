@@ -33,3 +33,22 @@ class Resource
 public:
 	static std::string ReadResource(boost::filesystem::path dir);
 };
+
+#include <sys/stat.h>
+namespace sbu_stats
+{
+#ifdef _WIN32
+	typedef struct _stat64 Stat;
+	static __inline int __CRTDECL stat(char const* const _FileName, Stat* const _Stat)
+	{
+		return ::_stati64(_FileName, _Stat);
+	}
+#else
+	typedef struct stat Stat;
+	static __inline int __CRTDECL stat(char const* const _FileName, Stat* const _Stat)
+	{
+		return ::stat(_FileName, _Stat);
+	}
+#endif
+}
+

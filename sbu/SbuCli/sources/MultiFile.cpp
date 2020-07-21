@@ -12,7 +12,9 @@ MultiFile::MultiFile()
 	this->fileSize = 0;
 	this->zipFile = Poco::TemporaryFile::tempName();
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile.c_str());
-	boost::filesystem::remove(this->zipFile);
+	auto removeResult = boost::filesystem::remove(this->zipFile);
+	logger->DebugFormat("MultiFile::MultiFile() using filename [%s] Removed:[%d]", this->zipFile.c_str(), removeResult);
+
 	zip = nullptr;
 }
 MultiFile::~MultiFile()
@@ -51,7 +53,7 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 {
 	if (this->HasFile(digest))
 	{
-		logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Already Exists", this->zipFile.c_str(), file.string(), digest);
+		logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Already Exists", this->zipFile.c_str(), file.string().c_str(), digest.c_str());
 		return false;
 	}
 	fileEntry newEntry;
@@ -74,7 +76,7 @@ bool MultiFile::AddFile(boost::filesystem::path file, const std::string& digest)
 	this->zip->addFile(digest, file.string());
 	this->totalSize += newEntry.size;
 
-	logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Size:[%ld]", this->zipFile.c_str(), file.string(), digest, newEntry.size);
+	logger->DebugFormat("MultiFile::AddFile() filename:[%s], path:[%s] digest:[%s] Size:[%ld]", this->zipFile.c_str(), file.string().c_str(), digest.c_str(), newEntry.size);
 	return true;
 }
 bool MultiFile::HasFile(const std::string& digest)
@@ -85,7 +87,7 @@ bool MultiFile::HasFile(const std::string& digest)
 		retValue = true;
 	}
 
-	logger->DebugFormat("MultiFile::HasFile() filename:[%s], digest:[%s] retValue:[%d]", this->zipFile.c_str(), digest, retValue);
+	logger->DebugFormat("MultiFile::HasFile() filename:[%s], digest:[%s] retValue:[%d]", this->zipFile.c_str(), digest.c_str(), retValue);
 	return retValue;
 }
 
