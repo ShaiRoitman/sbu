@@ -35,13 +35,14 @@ public:
 };
 
 #include <sys/stat.h>
+#include "boost/filesystem/path.hpp"
 namespace sbu_stats
 {
 #ifdef _WIN32
 	typedef struct _stat64 Stat;
-	static __inline int __CRTDECL stat(char const* const _FileName, Stat* const _Stat)
+	static __inline int __CRTDECL stat(boost::filesystem::path path, Stat* const _Stat)
 	{
-		return ::_stati64(_FileName, _Stat);
+		return ::_wstati64(path.generic_wstring().c_str(), _Stat);
 	}
 #else
 	typedef struct stat Stat;
