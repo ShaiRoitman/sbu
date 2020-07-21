@@ -46,7 +46,7 @@ namespace sbu_stats
 	}
 #else
 	typedef struct stat Stat;
-	static __inline int __CRTDECL stat(char const* const _FileName, Stat* const _Stat)
+	static __inline int stat(char const* const _FileName, Stat* const _Stat)
 	{
 		return ::stat(_FileName, _Stat);
 	}
