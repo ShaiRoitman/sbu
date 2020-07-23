@@ -2,8 +2,24 @@
 
 #include <string>
 #include <memory>
-#include <boost/program_options/variables_map.hpp>
-#include "CommandLineAndConfig.h"
+#include <list>
+
+class LoggingComponentEntry
+{
+public:
+	std::string componentName;
+	std::string level;
+};
+
+class LoggingOptions
+{
+public:
+	LoggingOptions();
+	std::list<LoggingComponentEntry> components;
+	bool shouldLogToConsole;
+	std::string fileOutputName;
+	std::string rootLevel;
+};
 
 class ILogger
 {
@@ -27,6 +43,6 @@ public:
 class LoggerFactory
 {
 public:
-	static void InitLogger(boost::program_options::variables_map& vm, LoggingOptions& loggingComponents);
+	static void InitLogger(LoggingOptions& loggingComponents);
 	static std::shared_ptr<ILogger> getLogger(const char* component);
 };

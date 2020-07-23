@@ -13,6 +13,13 @@
 
 const int bufferSize = 64 * 1024;
 
+LoggingOptions::LoggingOptions()
+{
+	this->shouldLogToConsole = false;
+	this->rootLevel = "Information";
+	this->fileOutputName = "";
+}
+
 class InitRootLogger
 {
 public:
@@ -135,40 +142,27 @@ protected:
 	Poco::Logger& m_Logger;
 };
 
-void LoggerFactory::InitLogger(boost::program_options::variables_map& vm, LoggingOptions& loggingComponents)
+void LoggerFactory::InitLogger(LoggingOptions& loggingComponents)
 {
-	if (!vm["Logging.Console"].empty())
+	if (loggingComponents.shouldLogToConsole)
 	{
-		auto value = vm["Logging.Console"].as<std::string>();
-		if (vm["Logging.Console"].as<std::string>() == "true")
-		{
-			Poco::AutoPtr<Poco::StreamChannel> cChannel(new Poco::StreamChannel(std::cout));
-			InitRootLogger::sChannel->addChannel(cChannel);
-		}
+		Poco::AutoPtr<Poco::StreamChannel> cChannel(new Poco::StreamChannel(std::cout));
+		InitRootLogger::sChannel->addChannel(cChannel);
 	}
 
-	if (!vm["Logging.FileOutput"].empty())
+	if (loggingComponents.fileOutputName.size() != 0)
 	{
-		auto fileName = vm["Logging.FileOutput"].as<std::string>();
-		if (fileName != "")
-		{
-			Poco::AutoPtr<Poco::FileChannel> pChannel(new Poco::FileChannel());
-			pChannel->setProperty("path", fileName);
-			InitRootLogger::sChannel->addChannel(pChannel);
-		}
+		Poco::AutoPtr<Poco::FileChannel> pChannel(new Poco::FileChannel());
+		pChannel->setProperty("path", loggingComponents.fileOutputName);
+		InitRootLogger::sChannel->addChannel(pChannel);
 	}
-	if (!vm["Logging.Verbosity"].empty())
-	{
-		auto verbosity = vm["Logging.Verbosity"].as<std::string>();
-		Poco::Logger::root().setLevel(verbosity);
-		Poco::Logger::setLevel(Poco::Logger::ROOT, Poco::Logger::parseLevel(verbosity));
-	}
+
+	Poco::Logger::setLevel(Poco::Logger::ROOT, Poco::Logger::parseLevel(loggingComponents.rootLevel));
 
 	for (auto iter = loggingComponents.components.begin(); iter != loggingComponents.components.end(); ++iter)
 	{
-		try 
+		try
 		{
-
 			auto level = Poco::Logger::parseLevel(iter->level);
 			Poco::Logger::setLevel(iter->componentName, level);
 		}
@@ -177,7 +171,7 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm, Loggin
 			std::cout << "Failed to parse logging " << ex.what() << std::endl;
 		}
 	}
- }
+}
 
 std::shared_ptr<ILogger> LoggerFactory::getLogger(const char* component)
 {

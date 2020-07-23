@@ -28,10 +28,41 @@ int main(int argc, const char* argv[])
 	operations["BackupInfo"] = BackupInfoFactory;
 
 	CommandLineAndOptions options;
-	LoggingOptions loggingComponentsOptions;
-	int retValue = options.ParseOptions(argc, argv, loggingComponentsOptions);
-	LoggerFactory::InitLogger(options.vm, loggingComponentsOptions);
-	static auto logger = LoggerFactory::getLogger("application");
+
+	int retValue = options.ParseOptions(argc, argv);
+	std::shared_ptr<ILogger> logger;
+	try
+	{
+		if (!options.vm["Logging.Console"].empty())
+		{
+			auto value = options.vm["Logging.Console"].as<std::string>();
+			if (options.vm["Logging.Console"].as<std::string>() == "true")
+			{
+				options.loggingOptions.shouldLogToConsole = true;
+			}
+		}
+
+		if (!options.vm["Logging.FileOutput"].empty())
+		{
+			auto fileName = options.vm["Logging.FileOutput"].as<std::string>();
+			options.loggingOptions.fileOutputName = fileName;
+		}
+
+		if (!options.vm["Logging.Verbosity"].empty())
+		{
+			auto verbosity = options.vm["Logging.Verbosity"].as<std::string>();
+			options.loggingOptions.rootLevel = verbosity;
+		}
+
+		LoggerFactory::InitLogger(options.loggingOptions);
+		logger = LoggerFactory::getLogger("application");
+	}
+	catch (std::exception ex)
+	{
+		std::cout << "Failed to parse logging options" << std::endl;
+		retValue = ExitCode_LoggingFailure;
+		return retValue;
+	}
 
 	logger->Info("main(): Application Started");
 

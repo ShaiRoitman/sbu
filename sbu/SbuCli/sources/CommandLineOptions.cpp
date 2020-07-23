@@ -8,7 +8,7 @@ using namespace boost::program_options;
 
 #include "sbu.h"
 
-int CommandLineAndOptions::ParseOptions(int argc, const char* argv[], LoggingOptions& loggingOptions)
+int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 {
 	int retValue = ExitCode_Success;
 
