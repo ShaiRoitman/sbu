@@ -8,7 +8,7 @@ using namespace boost::program_options;
 
 #include "sbu.h"
 
-int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
+int CommandLineAndOptions::ParseOptions(int argc, const char* argv[], LoggingOptions& loggingOptions)
 {
 	int retValue = ExitCode_Success;
 
@@ -85,7 +85,19 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		{
 			if (boost::filesystem::exists(sbuConfigFileName))
 			{
-				store(parse_config_file<char>(sbuConfigFileName.c_str(), desc, true), vm);
+				auto fileParams = parse_config_file<char>(sbuConfigFileName.c_str(), desc, true);
+				for (const auto& o : fileParams.options) {
+					const std::string logComponentPrefix = "Logging.Components.";
+					if (o.string_key.rfind(logComponentPrefix, 0) == 0)
+					{
+						LoggingComponentEntry entry;
+						entry.componentName= o.string_key.substr(logComponentPrefix.size());
+						entry.level = o.value[0];
+						loggingOptions.components.push_back(entry);
+					}
+
+				}
+				store(fileParams, vm);
 			}
 			else
 			{

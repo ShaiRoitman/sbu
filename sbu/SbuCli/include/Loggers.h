@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <boost/program_options/variables_map.hpp>
+#include "CommandLineAndConfig.h"
 
 class ILogger
 {
@@ -26,6 +27,6 @@ public:
 class LoggerFactory
 {
 public:
-	static void InitLogger(boost::program_options::variables_map& vm);
+	static void InitLogger(boost::program_options::variables_map& vm, LoggingOptions& loggingComponents);
 	static std::shared_ptr<ILogger> getLogger(const char* component);
 };

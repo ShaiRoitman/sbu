@@ -135,7 +135,7 @@ protected:
 	Poco::Logger& m_Logger;
 };
 
-void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
+void LoggerFactory::InitLogger(boost::program_options::variables_map& vm, LoggingOptions& loggingComponents)
 {
 	if (!vm["Logging.Console"].empty())
 	{
@@ -163,7 +163,21 @@ void LoggerFactory::InitLogger(boost::program_options::variables_map& vm)
 		Poco::Logger::root().setLevel(verbosity);
 		Poco::Logger::setLevel(Poco::Logger::ROOT, Poco::Logger::parseLevel(verbosity));
 	}
-}
+
+	for (auto iter = loggingComponents.components.begin(); iter != loggingComponents.components.end(); ++iter)
+	{
+		try 
+		{
+
+			auto level = Poco::Logger::parseLevel(iter->level);
+			Poco::Logger::setLevel(iter->componentName, level);
+		}
+		catch (std::exception ex)
+		{
+			std::cout << "Failed to parse logging " << ex.what() << std::endl;
+		}
+	}
+ }
 
 std::shared_ptr<ILogger> LoggerFactory::getLogger(const char* component)
 {

@@ -14,7 +14,6 @@ MultiFile::MultiFile()
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile.c_str());
 	auto removeResult = boost::filesystem::remove(this->zipFile);
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s] Removed:[%d]", this->zipFile.c_str(), removeResult);
-
 	zip = nullptr;
 }
 MultiFile::~MultiFile()

@@ -300,7 +300,7 @@ protected:
 		static std::string insertQuerySQL = Text_Resource::InsertDirectory;
 		logger->DebugFormat("BackupDB::InsertDirectoryToEntries() dir:[%ws]", dir.string().c_str());
 		sbu_stats::Stat result;
-		sbu_stats::stat(dir.generic_string().c_str(), &result);
+		auto stat_Result = sbu_stats::stat(dir, &result);
 		try {
 			auto insertQuery =db->CreateStatement(insertQuerySQL);
 			insertQuery->bind(":path", to_utf8(relative(dir, root)));
@@ -370,7 +370,7 @@ protected:
 	{
 		static std::string insertQuerySQL = Text_Resource::InsertFile;
 		sbu_stats::Stat result;
-		auto statResult = sbu_stats::stat(file.generic_string().c_str(), &result);
+		auto statResult = sbu_stats::stat(file, &result);
 		if (statResult == 0) 
 		{
 			logger->DebugFormat("BackupDB::HandleFile() file:[%s] statResult:[%d]", file.string().c_str(), statResult);

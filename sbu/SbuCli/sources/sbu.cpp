@@ -28,8 +28,9 @@ int main(int argc, const char* argv[])
 	operations["BackupInfo"] = BackupInfoFactory;
 
 	CommandLineAndOptions options;
-	int retValue = options.ParseOptions(argc, argv);
-	LoggerFactory::InitLogger(options.vm);
+	LoggingOptions loggingComponentsOptions;
+	int retValue = options.ParseOptions(argc, argv, loggingComponentsOptions);
+	LoggerFactory::InitLogger(options.vm, loggingComponentsOptions);
 	static auto logger = LoggerFactory::getLogger("application");
 
 	logger->Info("main(): Application Started");
