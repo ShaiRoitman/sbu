@@ -149,16 +149,17 @@ class TestNightly(unittest.TestCase):
     origin = None
 
     @classmethod
-    def setUpClass(cls):
+    def setUp(cls):
         TestNightly.tmp = os.path.join(tempfile.gettempdir(), '{}'.format(datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')))
         TestNightly.origin = os.getcwd()
         os.makedirs(TestNightly.tmp)
         os.chdir(TestNightly.tmp)
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDown(cls):
         os.chdir(TestNightly.origin)
-        # shutil.rmtree(TestNightly.tmp, ignore_errors=False)
+        if (os.path.isdir(TestNightly.tmp)):
+            shutil.rmtree(TestNightly.tmp)
 
     def test_NonFunctionalCommandLine(self):
         cmdLine = SbuCmdLine()
