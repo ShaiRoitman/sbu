@@ -23,7 +23,7 @@ public:
 	{
 		int retValue = ExitCode_Success;
 
-		Integer backupid = vm["byID"].as<int>();
+		Integer backupid = getValueAsInt(vm, "byID");
 
 		logger->DebugFormat("Operation:[BackupInfo] Id:[%d]", backupid);
 

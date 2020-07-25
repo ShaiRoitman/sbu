@@ -23,8 +23,8 @@ public:
 	{
 		int retValue = ExitCode_Success;
 
-		std::string name = vm["name"].as<std::string>();
-		std::string path = vm["path"].as<std::string>();
+		std::string name = getValueAsString(vm, "name");
+		std::string path = getValueAsString(vm, "path");
 
 		logger->DebugFormat("Operation:[CreateBackupDef] Name:[%s] Path:[%s]", name.c_str(), path.c_str());
 

@@ -23,8 +23,8 @@ int RestoreOperation::Operate(boost::program_options::variables_map& vm)
 	int retValue = ExitCode_Success;
 	auto restoreParameters = IRepositoryDB::RestoreParameters();
 
-	std::string name = vm["name"].as<std::string>();
-	std::string rootDest = vm["path"].as < std::string>();
+	std::string name = getValueAsString(vm, "name");
+	std::string rootDest = getValueAsString(vm, "path");
 	restoreParameters.RootDest(rootDest);
 	std::string dateStr;
 	auto restoreDate = std::chrono::system_clock::now();

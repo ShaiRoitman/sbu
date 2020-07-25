@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "sbu_exceptions.h"
 #include <iostream>
+#include "boost/format.hpp"
 
 using namespace boost::filesystem;
 
@@ -55,15 +56,18 @@ public:
 			std::string content = ex.what();
 			if (content.find("UNIQUE constraint failed") != std::string::npos)
 			{
+				AddToExecutionLog(db, "CreateBackupDef() Failed Uniqueness", (boost::format("name:[%1%] path:[%2%]") % name % rootPath).str());
 				logger->ErrorFormat("RepositoryDB::AddBackupDef() Failed due to uniqueness");
 				throw sbu_alreadyexists();
 			}
+			AddToExecutionLog(db, "CreateBackupDef() Failed", (boost::format("name:[%1%] path:[%2%]") % name % rootPath).str());
 			logger->ErrorFormat("RepositoryDB::AddBackupDef() Failed");
 			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
 		}
 
 		auto retValue = this->GetBackupDef(name);
 		LogBackupDef("RepositoryDB::AddBackupDef() Added ", retValue);
+		AddToExecutionLog(db, "CreateBackupDef() Success", (boost::format("name:[%1%] path:[%2%]") % name % rootPath).str()) ;
 		return retValue;
 	}
 
@@ -138,6 +142,8 @@ public:
 		bool retValue = deleteBackupDefs->exec() > 0;
 
 		transaction->commit();
+
+		AddToExecutionLog(db, "DeleteBackupDef() Success", (boost::format("id:[%1%]") % id).str());
 
 		logger->DebugFormat("RepositoryDB::DeleteBackupDef() id:[%d]", id);
 		return retValue;

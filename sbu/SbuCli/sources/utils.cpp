@@ -193,3 +193,57 @@ void register_stacktrace_handler()
 	::signal(SIGSEGV, &my_signal_handler);
 	::signal(SIGABRT, &my_signal_handler);
 }
+
+void AddToExecutionLog(std::shared_ptr<ISbuDBDatabase> db, const std::string& comment, const std::string& argument)
+{
+	auto insertQuery = db->CreateStatement("INSERT INTO ExecutionLog (EventTime, Comment, Argument) VALUES (:time, :comment, :arg)");
+
+	auto currentTime = return_current_time_and_date();
+
+	insertQuery->bind(":time", currentTime);
+	insertQuery->bind(":comment", comment);
+	insertQuery->bind(":arg", argument);
+	auto result = insertQuery->exec();
+
+	logger->DebugFormat("AddToExecutionLog() time:[%s] comment:[%s] arg:[%s] result:[%d]",
+		currentTime.c_str(),
+		comment.c_str(),
+		argument.c_str(),
+		result);
+}
+
+std::string getValueAsString(boost::program_options::variables_map& vm, const char* id)
+{
+	try {
+		auto retValue = vm[id].as<std::string>();
+		return retValue;
+	}
+	catch (std::exception ex)
+	{
+		logger->ErrorFormat("Failed to retrieve value %s from arguments", id);
+		throw;
+	}
+}
+
+std::string getValueAsString(boost::program_options::variables_map& vm, const char* id, const char* defaultValue)
+{
+	std::string retValue = defaultValue;
+
+	if (!vm[id].empty())
+		retValue = vm[id].as<std::string>();
+
+	return retValue;
+}
+
+int getValueAsInt(boost::program_options::variables_map& vm, const char* id)
+{
+	try {
+		auto retValue = vm[id].as<int>();
+		return retValue;
+	}
+	catch (std::exception ex)
+	{
+		logger->ErrorFormat("Failed to retrieve value %s from arguments", id);
+		throw;
+	}
+}
