@@ -36,6 +36,15 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	long maxSizeToBulk;
 	long bulkSize;
 
+	const long maxSizeToBulkDefault = 128 * 1024;
+	const long bulkSizeDefault = 5 * 1024 * 1024;
+	const std::string shouldLogToConsole = "False";
+	const std::string rootLogLevel = "Information";
+	const std::string repositoryDB = "RepositoryDB.db";
+	const std::string backupDB = "BackupDB.db";
+	const std::string fileRepositoryDB = "FileRepositoryDB.db";
+		
+
 	desc.add_options()
 		("help,h", "print usage message")
 		("version", "print version")
@@ -50,21 +59,21 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("date,d", value(&date), "The last effective date - Defaults to now()")
 		("General.StorageType", value(&filerepPassword), "StorageType: FileRepository, SecureFileRepository, AwsS3, SecureAwsS3")
 		("Storage.password", value(&storageType), "If exists uses this password SecureFileRepository or S3 Client side encryption")
-		("FileRepository.name", value(&filerepName)->default_value("FileRepository.db"), "The database name of the FileRepository")
+		("FileRepository.name", value(&filerepName)->default_value(fileRepositoryDB), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
-		("FileRepository.maxSizeToBulk", value(&maxSizeToBulk)->default_value(128 * 1024), "Minimum file size to bulk")
-		("FileRepository.bulkSize", value(&bulkSize)->default_value(5 * 1024 * 1024), "bulk Size")
+		("FileRepository.maxSizeToBulk", value(&maxSizeToBulk)->default_value(maxSizeToBulkDefault), "Minimum file size to bulk")
+		("FileRepository.bulkSize", value(&bulkSize)->default_value(bulkSizeDefault), "bulk Size")
 		("AwsS3Storage.key", value(&awskey), "Access key for the AWS Account")
 		("AwsS3Storage.secret", value(&awssecret), "Secret for the AWS Account")
 		("AwsS3Storage.bucket", value(&awsbucket), "S3 Bucket AWS Account")
 		("AwsS3Storage.region", value(&awsregion), "S3 Bucket region AWS Account")
 		("AwsS3Storage.path", value(&awsBasePath), "S3 BasePath in Bucket AWS Account")
-		("Logging.Console", value(&logging)->default_value("False"), "true/false - Enable logs to console")
+		("Logging.Console", value(&logging)->default_value(shouldLogToConsole), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
-		("Logging.Verbosity", value(&logging_verbosity)->default_value("Information"), "Logging Verbosity - Default Info")
-		("Repository.path", value(&repPath)->default_value("RepositoryDB.db"), "RepositoryDB path")
+		("Logging.Verbosity", value(&logging_verbosity)->default_value(rootLogLevel), "Logging Verbosity - Default Info")
+		("Repository.path", value(&repPath)->default_value(repositoryDB), "RepositoryDB path")
 		("showOnly", "In restore show only the files to be restored")
-		("BackupDB.path", value(&backupDBPath)->default_value("BackupDB.db"), "The name of the Backup database to use")
+		("BackupDB.path", value(&backupDBPath)->default_value(backupDB), "The name of the Backup database to use")
 		;
 
 	try
