@@ -13,6 +13,14 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	int retValue = ExitCode_Success;
 
 	const std::string configFileEnvVar = "SBU_CONFIG";
+	const long maxSizeToBulkDefault = 128 * 1024;
+	const long bulkSizeDefault = 5 * 1024 * 1024;
+	const std::string shouldLogToConsole = "False";
+	const std::string rootLogLevel = "Information";
+	const std::string repositoryDB = "RepositoryDB.db";
+	const std::string backupDB = "BackupDB.db";
+	const std::string fileRepositoryDB = "FileRepositoryDB.db";
+
 	options_description desc("Allowed options");
 
 	std::string path;
@@ -27,7 +35,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string filerepPath;
 	std::string repPath;
 	std::string backupDBPath;
-	std::string step;
+	std::string bstep;
+	std::string rstep;
 	std::string filerepPassword;
 	std::string awskey, awssecret, awsbucket, awsregion, awsBasePath;
 	std::string storageType;
@@ -44,28 +53,29 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("name,n", value(&name), "Name")
 		("path,p", value(&path), "Path")
 		("byID", value(&byID), "Select By ID")
-		("bstep", value(&step), "BackupStep : All, Init, Scan, DiffCalc, FileUpload, Complete")
+		("bstep", value(&bstep), "BackupStep : All, Init, Scan, DiffCalc, FileUpload, Complete")
+		("rstep", value(&rstep), "RestoreStep: Init, Scan, DiffCalc, Download, Complete")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
 		("General.StorageType", value(&filerepPassword), "StorageType: FileRepository, SecureFileRepository, AwsS3, SecureAwsS3")
-		("Storage.password", value (&storageType), "If exists uses this password SecureFileRepository or S3 Client side encryption")
-		("FileRepository.name", value(&filerepName)->default_value("FileRepository.db"), "The database name of the FileRepository")
+		("Storage.password", value(&storageType), "If exists uses this password SecureFileRepository or S3 Client side encryption")
+		("FileRepository.name", value(&filerepName)->default_value(fileRepositoryDB), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
-		("FileRepository.maxSizeToBulk", value(&maxSizeToBulk)->default_value(128*1024), "Minimum file size to bulk")
-		("FileRepository.bulkSize", value(&bulkSize)->default_value(5*1024*1024), "bulk Size")
+		("FileRepository.maxSizeToBulk", value(&maxSizeToBulk)->default_value(maxSizeToBulkDefault), "Minimum file size to bulk")
+		("FileRepository.bulkSize", value(&bulkSize)->default_value(bulkSizeDefault), "bulk Size")
 		("AwsS3Storage.key", value(&awskey), "Access key for the AWS Account")
 		("AwsS3Storage.secret", value(&awssecret), "Secret for the AWS Account")
 		("AwsS3Storage.bucket", value(&awsbucket), "S3 Bucket AWS Account")
 		("AwsS3Storage.region", value(&awsregion), "S3 Bucket region AWS Account")
 		("AwsS3Storage.path", value(&awsBasePath), "S3 BasePath in Bucket AWS Account")
-		("Logging.Console", value(&logging)->default_value("False"), "true/false - Enable logs to console")
+		("Logging.Console", value(&logging)->default_value(shouldLogToConsole), "true/false - Enable logs to console")
 		("Logging.FileOutput", value(&logging), "filename - if exists emit logs to the file")
-		("Logging.Verbosity", value(&logging_verbosity)->default_value("Information"), "Logging Verbosity - Default Info")
-		("Repository.path", value(&repPath)->default_value("RepositoryDB.db"), "RepositoryDB path")
+		("Logging.Verbosity", value(&logging_verbosity)->default_value(rootLogLevel), "Logging Verbosity - Default Info")
+		("Repository.path", value(&repPath)->default_value(repositoryDB), "RepositoryDB path")
 		("showOnly", "In restore show only the files to be restored")
-		("BackupDB.path", value(&backupDBPath)->default_value("BackupDB.db"), "The name of the Backup database to use")
+		("BackupDB.path", value(&backupDBPath)->default_value(backupDB), "The name of the Backup database to use")
 		;
 
-	try 
+	try
 	{
 		store(parse_command_line(argc, argv, desc), vm);
 		std::string sbuConfigFileName;
@@ -91,7 +101,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 					if (o.string_key.rfind(logComponentPrefix, 0) == 0)
 					{
 						LoggingComponentEntry entry;
-						entry.componentName= o.string_key.substr(logComponentPrefix.size());
+						entry.componentName = o.string_key.substr(logComponentPrefix.size());
 						entry.level = o.value[0];
 						loggingOptions.components.push_back(entry);
 					}
@@ -107,9 +117,9 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 
 		store(parse_environment(desc,
 			[](const std::string& i_env_var)
-		{// maps environment variable "HOSTNAME" to user-defined option "hostname"
-			return i_env_var == "HOSTNAME" ? "hostname" : "";
-		}),
+			{// maps environment variable "HOSTNAME" to user-defined option "hostname"
+				return i_env_var == "HOSTNAME" ? "hostname" : "";
+			}),
 			vm);
 
 		if (!vm["help"].empty() || !vm["version"].empty())

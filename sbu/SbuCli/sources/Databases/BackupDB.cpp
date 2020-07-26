@@ -39,7 +39,7 @@ public:
 		root = dir;
 		logger->DebugFormat("BackupDB::StartScan() dir:[%s] Start", dir.string().c_str());
 
-		AddToExecutionLog("Start Scan", to_utf8(dir.generic_wstring()));
+		AddToExecutionLog(db, "Start Scan", to_utf8(dir.generic_wstring()));
 
 		auto insertQuery = db->CreateStatement("INSERT INTO GeneralInfo (RootPath, Created, LastAction) VALUES (:root ,:created, :lastAction)");
 
@@ -65,7 +65,7 @@ public:
 		}
 
 		this->UpdateAction("ContinueScan");
-		AddToExecutionLog("Continue Scan", "");
+		AddToExecutionLog(db, "Continue Scan", "");
 		auto query = db->CreateStatement("SELECT ID,Path FROM NextScan");
 		while (query->executeStep())
 		{
@@ -80,7 +80,7 @@ public:
 		completeStage->bind(":date", return_current_time_and_date());
 		completeStage->exec();
 
-		AddToExecutionLog("End of Scan", "");
+		AddToExecutionLog(db, "End of Scan", "");
 		logger->DebugFormat("BackupDB::ContinueScan() End");
 	}
 
@@ -98,6 +98,7 @@ public:
 	virtual void StartDiffCalc() override
 	{
 		this->UpdateAction("StartDiffCalc");
+		AddToExecutionLog(db, "Start DiffCalc", "");
 		logger->Debug("Adding deleted files into NextState");
 		try {
 			auto markDeleted = db->CreateStatement(Text_Resource::MarkDeleted);
@@ -123,6 +124,7 @@ public:
 
 		try {
 			this->UpdateAction("ContinueDiffCalc");
+			AddToExecutionLog(db, "ContinueDiffCalc", "");
 			auto calcDigestQuery = db->CreateStatement(Text_Resource::findHashCalcQuery);
 			while (calcDigestQuery->executeStep())
 			{
@@ -173,6 +175,7 @@ public:
 	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
 		logger->InfoFormat("BackupDB::StartUpload()");
+		AddToExecutionLog(db, "StartUpload", "");
 		this->UpdateAction("StartUpload");
 	}
 
@@ -187,6 +190,7 @@ public:
 		}
 
 		this->UpdateAction("ContinueUpload");
+		AddToExecutionLog(db, "ContinueUpload", "");
 		auto uploadQuery = db->CreateStatement(Text_Resource::findUploadQuery);
 		while (uploadQuery->executeStep())
 		{
@@ -242,28 +246,11 @@ public:
 		completeStage->exec();
 
 		this->UpdateAction("Complete");
+		AddToExecutionLog(db, "Complete", "");
 		logger->InfoFormat("BackupDB::Complete()");
 	}
 
 protected:
-	void AddToExecutionLog(const std::string& comment, const std::string& argument)
-	{
-		auto insertQuery = db->CreateStatement("INSERT INTO ExecutionLog (EventTime, Comment, Argument) VALUES (:time, :comment, :arg)");
-
-		auto currentTime = return_current_time_and_date();
-
-		insertQuery->bind(":time", currentTime);
-		insertQuery->bind(":comment", comment);
-		insertQuery->bind(":arg", argument);
-		auto result = insertQuery->exec();
-
-		logger->DebugFormat("BackupDB::AddToExecutionLog() time:[%s] comment:[%s] arg:[%s] result:[%d]",
-			currentTime.c_str(),
-			comment.c_str(),
-			argument.c_str(),
-			result);
-	}
-
 	void AddDirectoryToScan(path dir)
 	{
 		auto insertQuery = db->CreateStatement("INSERT INTO Scan (Path, Added) VALUES (:path,:added)");
@@ -315,7 +302,7 @@ protected:
 		{
 			logger->ErrorFormat("BackupDB::InsertDirectoryToEntries() Failed to insert dir:[%s] exception:[%s]",
 				dir.string().c_str(), ex.what());
-			AddToExecutionLog("Error In Handling Directory", to_utf8(dir.generic_wstring()));
+			AddToExecutionLog(db, "Error In Handling Directory", to_utf8(dir.generic_wstring()));
 		}
 	}
 
@@ -349,7 +336,7 @@ protected:
 			logger->ErrorFormat("BackupDB::ScanDirectory() Handling dir:[%s] exception:[%s]",
 				dir.string().c_str(), ex.what());
 
-			AddToExecutionLog("Error In Scanning Directory", to_utf8(dir.generic_wstring()));
+			AddToExecutionLog(db, "Error In Scanning Directory", to_utf8(dir.generic_wstring()));
 		}
 	}
 
@@ -390,7 +377,7 @@ protected:
 				logger->ErrorFormat("BackupDB::ScanDirectory() Handling file:[%s] exception:[%s]",
 					file.string().c_str(), ex.what());
 
-				AddToExecutionLog("Error In Handling File", to_utf8(file.generic_wstring()));
+				AddToExecutionLog(db, "Error In Handling File", to_utf8(file.generic_wstring()));
 			}
 		}
 		else
@@ -398,7 +385,7 @@ protected:
 			logger->ErrorFormat("BackupDB::ScanDirectory() Handling file:[%s] StatResult:[%d]",
 				file.string().c_str(), statResult);
 
-			AddToExecutionLog("Error In Handling File statResult", to_utf8(file.generic_wstring()));
+			AddToExecutionLog(db, "Error In Handling File statResult", to_utf8(file.generic_wstring()));
 		}
 
 	}

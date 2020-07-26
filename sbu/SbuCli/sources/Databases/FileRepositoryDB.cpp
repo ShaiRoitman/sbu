@@ -158,7 +158,7 @@ void FileRepositoryDB::SendMultiFile()
 {
 	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Closing db:[%p]", *db);
 	this->multiFile.Close();
-	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Creating Translaction db:[%p]", *db);
+	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Creating Transaction db:[%p]", *db);
 	auto transaction = db->CreateTransaction();
 	logger->DebugFormat("FileRepositoryDB::SendMultiFile()");
 

@@ -22,11 +22,11 @@ BackupOperation::BackupOperation(std::shared_ptr<Strategy> strategy)
 int BackupOperation::Init(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
-	std::string dbPath = vm["BackupDB.path"].as<std::string>();
+	std::string dbPath = getValueAsString(vm, "BackupDB.path");
 	bool doesExists = boost::filesystem::exists(dbPath);
 	if (doesExists == false)
 	{
-		std::string name = vm["name"].as<std::string>();
+		std::string name = getValueAsString(vm, "name");
 		auto RepoDB = getRepository(vm);
 		auto backupdef = RepoDB->GetBackupDef(name);
 		if (backupdef != nullptr)
@@ -56,7 +56,7 @@ int BackupOperation::Scan(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
 
-	std::string dbPath = vm["BackupDB.path"].as<std::string>();
+	std::string dbPath = getValueAsString(vm, "BackupDB.path");
 
 	logger->DebugFormat("Operation:[Scan] dbPath:[%s]", dbPath.c_str());
 
@@ -79,7 +79,7 @@ int BackupOperation::DiffCalc(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
 
-	std::string dbPath = vm["BackupDB.path"].as<std::string>();
+	std::string dbPath = getValueAsString(vm, "BackupDB.path");
 
 	logger->DebugFormat("Operation:[DiffCalc] dbPath:[%s]", dbPath.c_str());
 
@@ -103,7 +103,7 @@ int BackupOperation::FileUpload(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
 
-	std::string dbPath = vm["BackupDB.path"].as<std::string>();
+	std::string dbPath = getValueAsString(vm, "BackupDB.path");
 
 	logger->DebugFormat("Operation:[FileUpload] dbPath:[%s]", dbPath.c_str());
 
@@ -128,7 +128,7 @@ int BackupOperation::Complete(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
 
-	std::string dbPath = vm["BackupDB.path"].as<std::string>();
+	std::string dbPath = getValueAsString(vm, "BackupDB.path");
 
 	logger->DebugFormat("Operation:[Complete] dbPath:[%s]", dbPath.c_str());
 
@@ -142,7 +142,7 @@ int BackupOperation::Complete(boost::program_options::variables_map& vm)
 		backupDB->ContinueUpload(fileRepDB);
 		backupDB->Complete();
 
-		std::string name = vm["name"].as<std::string>();
+		std::string name = getValueAsString(vm, "name");
 		auto RepoDB = getRepository(vm);
 		auto backupdef = RepoDB->GetBackupDef(name);
 
@@ -166,7 +166,7 @@ int BackupOperation::All(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
 
-	std::string name = vm["name"].as<std::string>();
+	std::string name = getValueAsString(vm, "name");
 
 	logger->DebugFormat("Operation:[Backup] Name:[%s] Step [All]", name.c_str());
 
@@ -189,11 +189,7 @@ int BackupOperation::All(boost::program_options::variables_map& vm)
 int BackupOperation::Operate(boost::program_options::variables_map& vm)
 {
 	int retValue = ExitCode_Success;
-	std::string step = "All";
-	if (!vm["bstep"].empty())
-	{
-		step = vm["bstep"].as<std::string>();
-	}
+	std::string step = getValueAsString(vm, "bstep", "All");
 
 	logger->DebugFormat("Operation:[Backup] Step [%s]", step.c_str());
 

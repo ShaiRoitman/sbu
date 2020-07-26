@@ -6,6 +6,12 @@
 PRAGMA foreign_keys = off;
 BEGIN TRANSACTION;
 
+CREATE TABLE ExecutionLog (
+	EventTime		DATETIME,
+	Comment			TEXT,
+	Argument		TEXT
+);
+
 -- Table: Files
 CREATE TABLE Files (
     ID						INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -22,7 +22,7 @@ public:
 	{
 		int retValue = ExitCode_Success;
 
-		std::string name = vm["name"].as<std::string>();
+		std::string name = getValueAsString(vm, "name");
 
 		logger->DebugFormat("Operation:[ListBackups] Name:[%s]", name.c_str());
 

@@ -21,21 +21,21 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 		throw sbu_missingParameter();
 	}
 
-	auto repoType = vm["General.StorageType"].as<std::string>();
+	auto repoType = getValueAsString(vm, "General.StorageType"); 
 
 	if (repoType == "FileRepository" || repoType == "SecureFileRepository")
 	{
-		boost::filesystem::path repoPath = vm["FileRepository.path"].as<std::string>();
+		boost::filesystem::path repoPath = getValueAsString(vm, "FileRepository.path");
 		storageHander = std::make_shared<FileSystemStorageHandler>(repoPath);
 		logger->InfoFormat("getFileRepository() return FileSystemHandler path:[%s]", repoPath.string().c_str());
 	}
 	else if (repoType == "AwsS3" || repoType == "SecureAwsS3")
 	{
-		std::string region = vm["AwsS3Storage.region"].as<std::string>();
-		std::string bucket = vm["AwsS3Storage.bucket"].as<std::string>();
-		std::string basePath = vm["AwsS3Storage.path"].as<std::string>();
-		std::string key = vm["AwsS3Storage.key"].as<std::string>();
-		std::string secret = vm["AwsS3Storage.secret"].as<std::string>();
+		std::string region = getValueAsString(vm, "AwsS3Storage.region");
+		std::string bucket = getValueAsString(vm, "AwsS3Storage.bucket");
+		std::string basePath = getValueAsString(vm, "AwsS3Storage.path");
+		std::string key = getValueAsString(vm, "AwsS3Storage.key");
+		std::string secret = getValueAsString(vm, "AwsS3Storage.secret");
 		storageHander = std::make_shared<AwsS3StorageHandler>(region, bucket, basePath, key, secret);
 		logger->InfoFormat("getFileRepository() return AWS S3 bucket:[%s]", bucket.c_str());
 	}
@@ -63,7 +63,7 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 
 std::shared_ptr<IRepositoryDB> getRepository(boost::program_options::variables_map& vm)
 {
-	std::string repoDB = vm["Repository.path"].as<std::string>();
+	std::string repoDB = getValueAsString(vm, "Repository.path");
 	auto RepoDB = CreateRepositoryDB(repoDB);;
 
 	return RepoDB;
