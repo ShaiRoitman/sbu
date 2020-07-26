@@ -32,6 +32,8 @@ bool copy_file_logged(boost::filesystem::path srcPath, boost::filesystem::path o
 std::shared_ptr<ISbuDBDatabase> getOrCreateDb(boost::filesystem::path dbPath, const char* initScript);
 void AddToExecutionLog(std::shared_ptr<ISbuDBDatabase> db, const std::string& comment, const std::string& argument);
 
+bool removeFile(const boost::filesystem::path& filePath);
+
 /* Variable map value extraction helpers */
 std::string getValueAsString(boost::program_options::variables_map& vm, const char* id);
 std::string getValueAsString(boost::program_options::variables_map& vm, const char* id, const char* defaultValue);

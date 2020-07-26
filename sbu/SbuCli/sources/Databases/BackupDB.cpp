@@ -98,6 +98,7 @@ public:
 	virtual void StartDiffCalc() override
 	{
 		this->UpdateAction("StartDiffCalc");
+		AddToExecutionLog(db, "Start DiffCalc", "");
 		logger->Debug("Adding deleted files into NextState");
 		try {
 			auto markDeleted = db->CreateStatement(Text_Resource::MarkDeleted);
@@ -123,6 +124,7 @@ public:
 
 		try {
 			this->UpdateAction("ContinueDiffCalc");
+			AddToExecutionLog(db, "ContinueDiffCalc", "");
 			auto calcDigestQuery = db->CreateStatement(Text_Resource::findHashCalcQuery);
 			while (calcDigestQuery->executeStep())
 			{
@@ -173,6 +175,7 @@ public:
 	virtual void StartUpload(std::shared_ptr<IFileRepositoryDB> fileDB) override
 	{
 		logger->InfoFormat("BackupDB::StartUpload()");
+		AddToExecutionLog(db, "StartUpload", "");
 		this->UpdateAction("StartUpload");
 	}
 
@@ -187,6 +190,7 @@ public:
 		}
 
 		this->UpdateAction("ContinueUpload");
+		AddToExecutionLog(db, "ContinueUpload", "");
 		auto uploadQuery = db->CreateStatement(Text_Resource::findUploadQuery);
 		while (uploadQuery->executeStep())
 		{
@@ -242,6 +246,7 @@ public:
 		completeStage->exec();
 
 		this->UpdateAction("Complete");
+		AddToExecutionLog(db, "Complete", "");
 		logger->InfoFormat("BackupDB::Complete()");
 	}
 

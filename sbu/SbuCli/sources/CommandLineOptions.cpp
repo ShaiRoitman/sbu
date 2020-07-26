@@ -13,6 +13,14 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	int retValue = ExitCode_Success;
 
 	const std::string configFileEnvVar = "SBU_CONFIG";
+	const long maxSizeToBulkDefault = 128 * 1024;
+	const long bulkSizeDefault = 5 * 1024 * 1024;
+	const std::string shouldLogToConsole = "False";
+	const std::string rootLogLevel = "Information";
+	const std::string repositoryDB = "RepositoryDB.db";
+	const std::string backupDB = "BackupDB.db";
+	const std::string fileRepositoryDB = "FileRepositoryDB.db";
+
 	options_description desc("Allowed options");
 
 	std::string path;
@@ -35,15 +43,6 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	int byID;
 	long maxSizeToBulk;
 	long bulkSize;
-
-	const long maxSizeToBulkDefault = 128 * 1024;
-	const long bulkSizeDefault = 5 * 1024 * 1024;
-	const std::string shouldLogToConsole = "False";
-	const std::string rootLogLevel = "Information";
-	const std::string repositoryDB = "RepositoryDB.db";
-	const std::string backupDB = "BackupDB.db";
-	const std::string fileRepositoryDB = "FileRepositoryDB.db";
-		
 
 	desc.add_options()
 		("help,h", "print usage message")

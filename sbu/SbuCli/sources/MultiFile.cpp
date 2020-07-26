@@ -3,6 +3,7 @@
 #include "Poco/Zip/Compress.h"
 #include <iostream>
 #include <fstream>
+#include "utils.h"
 
 static auto logger = LoggerFactory::getLogger("application.MultiFile");
 
@@ -12,7 +13,7 @@ MultiFile::MultiFile()
 	this->fileSize = 0;
 	this->zipFile = Poco::TemporaryFile::tempName();
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s]", this->zipFile.c_str());
-	auto removeResult = boost::filesystem::remove(this->zipFile);
+	auto removeResult = removeFile(this->zipFile);
 	logger->DebugFormat("MultiFile::MultiFile() using filename [%s] Removed:[%d]", this->zipFile.c_str(), removeResult);
 	zip = nullptr;
 }

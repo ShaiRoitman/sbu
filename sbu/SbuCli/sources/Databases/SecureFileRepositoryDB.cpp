@@ -54,7 +54,7 @@ public:
 
 		auto retValue = this->fileHandler->CopyFileToRepository(secureDigest, secureFile);
 
-		boost::filesystem::remove(secureFile);
+		removeFile(secureFile);
 		logger->InfoFormat("SecureFileRepositoryDB::CopyFileToRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), filePath.string().c_str());
 		return retValue;
 	}
@@ -66,7 +66,7 @@ public:
 		auto retValue = this->fileHandler->CopyFileFromRepository(secureDigest, secureFile);
 		PocoDecryptFile(secureFile, filePath, pCipher);
 
-		boost::filesystem::remove(secureFile);
+		removeFile(secureFile);
 		logger->InfoFormat("SecureFileRepositoryDB::CopyFileToRepository() Handle:[%s] FilePath:[%s]", handle.c_str(), filePath.string().c_str());
 		return retValue;
 	}

@@ -247,3 +247,16 @@ int getValueAsInt(boost::program_options::variables_map& vm, const char* id)
 		throw;
 	}
 }
+
+bool removeFile(const boost::filesystem::path& filePath)
+{
+	bool retValue = false;
+	try {
+		retValue = boost::filesystem::remove(filePath);
+		logger->InfoFormat("removeFile() filePath:[%s] success exist:[%d]", filePath.c_str(), retValue);
+	}
+	catch (std::exception ex) {
+		logger->ErrorFormat("removeFile() filePath:[%s] failed exception:[%s]", filePath.c_str(), ex.what());
+	}
+	return retValue;
+}

@@ -6,6 +6,7 @@
 #include "sbu_exceptions.h"
 #include <iostream>
 #include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace boost::filesystem;
 
@@ -42,6 +43,7 @@ public:
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
 	{
 		logger->DebugFormat("Adding BackupDef Name:[%s] RootPath:[%s]", name.c_str(), rootPath.string().c_str());
+		AddToExecutionLog(db, "AddBackupDef()", name);
 		try {
 			auto insertQuery = db->CreateStatement("INSERT INTO BackupDefs (Name, Hostname, RootPath, Added) VALUES (:name, :host, :root, :added)");
 
@@ -131,6 +133,7 @@ public:
 
 	virtual bool DeleteBackupDef(Integer id) override
 	{
+		AddToExecutionLog(db, "DeleteBackupDef()", boost::lexical_cast<std::string>(id));
 		auto transaction = db->CreateTransaction();
 
 		auto deleteBackups = db->CreateStatement("DELETE FROM Backups WHERE BackupDefID = :id");
@@ -179,15 +182,16 @@ public:
 		backupDef.id = backupParams.backupDefId;
 		try {
 			retValue = CreateBackupInfo(backupDef);
+			const std::string fileName = "BackupDB.db";
 
 			UpdatedBackup("Starting Backup", retValue);
-			boost::filesystem::remove("backupDB.db");
+			removeFile(fileName);
 			auto backupDB = getBackupDB();
 
 			UpdatedBackup("Scanning FileSystem", retValue);
 			backupDB->StartScan(backupDef.rootPath);
 			backupDB->ContinueScan();
-			this->CopyCurrentStateIntoBackupDB("backupDB.db", backupDef);
+			this->CopyCurrentStateIntoBackupDB(fileName, backupDef);
 
 			UpdatedBackup("CalculatingDiff", retValue);
 			backupDB->StartDiffCalc();
@@ -199,7 +203,7 @@ public:
 			backupDB->Complete();
 
 			UpdatedBackup("UpdatingRepository", retValue);
-			CopyBackupDBStateIntoRepoAndComplete("backupDB.db", retValue);
+			CopyBackupDBStateIntoRepoAndComplete(fileName, retValue);
 		}
 		catch (std::exception ex)
 		{
