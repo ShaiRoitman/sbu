@@ -151,7 +151,7 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 		retValue = true;
 	}
 
-	logger->DebugFormat("FileRepositoryDB::GetFileLocalPath() handle:[%s] path:[%s] retValue:[%d]", handle.c_str(), (path == nullptr) ? L"null" : path->c_str(), retValue);
+	logger->DebugFormat("FileRepositoryDB::GetFileLocalPath() handle:[%s] path:[%ws] retValue:[%d]", handle.c_str(), (path == nullptr) ? L"null" : path->generic_wstring().c_str(), retValue);
 	return retValue;
 }
 void FileRepositoryDB::SendMultiFile()
