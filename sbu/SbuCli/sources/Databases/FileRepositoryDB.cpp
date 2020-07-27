@@ -156,9 +156,9 @@ bool FileRepositoryDB::GetFileLocalPath(const RepoHandle& handle, boost::filesys
 }
 void FileRepositoryDB::SendMultiFile()
 {
-	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Closing db:[%p]", *db);
+	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Closing db:[%p]", db.get());
 	this->multiFile.Close();
-	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Creating Transaction db:[%p]", *db);
+	logger->DebugFormat("FileRepositoryDB::SendMultiFile() Creating Transaction db:[%p]", db.get());
 	auto transaction = db->CreateTransaction();
 	logger->DebugFormat("FileRepositoryDB::SendMultiFile()");
 

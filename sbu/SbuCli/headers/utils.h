@@ -62,10 +62,10 @@ namespace sbu_stats
 	}
 #else
 	typedef struct stat Stat;
-	static __inline int stat(char const* const _FileName, Stat* const _Stat)
+	static __inline int stat(boost::filesystem::path path, Stat* const _Stat)
 	{
-		return ::stat(_FileName, _Stat);
-	}
+		return ::stat(path.generic_string().c_str(), _Stat);
+}
 #endif
 }
 
