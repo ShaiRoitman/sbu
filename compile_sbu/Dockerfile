@@ -17,8 +17,9 @@ RUN git clone https://github.com/SRombauts/SQLiteCpp
 RUN git clone https://github.com/alex85k/sqlite3-cmake.git
 
 COPY SQLite3.CMakeLists.txt /git/sqlite3-cmake/CMakeLists.txt
+COPY aws_compiler_settings.cmake /git/aws-sdk-cpp/cmake/compiler_settings.cmake
 
-ENV WORKING_CPU 6
+ENV WORKING_CPU 4
 ENV OPENSSL_ROOT_DIR /git/openssl
 
 
