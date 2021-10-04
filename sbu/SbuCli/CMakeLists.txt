@@ -2,7 +2,6 @@ include (${PROJECT_SOURCE_DIR}/cmake/${SBU_PLATFROM}/sbu.cmake)
 
 find_package(Boost REQUIRED COMPONENTS filesystem program_options log)
 find_package(SQLiteCpp CONFIG REQUIRED)
-find_package(sqlite3 CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Poco REQUIRED Foundation Util Crypto Zip Net)
 find_package(aws-cpp-sdk-core CONFIG REQUIRED transfer)
@@ -56,4 +55,4 @@ add_executable (sbu ${headers_files} ${include_files} ${sources_files} ${resourc
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)
 message ( "${Boost_LIBRARIES}" )
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp sqlite3 ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})
