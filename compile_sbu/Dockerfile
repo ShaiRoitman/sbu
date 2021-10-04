@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 RUN  apt-get update 
 RUN  apt-get install -y wget gcc cmake g++
 RUN  apt-get install -y libboost-all-dev
-RUN  apt-get install -y libcurl4-openssl-dev
+RUN  apt-get install -y libcurl4-openssl-dev zlib1g-dev
 RUN  apt-get install -y git
 RUN  rm -rf /var/lib/apt/lists/*
 
@@ -12,7 +12,7 @@ RUN mkdir git
 WORKDIR /git
 RUN git clone https://github.com/openssl/openssl
 RUN git clone -b master https://github.com/pocoproject/poco.git
-RUN git clone https://github.com/aws/aws-sdk-cpp.git
+RUN git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp.git
 RUN git clone https://github.com/SRombauts/SQLiteCpp
 RUN git clone https://github.com/alex85k/sqlite3-cmake.git
 
