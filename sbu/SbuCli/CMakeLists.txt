@@ -55,4 +55,4 @@ add_executable (sbu ${headers_files} ${include_files} ${sources_files} ${resourc
 set_property(TARGET sbu PROPERTY CXX_STANDARD 11)
 message ( "${Boost_LIBRARIES}" )
 
-target_link_libraries (sbu LINK_PUBLIC SQLiteCpp ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})
+target_link_libraries (sbu LINK_PUBLIC SQLiteCpp ${SQLITE3LIB} ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES} ${AWSSDK_PLATFORM_DEPS} ${POCO_DEP} ${AWS_DEP} ${SBU_PLATFORM_LIBS})

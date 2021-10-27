@@ -2,6 +2,7 @@
 
 set (GIT_ROOT "/home/master/git")
 set (POCO_DEP PocoZip PocoFoundation PocoUtil PocoCrypto PocoNet)
+set (SQLITELIB sqlite3)
 
 set (AWS_DEP aws-cpp-sdk-s3 aws-cpp-sdk-core aws-cpp-sdk-transfer)
 
