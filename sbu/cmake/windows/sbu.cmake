@@ -4,3 +4,4 @@ set (SBU_PLATFORM_LIBS)
 
 set (SQLITELIB sqlite3)
 find_package(sqlite3 CONFIG REQUIRED)
+add_definitions(-D_WIN32_WINNT=0x0501)

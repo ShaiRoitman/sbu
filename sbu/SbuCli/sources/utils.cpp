@@ -11,6 +11,8 @@
 #include "SbuDatabaseSQLite.h"
 #include <signal.h>
 #include <boost/stacktrace.hpp>
+#include <time.h>
+#include <errno.h>
 
 static auto logger = LoggerFactory::getLogger("application.Utils");
 
@@ -51,12 +53,15 @@ std::string return_current_time_and_date()
 	return get_string_from_time_point(now);
 }
 
+#pragma warning(push)
+#pragma warning ( disable : 4996 )
 std::string return_time_and_date(time_t time)
 {
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&time), "%Y-%m-%d %X");
 	return ss.str();
 }
+#pragma warning(pop)
 
 std::string get_string_from_time_point(std::chrono::system_clock::time_point tp)
 {
@@ -97,9 +102,9 @@ int sha1(const char * name, unsigned char * out)
 	unsigned char buf[MAX_BUF_LEN];
 	SHA_CTX ctxt;
 
-	pf = fopen(name, "rb");
+	auto open_success = fopen_s(&pf, name, "rb");
 
-	if (!pf)
+	if (open_success != 0)
 		return -1;
 
 	SHA1_Init(&ctxt);
@@ -123,12 +128,23 @@ int sha1(const char * name, unsigned char * out)
 	return 0;
 }
 
-void bin2hex(unsigned char * src, int len, char * hex)
+errno_t bin2hex(unsigned char * src, int len, char * hex, const size_t len_hex)
 {
 	int i, j;
 
-	for (i = 0, j = 0; i < len; i++, j += 2)
-		sprintf(&hex[j], "%02x", src[i]);
+	errno_t retValue = 0;
+
+	if (len * 2 < len_hex)
+	{
+		for (i = 0, j = 0; i < len; i++, j += 2)
+			sprintf_s(&hex[j], 3, "%02x", src[i]);
+	}
+	else
+	{
+		retValue = ERANGE;
+	}
+
+	return retValue;
 }
 
 
@@ -160,7 +176,7 @@ std::string calcHash(boost::filesystem::path path)
 	char digest[256];
 	memset(digest, 0, sizeof(digest));
 	sha1(path.string().c_str(), sha1p);
-	bin2hex(sha1p, sizeof(sha1p), digest);
+	bin2hex(sha1p, sizeof(sha1p), digest, sizeof(digest));
 	return digest;
 }
 
@@ -174,7 +190,7 @@ std::string calcHash(const std::string& str)
 	SHA1_Update(&ctxt, str.c_str(), str.length());
 	SHA1_Final(sha1p, &ctxt);
 
-	bin2hex(sha1p, sizeof(sha1p), digest);
+	bin2hex(sha1p, sizeof(sha1p), digest, sizeof(digest));
 	return digest;
 }
 

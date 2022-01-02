@@ -67,7 +67,7 @@ ToDo 22/06/2019
 2. Test Test Test
 3. Create Analytics queries 
 5. Cross Platform Compile ( Windows, Ubuntu, RaspberryPi, Docker )
-6. Create Dockers
+6. Create Usage Dockers Ubuntu, RaspberryPi
 7. Helm Charts for Kubernetes
 Publish
 8. postgres/mysql SQL Support
