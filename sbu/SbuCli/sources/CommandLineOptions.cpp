@@ -40,6 +40,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string filerepPassword;
 	std::string awskey, awssecret, awsbucket, awsregion, awsBasePath;
 	std::string storageType;
+	std::string hostname;
+
 	int byID;
 	long maxSizeToBulk;
 	long bulkSize;
@@ -73,6 +75,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("Repository.path", value(&repPath)->default_value(repositoryDB), "RepositoryDB path")
 		("showOnly", "In restore show only the files to be restored")
 		("BackupDB.path", value(&backupDBPath)->default_value(backupDB), "The name of the Backup database to use")
+		("Hostname", value(&hostname), "Changes the name of the host - Not Used")
 		;
 
 	try
