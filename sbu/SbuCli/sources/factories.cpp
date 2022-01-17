@@ -64,8 +64,7 @@ std::shared_ptr<IFileRepositoryDB> getFileRepository(boost::program_options::var
 std::shared_ptr<IRepositoryDB> getRepository(boost::program_options::variables_map& vm)
 {
 	std::string repoDB = getValueAsString(vm, "Repository.path");
-	std::string backupDB = getValueAsString(vm, "BackupDB.path");
-	auto RepoDB = CreateRepositoryDB(repoDB, backupDB);
+	auto RepoDB = CreateRepositoryDB(repoDB);
 
 	return RepoDB;
 }

@@ -33,7 +33,8 @@ int BackupOperation::Init(boost::program_options::variables_map& vm)
 		{
 			auto backupDB = CreateDB(dbPath);
 			backupDB->StartScan(backupdef->rootPath);
-			RepoDB->CopyCurrentStateIntoBackupDB(*backupdef);
+			boost::filesystem::path backupDBPath = getValueAsString(vm, "BackupDB.path");
+			RepoDB->CopyCurrentStateIntoBackupDB(*backupdef, backupDBPath);
 		}
 		else
 		{
@@ -151,7 +152,8 @@ int BackupOperation::Complete(boost::program_options::variables_map& vm)
 		{
 			this->strategy->successFunc(backupInfo);
 		}
-		RepoDB->CopyBackupDBStateIntoRepoAndComplete(backupInfo);
+		boost::filesystem::path backupDBPath = getValueAsString(vm, "BackupDB.path");
+		RepoDB->CopyBackupDBStateIntoRepoAndComplete(backupInfo, backupDBPath);
 	}
 	else
 	{
@@ -175,7 +177,8 @@ int BackupOperation::All(boost::program_options::variables_map& vm)
 	if (backupdef != nullptr)
 	{
 		std::shared_ptr<IFileRepositoryDB> fileRepDB = getFileRepository(vm);
-		auto backupInfo = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB);
+		boost::filesystem::path backupDBPath = getValueAsString(vm, "BackupDB.path");
+		auto backupInfo = RepoDB->Backup(IRepositoryDB::BackupParameters().BackupDefId(backupdef->id), fileRepDB, backupDBPath);
 		if (this->strategy != nullptr && this->strategy->successFunc != nullptr)
 		{
 			this->strategy->successFunc(backupInfo);
