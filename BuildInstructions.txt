@@ -118,13 +118,12 @@ cd sbu
 in /usr/local/lib/cmake/SQLiteCpp/SQLiteCppConfig.cmake comment Sqlite find (2nd row)
 ./LinuxBuild.sh
 mkdir sbu_app
-ldd sbu/SbuCli/sbu | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' sbu_app/
-cp sbu/SbuCli/sbu sbu_app
+ldd SbuCli/sbu | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' sbu_app/
+cp SbuCli/sbu sbu_app
 cd sbu_app
 strip *
 
-cp sbu/SbuCli/sbu docker_sbu
-
+cp -r sbu/sbu_app docker_sbu
 
 docker build -t sbu_run sbu_run
 
