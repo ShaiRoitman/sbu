@@ -112,9 +112,9 @@ public:
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
 
 	virtual BackupInfo CreateBackupInfo(BackupDef& backupDef) = 0;
-	virtual void CopyCurrentStateIntoBackupDB(boost::filesystem::path backupDBPath, const BackupDef& backupDef) = 0;
-	virtual void CopyBackupDBStateIntoRepoAndComplete(boost::filesystem::path backupDBPath, BackupInfo& retValue) = 0;
+	virtual void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef) = 0;
+	virtual void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue) = 0;
 
 };
 
-std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath);
+std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path backupDBPath);

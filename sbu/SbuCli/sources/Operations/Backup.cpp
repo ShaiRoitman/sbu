@@ -33,7 +33,7 @@ int BackupOperation::Init(boost::program_options::variables_map& vm)
 		{
 			auto backupDB = CreateDB(dbPath);
 			backupDB->StartScan(backupdef->rootPath);
-			RepoDB->CopyCurrentStateIntoBackupDB(dbPath, *backupdef);
+			RepoDB->CopyCurrentStateIntoBackupDB(*backupdef);
 		}
 		else
 		{
@@ -151,7 +151,7 @@ int BackupOperation::Complete(boost::program_options::variables_map& vm)
 		{
 			this->strategy->successFunc(backupInfo);
 		}
-		RepoDB->CopyBackupDBStateIntoRepoAndComplete(dbPath, backupInfo);
+		RepoDB->CopyBackupDBStateIntoRepoAndComplete(backupInfo);
 	}
 	else
 	{
