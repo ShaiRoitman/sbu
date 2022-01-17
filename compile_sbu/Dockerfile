@@ -59,6 +59,7 @@ RUN cmake .
 RUN make -j $WORKING_CPU
 
 WORKDIR /sbu
+ENV LD_LIBRARY_PATH /usr/local/lib 
 
 CMD /bin/bash
 
