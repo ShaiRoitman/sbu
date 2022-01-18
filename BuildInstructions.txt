@@ -125,5 +125,5 @@ strip *
 
 cp -r sbu/sbu_app docker_sbu
 
-docker build -t sbu_run sbu_run
+docker build -t sbu_run docker_sbu
 
