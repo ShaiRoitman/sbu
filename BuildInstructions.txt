@@ -113,6 +113,9 @@ fix Modelbase.h to #include "nlohmann/json.hpp"
 cmake -DCMAKE_PREFIX_PATH=/home/master/sbu/sbu/cmake/linux .
 
 docker build -t sbu_compile compile_sbu
+docker run -it -v ~/src/sbu:/sbu sbu_compile /sbu/linuxBuild/compile.sh
+
+
 docker run -it -v $PWD:/sbu sbu_compile
 cd sbu
 in /usr/local/lib/cmake/SQLiteCpp/SQLiteCppConfig.cmake comment Sqlite find (2nd row)
