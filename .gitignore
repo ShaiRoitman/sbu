@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+/sbu/.vs
+/sbu/CMakeFiles
+/sbu/SbuCli/Debug
+/sbu/SbuCli/sbu.dir
+/sbu/x64
