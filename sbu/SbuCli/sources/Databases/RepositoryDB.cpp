@@ -15,10 +15,9 @@ static auto logger = LoggerFactory::getLogger("application.RepositoryDB");
 class RepositoryDB : public IRepositoryDB
 {
 public:
-	RepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path backupDBPath)
+	RepositoryDB(boost::filesystem::path dbPath)
 	{
 		this->db = getOrCreateDb(dbPath, Text_Resource::Repository);
-		this->backupDBPath = backupDBPath;
 	}
 
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) override
@@ -176,7 +175,7 @@ public:
 		}
 	}
 
-	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) override
+	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB, boost::filesystem::path backupDBPath) override
 	{
 		BackupInfo retValue;
 		BackupDef backupDef;
@@ -191,7 +190,7 @@ public:
 			UpdatedBackup("Scanning FileSystem", retValue);
 			backupDB->StartScan(backupDef.rootPath);
 			backupDB->ContinueScan();
-			this->CopyCurrentStateIntoBackupDB(backupDef);
+			this->CopyCurrentStateIntoBackupDB(backupDef, backupDBPath);
 
 			UpdatedBackup("CalculatingDiff", retValue);
 			backupDB->StartDiffCalc();
@@ -203,7 +202,7 @@ public:
 			backupDB->Complete();
 
 			UpdatedBackup("UpdatingRepository", retValue);
-			CopyBackupDBStateIntoRepoAndComplete(retValue);
+			CopyBackupDBStateIntoRepoAndComplete(retValue, backupDBPath);
 		}
 		catch (std::exception ex)
 		{
@@ -335,7 +334,7 @@ public:
 		return retValue;
 	}
 
-	void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef) override
+	void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef, boost::filesystem::path backupDBPath) override
 	{
 		logger->DebugFormat("RepositoryDB::CopyCurrentStateIntoBackupDB() backupDBPath:[%s] Attaching", backupDBPath.c_str());
 		auto attach= db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
@@ -352,7 +351,7 @@ public:
 	}
 
 private:
-	void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue) override
+	void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue, boost::filesystem::path backupDBPath) override
 	{
 		logger->DebugFormat("RepositoryDB::CopyBackupDBStateIntoRepoAndComplete() backupDBPath:[%s] Attaching", backupDBPath.c_str());
 		auto attach =db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
@@ -397,8 +396,8 @@ private:
 	path backupDBPath;
 };
 
-std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path backupDBPath)
+std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath)
 {
 	logger->DebugFormat("Creating RepositoryDB dbPath:[%s]", dbPath.string().c_str());
-	return std::make_shared<RepositoryDB>(dbPath, backupDBPath);
+	return std::make_shared<RepositoryDB>(dbPath);
 }

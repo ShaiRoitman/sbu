@@ -98,7 +98,7 @@ public:
 	virtual bool DeleteBackupDef(Integer id) = 0;
 
 	virtual void ListBackupDefs(std::function<void(const IRepositoryDB::BackupDef& backupdef)> iter) = 0;
-	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
+	virtual BackupInfo Backup(BackupParameters backupParams, std::shared_ptr<IFileRepositoryDB> fileRepDB, boost::filesystem::path backupDBPath) = 0;
 	virtual void ListBackups(Integer id, std::function<void(const IRepositoryDB::BackupInfo& backup)> function) = 0;
 	virtual BackupInfo DeleteBackup(Integer backupId) = 0;
 	virtual void ListBackupInfo(Integer id, 
@@ -112,9 +112,9 @@ public:
 	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
 
 	virtual BackupInfo CreateBackupInfo(BackupDef& backupDef) = 0;
-	virtual void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef) = 0;
-	virtual void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue) = 0;
+	virtual void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef, boost::filesystem::path backupDBPath) = 0;
+	virtual void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue, boost::filesystem::path backupDBPath) = 0;
 
 };
 
-std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath, boost::filesystem::path backupDBPath);
+std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath);
