@@ -185,7 +185,7 @@ public:
 
 			UpdatedBackup("Starting Backup", retValue);
 			removeFile(backupDBPath);
-			auto backupDB = getBackupDB();
+			auto backupDB = CreateDB(backupDBPath);
 
 			UpdatedBackup("Scanning FileSystem", retValue);
 			backupDB->StartScan(backupDef.rootPath);
@@ -383,17 +383,9 @@ private:
 		logger->DebugFormat("RepositoryDB::UpdatedBackup() Status:[%s]", status.c_str());
 	}
 
-	std::shared_ptr<IBackupDB> getBackupDB()
-	{
-		std::shared_ptr<IBackupDB> backupDB = CreateDB("backupDB.db");
-
-		return backupDB;
-	}
-
 	std::shared_ptr<ISbuDBDatabase> db;
 	std::shared_ptr<IFileRepositoryDB> fileDB;
 	path root;
-	path backupDBPath;
 };
 
 std::shared_ptr<IRepositoryDB> CreateRepositoryDB(boost::filesystem::path dbPath)
