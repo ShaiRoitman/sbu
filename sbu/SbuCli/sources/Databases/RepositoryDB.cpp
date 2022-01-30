@@ -20,12 +20,7 @@ public:
 		this->db = getOrCreateDb(dbPath, Text_Resource::Repository);
 	}
 
-	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) override
-	{
-		this->fileDB = fileDB;
-	}
-
-	void LogBackupDef(const std::string& prefix,std::shared_ptr<BackupDef> def)
+	void LogBackupDef(const std::string& prefix, std::shared_ptr<BackupDef> def)
 	{
 		if (def != nullptr)
 		{
@@ -69,7 +64,7 @@ public:
 
 		auto retValue = this->GetBackupDef(name);
 		LogBackupDef("RepositoryDB::AddBackupDef() Added ", retValue);
-		AddToExecutionLog(db, "CreateBackupDef() Success", (boost::format("name:[%1%] path:[%2%]") % name % rootPath).str()) ;
+		AddToExecutionLog(db, "CreateBackupDef() Success", (boost::format("name:[%1%] path:[%2%]") % name % rootPath).str());
 		return retValue;
 	}
 
@@ -86,6 +81,10 @@ public:
 			retValue->rootPath = from_utf8(query->getColumn("RootPath")->getString());
 			retValue->hostName = query->getColumn("Hostname")->getString();
 			retValue->added = get_time_point(query->getColumn("Added")->getString());
+			
+			logger->InfoFormat(" SHAI root %s", "Shai");
+
+			logger->InfoFormat(" SHAI root %s", retValue->rootPath.c_str());
 
 			logger->InfoFormat("RepositoryDB::GetBackupDef(Integer) name:[%s] ID:[%ld] RootPath:[%s] Hostname:[%s] Added:[%s]",
 				retValue->name.c_str(),
@@ -140,7 +139,7 @@ public:
 		deleteBackups->bind(":id", id);
 		deleteBackups->exec();
 
-		auto deleteBackupDefs =db->CreateStatement("DELETE FROM BackupDefs WHERE ID= :id");
+		auto deleteBackupDefs = db->CreateStatement("DELETE FROM BackupDefs WHERE ID= :id");
 		deleteBackupDefs->bind(":id", id);
 		bool retValue = deleteBackupDefs->exec() > 0;
 
@@ -337,7 +336,7 @@ public:
 	void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef, boost::filesystem::path backupDBPath) override
 	{
 		logger->DebugFormat("RepositoryDB::CopyCurrentStateIntoBackupDB() backupDBPath:[%s] Attaching", backupDBPath.c_str());
-		auto attach= db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
+		auto attach = db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
 		attach->bind(":backupDB", backupDBPath.string().c_str());
 		attach->exec();
 
@@ -354,7 +353,7 @@ private:
 	void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue, boost::filesystem::path backupDBPath) override
 	{
 		logger->DebugFormat("RepositoryDB::CopyBackupDBStateIntoRepoAndComplete() backupDBPath:[%s] Attaching", backupDBPath.c_str());
-		auto attach =db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
+		auto attach = db->CreateStatement("ATTACH DATABASE :backupDB AS BackupDB");
 		attach->bind(":backupDB", backupDBPath.string().c_str());
 		attach->exec();
 
@@ -384,7 +383,6 @@ private:
 	}
 
 	std::shared_ptr<ISbuDBDatabase> db;
-	std::shared_ptr<IFileRepositoryDB> fileDB;
 	path root;
 };
 

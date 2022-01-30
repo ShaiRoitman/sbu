@@ -109,8 +109,6 @@ public:
 
 	virtual bool Restore(RestoreParameters restoreParams, std::shared_ptr<IFileRepositoryDB> fileRepDB) = 0;
 
-	virtual void SetFileRepositoryDB(std::shared_ptr<IFileRepositoryDB> fileDB) = 0;
-
 	virtual BackupInfo CreateBackupInfo(BackupDef& backupDef) = 0;
 	virtual void CopyCurrentStateIntoBackupDB(const BackupDef& backupDef, boost::filesystem::path backupDBPath) = 0;
 	virtual void CopyBackupDBStateIntoRepoAndComplete(BackupInfo& retValue, boost::filesystem::path backupDBPath) = 0;
