@@ -4,8 +4,12 @@ class SbuEnv:
     files_db: str
     backup_db: str
 
+
 class SbuApp:
     def __init__(self):
+        pass
+
+    def setCmdLine(self):
         pass
 
     def execute(self, cmdLine: str) -> {int, str}:

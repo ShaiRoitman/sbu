@@ -1,0 +1,11 @@
+{
+  "SBUAppConfig": "SbuConfig.json",
+  "SambaShares" : [
+    {
+      "name" : "ZeusUSB1",
+      "url" : "\\\\zeus\\usb1",
+      "username" : "",
+      "password" : ""
+    }
+  ]
+}

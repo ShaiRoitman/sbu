@@ -10,6 +10,12 @@ import json
 from SbuDataClasses import RepositoryBackupDef, RepositoryFile, RepositoryBackup, FileRepositoryFile, BackupInfoModel
 
 app = FastAPI()
+with open('DefaultSBUWebAppConfig.json') as json_file:
+    configuration = json.load(json_file)
+    print(configuration)
+
+sbu_app_config = configuration['SBUApp']
+mySbuApp = SbuApp(sbu_app_config)
 
 
 @app.get("/repository/backupdefs",
@@ -42,10 +48,10 @@ async def get_backupdefs():
 async def create_repository_backupdef(backupDef: RepositoryBackupDef):
     retValue: RepositoryBackupDef = RepositoryBackupDef()
 
-    app: SbuApp = SbuApp()
+    sbu_app: SbuApp = SbuApp()
 
     cmdLine = f"--action CreateBackupDef --name {backupDef.name} --path {backupDef.rootPath}"
-    result = app.execute(cmdLine)
+    result = sbu_app.execute(cmdLine)
     if (result[0] == 0):
         result_splitted = str(result[1]).split(",")
 
@@ -97,10 +103,13 @@ async def get_repository_files(backupdefName: str,
                                timestamp: Optional[datetime] = None):
     retValue:  List[RepositoryFile] = []
 
-    app: SbuApp = SbuApp()
+    sbu_app: SbuApp = SbuApp()
 
-    cmdLine = f"--action Restore --name {backupdefName} --path {timestamp}"
-    result = app.execute(cmdLine)
+    if (timestamp):
+        timestamp = datetime.now()
+
+    cmdLine = f"--action Restore --name {backupdefName} --date {timestamp} --showOnly"
+    result = sbu_app.execute(cmdLine)
     if (result[0] == 0):
         result_splitted = str(result[1]).split(",")
 
@@ -113,47 +122,24 @@ async def get_repository_files(backupdefName: str,
     return retValue
 
 
-@app.get("/filerepository/files",
-         tags=["FileRepository"],
-         response_model=List[FileRepositoryFile])
-async def get_files(backupdefID: Optional[int] = None,
-                    addedBefore: Optional[datetime] = None,
-                    addedAfter: Optional[datetime] = None,
-                    sizeBigger: Optional[int] = None,
-                    sizeSmaller: Optional[int] = None):
-    retValue: List[FileRepositoryFile] = []
-    # SQL Query
-    return retValue
-
-
-@app.get("/filerepository/files/{fileId}",
-         tags=["FileRepository"])
-async def get_file(fileId: str):
-    retValue = None
-
-    # SQL Query and file download
-
-    return retValue
-
-
 @app.post("/operations/backup",
           tags=["Operations"],
           response_model=BackupInfoModel)
-async def operate_backup(backupDefId: int):
+async def operate_backup(backupdefName: str):
     retValue: BackupInfoModel = BackupInfoModel()
 
-    # SQL Query
+    sbu_app: SbuApp = SbuApp()
 
-    return retValue
+    cmdLine = f"--action Backup --name {backupdefName} "
+    result = sbu_app.execute(cmdLine)
+    if (result[0] == 0):
+        result_splitted = str(result[1]).split(",")
 
-
-@app.get("/operations/backup/{backupId}",
-         tags=["Operations"],
-         response_model=BackupInfoModel)
-async def get_backup_info(backupId: int):
-    retValue: BackupInfoModel = BackupInfoModel()
-
-    # sbu shell
+        retValue.id = result_splitted[0]
+        retValue.name = result_splitted[1]
+        retValue.hostname = result_splitted[2]
+        retValue.rootPath = result_splitted[3]
+        retValue.addedDate = result_splitted[4]
 
     return retValue
 
@@ -161,10 +147,26 @@ async def get_backup_info(backupId: int):
 @app.post("/operations/restore",
           tags=["Operations"],
           response_model=List[RepositoryFile])
-async def operate_restore(backupDefId: int, destinationPath: str):
-    retValue: List[RepositoryFile] = []
+async def operate_restore(backupdefName: str,
+                          destinationPath: str,
+                          timestamp: Optional[datetime] = None):
+    retValue:  List[RepositoryFile] = []
 
-    # sbu shell
+    sbu_app: SbuApp = SbuApp()
+
+    if (timestamp):
+        timestamp = datetime.now()
+
+    cmdLine = f"--action Restore --name {backupdefName} --date {timestamp} --path {destinationPath} "
+    result = sbu_app.execute(cmdLine)
+    if (result[0] == 0):
+        result_splitted = str(result[1]).split(",")
+
+        retValue.id = result_splitted[0]
+        retValue.name = result_splitted[1]
+        retValue.hostname = result_splitted[2]
+        retValue.rootPath = result_splitted[3]
+        retValue.addedDate = result_splitted[4]
 
     return retValue
 

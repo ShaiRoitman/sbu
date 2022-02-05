@@ -1,0 +1,45 @@
+Installation
+------------
+Raspberry PI 4
+install docker, sambaserver
+download SBU Docker
+
+1. Set Place for SBU Configuration
+1. Set place for SBU Repository Metadata ( Repository, FileRepository DBs )
+2. Set place for SBU Execution Logs and Temporary Databases ( BackupDB , Logs )
+3. Set place for SBU Restore position
+4. Enable Samba Share on SBU Restore position
+5. Configure Samba locations in SBU App
+6. Set BackupDefs
+7. Run Docker
+   Volume Sharing for #1 #2 #3
+   Port opening for SBUWebApp
+
+SBUWebApp
+---------
+Execute Backup by BackupDef - specific TimeStamp , Samba Share
+Execute Restore by BackupDef, Date, Prefix, Substring
+Show Files by Restore (BackupDef, Date, Prefix, Substring) -> Destination
+Show Files by Backup
+
+DockerFileSystem
+
+/sbu/App/sbu
+         sbu ( & so files)
+         DefaultSBUApp.config
+/sbu/App/SBUWebApp/
+                   Sbu.py
+                   SQLHelper.py
+                   SbuWebApp.py
+                   SbuDataClasses.py
+                   DefaultSBUWebAppConfig.json
+/sbu/Configuration
+     SBUWebAppConfig.json
+     SBUApp.config
+/sbu/Metadata
+     Repository.db
+     FileRepository.db
+/sbu/Work
+     Zeus1/Backup_20220502_100000/BackupDB.db
+     Zeus1/Backup_20220502_100000/BackupExecutionLog.log
+/sbu/Restore

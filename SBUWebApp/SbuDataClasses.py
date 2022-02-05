@@ -3,13 +3,14 @@ from enum import Enum
 from typing import Optional
 from datetime import datetime
 
+
 @dataclass
 class RepositoryBackupDef:
     id: int
-    name : str
-    hostname : str
-    rootPath : str
-    addedDate : Optional[datetime]
+    name: str
+    hostname: str
+    rootPath: str
+    addedDate: Optional[datetime]
 
     def __init__(self):
         self.id = 0
@@ -18,13 +19,14 @@ class RepositoryBackupDef:
         self.rootPath = ""
         self.addedDate = datetime.now()
 
+
 @dataclass
 class RepositoryBackup:
     id: int
     backupDef: int
-    start : Optional[datetime]
+    start: Optional[datetime]
     lastStatusUpdate: Optional[datetime]
-    Status : str
+    Status: str
 
     def __init__(self):
         self.id = 0
@@ -33,10 +35,12 @@ class RepositoryBackup:
         self.lastStatusUpdate = None
         self.Status = ""
 
+
 class RepositoryFileStatus(Enum):
     CREATED = 1
     UPDATED = 3
     DELETED = 2
+
 
 @dataclass
 class RepositoryFile:
@@ -52,14 +56,17 @@ class RepositoryFile:
     fileHandle: str
     status: Optional[RepositoryFileStatus]
 
+
 @dataclass
 class FileRepositoryFile:
     id: int
     path: str
     size: int
+    added: Optional[datetime]
     digestType: str
     digestValue: str
     multiFileHostDigest: str
+
 
 @dataclass
 class BackupInfoModel:
