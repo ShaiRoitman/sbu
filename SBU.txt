@@ -27,7 +27,7 @@ DockerFileSystem
 
 /sbu/App/sbu
          sbu
-         so/ ( & so files)
+         so/*.so
          DefaultSBUApp.config
 /sbu/App/SBUWebApp/
                    Sbu.py
@@ -45,3 +45,4 @@ DockerFileSystem
      Zeus1/Backup_20220502_100000/BackupDB.db
      Zeus1/Backup_20220502_100000/BackupExecutionLog.log
 /sbu/Restore
+/sbu/dockerEntryPoint.sh
