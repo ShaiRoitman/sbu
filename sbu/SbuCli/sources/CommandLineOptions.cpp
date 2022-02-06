@@ -37,7 +37,7 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 	std::string backupDBPath;
 	std::string bstep;
 	std::string rstep;
-	std::string filerepPassword;
+	std::string password;
 	std::string awskey, awssecret, awsbucket, awsregion, awsBasePath;
 	std::string storageType;
 	std::string hostname;
@@ -58,8 +58,8 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 		("bstep", value(&bstep), "BackupStep : All, Init, Scan, DiffCalc, FileUpload, Complete")
 		("rstep", value(&rstep), "RestoreStep: Init, Scan, DiffCalc, Download, Complete")
 		("date,d", value(&date), "The last effective date - Defaults to now()")
-		("General.StorageType", value(&filerepPassword), "StorageType: FileRepository, SecureFileRepository, AwsS3, SecureAwsS3")
-		("Storage.password", value(&storageType), "If exists uses this password SecureFileRepository or S3 Client side encryption")
+		("General.StorageType", value(&storageType), "StorageType: FileRepository, SecureFileRepository, AwsS3, SecureAwsS3")
+		("Storage.password", value(&password), "If exists uses this password SecureFileRepository or S3 Client side encryption")
 		("FileRepository.name", value(&filerepName)->default_value(fileRepositoryDB), "The database name of the FileRepository")
 		("FileRepository.path", value(&filerepPath), "Path of the FileRepository")
 		("FileRepository.maxSizeToBulk", value(&maxSizeToBulk)->default_value(maxSizeToBulkDefault), "Minimum file size to bulk")
