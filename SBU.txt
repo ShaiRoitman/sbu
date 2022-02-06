@@ -8,6 +8,7 @@ download SBU Docker
 1. Set place for SBU Repository Metadata ( Repository, FileRepository DBs )
 2. Set place for SBU Execution Logs and Temporary Databases ( BackupDB , Logs )
 3. Set place for SBU Restore position
+3.5 Set place for SBU Work dir
 4. Enable Samba Share on SBU Restore position
 5. Configure Samba locations in SBU App
 6. Set BackupDefs
@@ -25,7 +26,8 @@ Show Files by Backup
 DockerFileSystem
 
 /sbu/App/sbu
-         sbu ( & so files)
+         sbu
+         so/ ( & so files)
          DefaultSBUApp.config
 /sbu/App/SBUWebApp/
                    Sbu.py
