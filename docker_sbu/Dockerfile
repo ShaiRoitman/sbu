@@ -15,6 +15,7 @@ RUN mkdir /sbu/Configuration
 RUN mkdir /sbu/Metadata
 RUN mkdir /sbu/Workdir
 RUN mkdir /sbu/Restore
+RUN mkdir /mounts
 
 RUN mkdir /work
 

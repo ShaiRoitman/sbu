@@ -18,13 +18,20 @@ download SBU Docker
 
 SBUWebApp
 ---------
-Execute Backup by BackupDef - specific TimeStamp , Samba Share
+Environment Variables
+---------------------
+SBUWEBAPP_CONFIG - The SBUWebAppConfig.json
+
+
+
+Execute Backup by BackupDef - specific TimeStamp 
 Execute Restore by BackupDef, Date, Prefix, Substring
 Show Files by Restore (BackupDef, Date, Prefix, Substring) -> Destination
 Show Files by Backup
 
 DockerFileSystem
-
+----------------
+/sbu/dockerEntryPoint.sh
 /sbu/App/sbu
          sbu
          so/*.so
@@ -42,7 +49,29 @@ DockerFileSystem
      Repository.db
      FileRepository.db
 /sbu/Work
+     dockerEntryPoint.log
+     SBUWebServiceLog
      Zeus1/Backup_20220502_100000/BackupDB.db
      Zeus1/Backup_20220502_100000/BackupExecutionLog.log
 /sbu/Restore
-/sbu/dockerEntryPoint.sh
+/sbu/fileRepository
+/mounts
+    Local1
+    Local2
+
+
+Environment Variables
+---------------------
+SBU_CONFIG - sbu configuration file path
+SBUWEB_CONFIG - SBUWeb configruation file path
+
+SBUWebApp
+---------
+1. Serve as WebService Endpoints
+   execute backup
+   execute restore
+2. Scheduling
+3. Load Samba mounts
+4. logging output
+
+
