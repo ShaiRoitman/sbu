@@ -1,9 +1,9 @@
 import SBUGlobals
 
-from SBUUtils import LoadConfiguration
+from SBUUtils import InitApp
 import uvicorn
 
-LoadConfiguration()
+InitApp()
 
 if __name__ == "__main__":
     webServerConfig = SBUGlobals.configuration["WebServer"]

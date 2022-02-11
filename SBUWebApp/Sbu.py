@@ -1,6 +1,7 @@
 import SBUGlobals
 import os
 import subprocess
+from typing import List
 
 class SbuApp:
     def __init__(self):
@@ -27,7 +28,7 @@ class SbuApp:
 
         return self.execute( args )
 
-    def execute(self, cmdLine: list[str]) -> {int, str}:
+    def execute(self, cmdLine: List[str]) -> {int, str}:
         process = subprocess.Popen(cmdLine)
         retValue = [process.wait(), process.stdout.readlines()]
         return retValue

@@ -2,12 +2,9 @@ from fastapi import FastAPI
 from typing import List, Optional
 from datetime import datetime
 
-import SBUGlobals
 from SQLHelper import WhereClause
 import sqlite3
 from Sbu import SbuApp
-
-from SBUGlobals import configuration
 
 from SbuDataClasses import RepositoryBackupDef, RepositoryFile, RepositoryBackup, FileRepositoryFile, BackupInfoModel
 
@@ -125,10 +122,8 @@ async def operate_backup(backupdefName: str):
 
     sbu_app: SbuApp = SbuApp()
 
-    workDir = SBUGlobals.configuration["workDir"]
+    result = sbu_app.executeBackup(backupdefName)
 
-    cmdLine = f"--action Backup --name {backupdefName} "
-    result = sbu_app.execute(cmdLine)
     if (result[0] == 0):
         result_splitted = str(result[1]).split(",")
 
