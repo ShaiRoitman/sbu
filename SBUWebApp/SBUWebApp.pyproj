@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="SBUWebApp.py" />
+    <Compile Include="SbuDataClasses.py" />
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">

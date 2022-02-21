@@ -75,3 +75,18 @@ SBUWebApp
 4. logging output
 
 
+
+Tasks
+-----
+1. Setup Raspberry pi
+2. Configure Specific Environment docker confs
+3. Create Container which runs web server
+   docker run -....
+4. CreateBackupDef
+   docker run -....
+
+   Create BackupDef
+   sbu --action CreateBackupDef --name sbu --path /mounts/sbu
+   sbu --action CreateBackupDef --name clu --path /mounts/clu
+
+5. Open Web Server

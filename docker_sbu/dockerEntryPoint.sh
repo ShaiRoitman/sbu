@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-export SBU_CONFIG_PATH=/sbu/Configuration
-export SBU_CONFIG=$SBU_CONFIG_PATH/SBUApp.config
-export SBUWEBAPP_CONFIG=$SBU_CONFIG_PATH/SBUWebAppConfig.json
-
 if test -f "$SBUWEBAPP_CONFIG"; then
   echo "$SBUWEBAPP_CONFIG exists."
 else
