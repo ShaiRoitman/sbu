@@ -8,6 +8,7 @@ download SBU Docker
 1. Set place for SBU Repository Metadata ( Repository, FileRepository DBs )
 2. Set place for SBU Execution Logs and Temporary Databases ( BackupDB , Logs )
 3. Set place for SBU Restore position
+3.5 Set place for SBU Work dir
 4. Enable Samba Share on SBU Restore position
 5. Configure Samba locations in SBU App
 6. Set BackupDefs
@@ -17,15 +18,23 @@ download SBU Docker
 
 SBUWebApp
 ---------
-Execute Backup by BackupDef - specific TimeStamp , Samba Share
+Environment Variables
+---------------------
+SBUWEBAPP_CONFIG - The SBUWebAppConfig.json
+
+
+
+Execute Backup by BackupDef - specific TimeStamp 
 Execute Restore by BackupDef, Date, Prefix, Substring
 Show Files by Restore (BackupDef, Date, Prefix, Substring) -> Destination
 Show Files by Backup
 
 DockerFileSystem
-
+----------------
+/sbu/dockerEntryPoint.sh
 /sbu/App/sbu
-         sbu ( & so files)
+         sbu
+         so/*.so
          DefaultSBUApp.config
 /sbu/App/SBUWebApp/
                    Sbu.py
@@ -40,6 +49,44 @@ DockerFileSystem
      Repository.db
      FileRepository.db
 /sbu/Work
+     dockerEntryPoint.log
+     SBUWebServiceLog
      Zeus1/Backup_20220502_100000/BackupDB.db
      Zeus1/Backup_20220502_100000/BackupExecutionLog.log
 /sbu/Restore
+/sbu/fileRepository
+/mounts
+    Local1
+    Local2
+
+
+Environment Variables
+---------------------
+SBU_CONFIG - sbu configuration file path
+SBUWEB_CONFIG - SBUWeb configruation file path
+
+SBUWebApp
+---------
+1. Serve as WebService Endpoints
+   execute backup
+   execute restore
+2. Scheduling
+3. Load Samba mounts
+4. logging output
+
+
+
+Tasks
+-----
+1. Setup Raspberry pi
+2. Configure Specific Environment docker confs
+3. Create Container which runs web server
+   docker run -....
+4. CreateBackupDef
+   docker run -....
+
+   Create BackupDef
+   sbu --action CreateBackupDef --name sbu --path /mounts/sbu
+   sbu --action CreateBackupDef --name clu --path /mounts/clu
+
+5. Open Web Server

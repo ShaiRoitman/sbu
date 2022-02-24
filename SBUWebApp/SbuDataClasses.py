@@ -78,3 +78,6 @@ class BackupInfoModel:
     diffComplete: Optional[datetime]
     fileUploadComplete: Optional[datetime]
     finalizationComplete: Optional[datetime]
+
+    def __init__(self):
+        pass

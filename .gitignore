@@ -53,3 +53,5 @@
 /sbu/ALL_BUILD.vcxproj
 /sbuTests/__pycache__
 /sbuTests/.vs/sbuTests/v15
+/docker_sbu/sbu_app
+/sbu/sbu_app

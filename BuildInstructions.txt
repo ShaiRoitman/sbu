@@ -129,4 +129,12 @@ strip *
 cp -r sbu/sbu_app docker_sbu
 
 docker build -t sbu_run docker_sbu
+docker build -t sbu_run -f docker_sbu/Dockerfile .
+docker build -t web_sbu -f webservice_sbu/Dockerfile .
 
+
+Dockers
+-------
+compile_sbu - Used for compiling the sbu code
+web_sbu - Creating the SBUWebApp environment
+sbu_run - Complete Application of the SBUWebApp and sbu
