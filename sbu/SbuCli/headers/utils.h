@@ -41,9 +41,6 @@ std::string getValueAsString(boost::program_options::variables_map& vm, const ch
 int getValueAsInt(boost::program_options::variables_map& vm, const char* id);
 
 
-
-
-
 class Resource
 {
 public:

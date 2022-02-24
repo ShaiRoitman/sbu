@@ -1,4 +1,5 @@
 #include "Operations.h"
+#include "StandardOutputWrapper.h"
 
 #include <iostream>
 #include "utils.h"
@@ -56,11 +57,13 @@ std::shared_ptr<Operation> CreateBackupDefFactory()
 	retValue->strategy->OnCreatedDef = 
 		[] (std::shared_ptr<IRepositoryDB::BackupDef> backupdef)
 	{
-		std::cout << backupdef->id << ",";
-		std::cout << backupdef->name << ",";
-		std::cout << backupdef->hostName << ",";
-		std::cout << backupdef->rootPath << ",";
-		std::cout << get_string_from_time_point(backupdef->added) << std::endl;
+		StandardOutputWrapper& output = *StandardOutputWrapper::GetInstance();
+		output << backupdef->id << ",";
+		output << backupdef->name << ",";
+		output << backupdef->hostName << ",";
+		output << backupdef->rootPath << ",";
+		output << get_string_from_time_point(backupdef->added);
+		output.EOL();
 	};
 
 	return retValue;

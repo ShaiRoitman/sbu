@@ -1,6 +1,7 @@
 #include "RepositoryDB.h"
 #include "BackupDB.h"
 #include "FileRepositoryDB.h"
+#include "StandardOutputWrapper.h"
 
 #include "utils.h"
 #include "sbu_exceptions.h"
@@ -37,6 +38,7 @@ public:
 
 	virtual std::shared_ptr<BackupDef> AddBackupDef(const std::string& name, boost::filesystem::path rootPath) override
 	{
+		StandardOutputWrapper* output = StandardOutputWrapper::GetInstance();
 		logger->DebugFormat("Adding BackupDef Name:[%s] RootPath:[%s]", name.c_str(), rootPath.string().c_str());
 		AddToExecutionLog(db, "AddBackupDef()", name);
 		try {
@@ -59,7 +61,8 @@ public:
 			}
 			AddToExecutionLog(db, "CreateBackupDef() Failed", (boost::format("name:[%1%] path:[%2%]") % name % rootPath).str());
 			logger->ErrorFormat("RepositoryDB::AddBackupDef() Failed");
-			std::cout << "Error in adding backup def " + std::string(ex.what()) << std::endl;
+
+			output->OutputLine( std::string("Error in adding backup def ") + std::string(ex.what()));
 		}
 
 		auto retValue = this->GetBackupDef(name);

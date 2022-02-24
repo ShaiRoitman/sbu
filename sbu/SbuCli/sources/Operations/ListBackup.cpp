@@ -1,4 +1,5 @@
 #include "Operations.h"
+#include "StandardOutputWrapper.h"
 
 #include <iostream>
 #include "utils.h"
@@ -46,10 +47,12 @@ std::shared_ptr<Operation> ListBackupsFactory()
 	retValue->strategy = std::make_shared<ListBackupsOperation::Strategy>();
 	retValue->strategy->backupIter = [](const IRepositoryDB::BackupInfo& backup)
 	{
-		std::cout << backup.id << ",";
-		std::cout << backup.status << ",";
-		std::cout << get_string_from_time_point(backup.started) << ",";
-		std::cout << get_string_from_time_point(backup.lastUpdated) << std::endl;
+		StandardOutputWrapper& output = *StandardOutputWrapper::GetInstance();
+		output << backup.id << ",";
+		output << backup.status << ",";
+		output << get_string_from_time_point(backup.started) << ",";
+		output << get_string_from_time_point(backup.lastUpdated);
+		output.EOL();
 	};
 
 	return retValue;

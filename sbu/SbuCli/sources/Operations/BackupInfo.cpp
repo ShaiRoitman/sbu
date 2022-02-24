@@ -1,5 +1,6 @@
 
 #include "Operations.h"
+#include "StandardOutputWrapper.h"
 
 #include <iostream>
 #include "utils.h"
@@ -44,7 +45,7 @@ std::shared_ptr<Operation> BackupInfoFactory()
 	retValue->strategy->fileInfoFunc =
 		[](const std::string& status, const std::string& path, const std::string& type)
 	{
-		std::cout << status << " : " << path << " : " << type << std::endl;
+		StandardOutputWrapper::GetInstance()->OutputLine(status + " : " + path + " : " + type);
 	};
 	return retValue;
 }
