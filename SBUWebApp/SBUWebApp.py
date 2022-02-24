@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from typing import List, Optional
 from datetime import datetime
@@ -10,12 +12,14 @@ import json
 from SbuDataClasses import RepositoryBackupDef, RepositoryFile, RepositoryBackup, FileRepositoryFile, BackupInfoModel
 
 app = FastAPI()
-with open('DefaultSBUWebAppConfig.json') as json_file:
+
+webSbuConfigFile = os.environ['SBUWEB_CONFIG']
+
+with open(webSbuConfigFile) as json_file:
     configuration = json.load(json_file)
     print(configuration)
 
-sbu_app_config = configuration['SBUApp']
-mySbuApp = SbuApp(sbu_app_config)
+mySbuApp = SbuApp()
 
 
 @app.get("/repository/backupdefs",
