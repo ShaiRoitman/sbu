@@ -1,6 +1,6 @@
 from pydantic.dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -81,3 +81,15 @@ class BackupInfoModel:
 
     def __init__(self):
         pass
+
+@dataclass
+class ExecutionResult:
+    arguments : str
+    output : str
+    startTime : datetime
+    endTime : datetime
+    errorCode : int
+
+@dataclass
+class RestoreExecuteResult(ExecutionResult):
+    files: List[str]

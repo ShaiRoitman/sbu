@@ -1,4 +1,4 @@
-from SbuDataClasses import RepositoryBackupDef, RepositoryFile, RepositoryBackup, FileRepositoryFile, BackupInfoModel
+from SbuDataClasses import RepositoryBackupDef, RepositoryFile, RepositoryBackup, FileRepositoryFile, BackupInfoModel , ExecutionResult, RestoreExecuteResult
 from Sbu import SbuApp
 from typing import List, Optional
 from datetime import datetime
@@ -6,44 +6,24 @@ from SQLHelper import WhereClause
 import sqlite3
 
 
-def backup(backupdefName: str):
-    retValue: BackupInfoModel = BackupInfoModel()
-
+def backup(backupdefName: str) -> ExecutionResult:
     sbu_app: SbuApp = SbuApp()
-
-    result = sbu_app.executeBackup(backupdefName)
-
-    if (result[0] == 0):
-        result_splitted = str(result[1]).split(",")
-
-        retValue.id = result_splitted[0]
-        retValue.name = result_splitted[1]
-        retValue.hostname = result_splitted[2]
-        retValue.rootPath = result_splitted[3]
-        retValue.addedDate = result_splitted[4]
-
+    retValue: ExecutionResult = sbu_app.executeBackup(backupdefName)
     return retValue
 
 def restore(backupdefName: str,
                           destinationPath: str,
-                          timestamp: Optional[datetime] = None):
-    retValue:  List[RepositoryFile] = []
-
+                          timestamp: Optional[datetime] = None) -> RestoreExecuteResult:
     sbu_app: SbuApp = SbuApp()
-
-    if (timestamp):
-        timestamp = datetime.now()
-
-    cmdLine = f"--action Restore --name {backupdefName} --date {timestamp} --path {destinationPath} "
-    result = sbu_app.execute(cmdLine)
-    if (result[0] == 0):
-        result_splitted = str(result[1]).split(",")
-
-        retValue.id = result_splitted[0]
-        retValue.name = result_splitted[1]
-        retValue.hostname = result_splitted[2]
-        retValue.rootPath = result_splitted[3]
-        retValue.addedDate = result_splitted[4]
+    result: ExecutionResult = sbu_app.executeRestore(backupdefName, destinationPath, timestamp)
+    retValue : RestoreExecuteResult = RestoreExecuteResult()
+    retValue.startTime = result.startTime
+    retValue.endTime = result.endTime
+    retValue.errorCode = result.errorCode
+    retValue.arguments = result.arguments
+    for file in result.output.split("\n"):
+        retValue.files.append(file)
+    retValue.output = ""
 
     return retValue
 
