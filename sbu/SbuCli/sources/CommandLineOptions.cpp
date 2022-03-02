@@ -3,6 +3,7 @@
 #include <iostream>
 #include "ExitCodes.h"
 #include "Loggers.h"
+#include "StandardOutputWrapper.h"
 
 using namespace boost::program_options;
 
@@ -11,6 +12,7 @@ using namespace boost::program_options;
 int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 {
 	int retValue = ExitCode_Success;
+	StandardOutputWrapper* output = StandardOutputWrapper::GetInstance();
 
 	const std::string configFileEnvVar = "SBU_CONFIG";
 	const long maxSizeToBulkDefault = 128 * 1024;
@@ -127,12 +129,13 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 
 		if (!vm["help"].empty() || !vm["version"].empty())
 		{
-			std::cout << std::string("sbu ( Smart Backup Utility ) : ") + g_Version << std::endl;
-			std::cout << std::string("Written by ") << std::string(g_DeveloperName) << std::endl;
+			output->OutputLine(std::string("sbu ( Smart Backup Utility ) : ") + g_Version);
+			output->OutputLine(std::string("Written by ") + std::string(g_DeveloperName));
 
 			if (!vm["help"].empty())
 			{
-				std::cout << desc << std::endl;
+				desc.print(output->GetStream());
+				output->EOL();
 				return ExitCode_HelpCalled;
 			}
 			else
@@ -143,13 +146,13 @@ int CommandLineAndOptions::ParseOptions(int argc, const char* argv[])
 
 		if (vm["action"].empty())
 		{
-			std::cout << "Missing action argument" << std::endl;
+			output->OutputLine("Missing action argument");
 			return ExitCode_MissingAction;
 		}
 	}
 	catch (const boost::program_options::unknown_option exception)
 	{
-		std::cout << std::string("Invalid option ") << exception.get_option_name() << std::endl;
+		output->OutputLine(std::string("Invalid option ") + exception.get_option_name());
 		retValue = ExitCode_InvalidArgument;
 	}
 

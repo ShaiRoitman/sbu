@@ -10,6 +10,7 @@
 #include "Operations.h"
 #include "ExitCodes.h"
 #include "utils.h"
+#include "StandardOutputWrapper.h"
 
 extern const std::string g_DeveloperName = "Shai Roitman";
 extern const std::string g_Version = "0.9";
@@ -59,7 +60,9 @@ int main(int argc, const char* argv[])
 	}
 	catch (std::exception ex)
 	{
-		std::cout << "Failed to parse logging options" << std::endl;
+		StandardOutputWrapper& output = *StandardOutputWrapper::GetInstance();
+		output << "Failed to parse logging options";
+		output.EOL();
 		retValue = ExitCode_LoggingFailure;
 		return retValue;
 	}

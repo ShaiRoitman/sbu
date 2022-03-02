@@ -1,4 +1,5 @@
 #include "Operations.h"
+#include "StandardOutputWrapper.h"
 
 #include <iostream>
 #include "utils.h"

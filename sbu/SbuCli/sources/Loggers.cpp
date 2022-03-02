@@ -1,5 +1,6 @@
 #include "Loggers.h"
 #include "stdarg.h"
+#include "StandardOutputWrapper.h"
 
 #include "Poco/ConsoleChannel.h"
 #include "Poco/StreamChannel.h"
@@ -168,7 +169,7 @@ void LoggerFactory::InitLogger(LoggingOptions& loggingComponents)
 		}
 		catch (std::exception ex)
 		{
-			std::cout << "Failed to parse logging " << ex.what() << std::endl;
+			StandardOutputWrapper::GetInstance()->OutputLine(std::string("Failed to parse logging ") + ex.what());
 		}
 	}
 }
