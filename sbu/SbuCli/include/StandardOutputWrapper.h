@@ -29,4 +29,11 @@ public:
 		(*this->active) << value;
 		return *this;
 	}
+        template<typename T> StandardOutputWrapper& operator <<(const T& value)
+        {
+                (*this->active) << value;
+                return *this;
+        }
+
+
 };

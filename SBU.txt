@@ -91,3 +91,6 @@ Tasks
 
 5. Open Web Server
 
+Tasks
+1. Create raspberry pi working env
+2. Reporting
