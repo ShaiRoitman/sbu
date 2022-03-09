@@ -94,3 +94,35 @@ Tasks
 Tasks
 1. Create raspberry pi working env
 2. Reporting
+
+
+Installation
+------------
+1. Create SBU Config Files
+2. Set SBU Environment variables
+3.
+
+
+sbu_env.sh
+----------
+#!/bin/bash
+
+export SBU_CONFIGURATION=/home/master/sbu/Configuration
+export SBU_METADATA=/home/master/sbu/Metadata
+export SBU_WORK=/home/master/sbu/Work
+export SBU_RESTORE=/home/master/sbu/Restore
+export SBU_FILEREP=/home/master/sbu/fileRepository
+export SBU_MOUNT1=/home/master/src/clu
+
+docker run -it \
+  -v $SBU_CONFIGURATION:/sbu/Configuration \
+  -v $SBU_METADATA:/sbu/Metadata \
+  -v $SBU_WORK:/sbu/Work \
+  -v $SBU_RESTORE:/sbu/Restore \
+  -v $SBU_FILEREP:/fileRepository \
+  -v $SBU_MOUNT1:/mounts/Clu \
+  -p 5000 \
+  -e SBUWEB_CONFIG=/sbu/Configuration/SBUWebAppConfig.json \
+  --name sbu \
+  --restart=unless-stopped
+  sbu_run
