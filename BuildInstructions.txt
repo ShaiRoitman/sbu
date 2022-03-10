@@ -138,3 +138,13 @@ Dockers
 compile_sbu - Used for compiling the sbu code
 web_sbu - Creating the SBUWebApp environment
 sbu_run - Complete Application of the SBUWebApp and sbu
+
+
+compile_sbu - Build SBU app c++ code environment
+web_sbu     - Create WebApp Virtual Environment
+
+sbu_run     - 
+FROM compile_sbu + files -> Create sbu app
+FROM web_sbu             -> Use VirtualEnv
+FROM alpine as base      
+     Virtual Env from web_sbu + sbu_app compile + webservice_sbu python code

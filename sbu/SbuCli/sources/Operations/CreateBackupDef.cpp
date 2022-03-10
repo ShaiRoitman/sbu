@@ -58,11 +58,12 @@ std::shared_ptr<Operation> CreateBackupDefFactory()
 		[] (std::shared_ptr<IRepositoryDB::BackupDef> backupdef)
 	{
 		StandardOutputWrapper& output = *StandardOutputWrapper::GetInstance();
+		auto addedTS = get_string_from_time_point(backupdef->added);
 		output << backupdef->id << ",";
 		output << backupdef->name << ",";
 		output << backupdef->hostName << ",";
 		output << backupdef->rootPath << ",";
-		output << get_string_from_time_point(backupdef->added);
+		output << addedTS;
 		output.EOL();
 	};
 

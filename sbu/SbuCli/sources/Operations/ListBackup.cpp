@@ -48,10 +48,12 @@ std::shared_ptr<Operation> ListBackupsFactory()
 	retValue->strategy->backupIter = [](const IRepositoryDB::BackupInfo& backup)
 	{
 		StandardOutputWrapper& output = *StandardOutputWrapper::GetInstance();
+		auto startedTS = get_string_from_time_point(backup.started);
+		auto updatedTS = get_string_from_time_point(backup.lastUpdated);
 		output << backup.id << ",";
 		output << backup.status << ",";
-		output << get_string_from_time_point(backup.started) << ",";
-		output << get_string_from_time_point(backup.lastUpdated);
+		output << startedTS << ",";
+		output << updatedTS;
 		output.EOL();
 	};
 
