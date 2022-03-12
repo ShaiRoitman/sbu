@@ -126,3 +126,30 @@ docker run -it \
   --name sbu \
   --restart=unless-stopped
   sbu_run
+
+
+
+LinuxBuild.sh
+-------------
+if Registry Configured
+   Check Version of compile_sbu
+   if newVersion(compile_sbu)
+      Create compile_Sbu
+      Push compile_sbu
+   if newVersion(sbu)
+      Compile sbuapp
+   if newVersion(web_sbu)
+      Create web_sbu Docker
+      push web_sbu Docker
+   if newVersion(sbu_web)
+      Create sbu_run
+      push sbu_run
+else
+  create compile_sbu
+  create web_sbu
+  create sbu_run
+end
+
+create compile_sbu
+create web_sbu
+create sbu_run
