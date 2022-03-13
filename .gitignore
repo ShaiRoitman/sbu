@@ -1,0 +1,45 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+sbu/sbu_app
+sbu/SBUWebApp
+sbu_app/CMakeCache.txt
+sbu_app/CMakeFiles/
+sbu_app/Makefile
+sbu_app/SbuCli/CMakeFiles/
+sbu_app/SbuCli/Makefile
+sbu_app/SbuCli/cmake_install.cmake
+sbu_app/SbuCli/sbu
+sbu_app/cmake_install.cmake
+sbu_app/sbu_app/
+sbu_app/SbuCli/headers/Text_Resources.h

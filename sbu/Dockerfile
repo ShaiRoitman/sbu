@@ -35,9 +35,6 @@ WORKDIR /sbu
 
 EXPOSE 5000
 
-#RUN /venv/bin/python3 -m pip install -r /sbu/App/SBUWebApp/requirements.txt
-
-
 ENV SBU_CONFIG_PATH /sbu/Configuration
 ENV SBU_CONFIG $SBU_CONFIG_PATH/SBUApp.config
 ENV SBUWEBAPP_CONFIG $SBU_CONFIG_PATH/SBUWebAppConfig.json
