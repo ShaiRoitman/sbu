@@ -1,5 +1,0 @@
-include_directories(${GIT_ROOT}/poco/Foundation/include)
-include_directories(${GIT_ROOT}/poco/Zip/include)
-include_directories(${GIT_ROOT}/poco/Crypto/include)
-include_directories(${GIT_ROOT}/poco/Net/include)
-include_directories(${GIT_ROOT}/poco/Util/include)
