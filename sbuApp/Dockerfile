@@ -1,17 +1,22 @@
 FROM ubuntu:18.04
 
 RUN apt update
-RUN apt install -y python3 python3-pip
-RUN apt install -y python3-venv
+RUN apt install -y python3
+RUN rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /web_sbu
+RUN mkdir /sbu
 
-WORKDIR /web_sbu
+COPY ./so /sbu/sbu_app/so
+COPY ./sbu /sbu/sbu_app
 
-RUN python3 -m venv /web_sbu /web_sbu/sbu_venv
+COPY ./SBUWebApp /sbu/SBUWebApp
+COPY ./start.sh /sbu/start.sh
 
-COPY SBUWebApp/requirements.txt /sbu/App/SBUWebApp/requirements.txt
-RUN  sbu_venv/bin/python3 -m pip install -r /sbu/App/SBUWebApp/requirements.txt
+COPY --from=web_sbu:1.0.0 /web_sbu/sbu_venv /venv
 
-CMD /bin/bash
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/sbu/sbu_app/so
+ENV PATH $PATH:/sbu/sbu_app:/venv/bin
 
+WORKDIR /sbu
+
+CMD /sbu/start.sh
