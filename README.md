@@ -1,2 +1,0 @@
-# sbu
-Smart Backup Utility
