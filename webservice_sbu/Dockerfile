@@ -10,7 +10,7 @@ WORKDIR /web_sbu
 
 RUN python3 -m venv /web_sbu /web_sbu/sbu_venv
 
-COPY SBUWebApp/requirements.txt /sbu/App/SBUWebApp/requirements.txt
+COPY ./requirements.txt /sbu/App/SBUWebApp/requirements.txt
 RUN  sbu_venv/bin/python3 -m pip install -r /sbu/App/SBUWebApp/requirements.txt
 
 CMD /bin/bash

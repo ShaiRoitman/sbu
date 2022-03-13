@@ -31,7 +31,7 @@ RUN make install
 
 RUN mkdir /git/aws-sdk-cpp/release
 WORKDIR /git/aws-sdk-cpp/release
-RUN cmake -DBUILD_ONLY="s3;core;transfer" ..
+RUN cmake -DBUILD_ONLY="s3;core;transfer" -DENABLE_TESTING=OFF ..
 RUN make -j $WORKING_CPU
 RUN make install
 

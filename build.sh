@@ -5,7 +5,7 @@ echo "Full Build"
 COMPILE_SBU_VERSION=`cat compile_sbu/version.txt`
 docker build -t compile_sbu:$COMPILE_SBU_VERSION -f compile_sbu/Dockerfile compile_sbu
 
-docker run --rm -it -v $PWD:/sbu sbu_compile ./linuxBuild/compile.sh
+docker run --rm -it -v $PWD:/sbu compile_sbu:$COMPILE_SBU_VERSION ./linuxBuild/compile.sh
 
 cp -r sbu/sbu_app/so sbuApp/so
 cp sbu/SbuCli/sbu sbuApp
