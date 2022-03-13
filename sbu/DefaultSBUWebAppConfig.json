@@ -1,0 +1,24 @@
+{
+  "Logging": {
+    "Verbosity": "Information",
+    "LogFile": "/sbu/Work/SBUWebService.log"
+  },
+  "paths": {
+    "SBUApp": "/sbu/App/sbu/sbu",
+    "SBUAppConfig": "/sbu/Configuration/SbuConfig.json",
+    "RestorePoint": "/sbu/Restore"
+  },
+  "SambaShares": [
+    {
+      "name": "ZeusUSB1",
+      "url": "\\\\zeus\\usb1",
+      "username": "",
+      "password": ""
+    }
+  ],
+  "WebServer" : {
+    "IP": "127.0.0.1",
+    "Port" : 5000,
+    "LogLevel": "info"
+  }
+}

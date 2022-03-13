@@ -8,10 +8,10 @@ RUN mkdir /venv
 
 WORKDIR /venv
 
-RUN python3 -m venv /venv /venv/webservice_venv
+RUN python3 -m venv /venv 
 
-COPY ./requirements.txt /venv/webservice_venv/requirements.txt
-RUN  /venv/webservice_venv/bin/python3 -m pip install -r /venv/webservice_venv/requirements.txt
+COPY ./requirements.txt /venv/requirements.txt
+RUN  /venv/bin/python3 -m pip install -r /venv/requirements.txt
 
 CMD /bin/bash
 

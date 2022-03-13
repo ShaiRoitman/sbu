@@ -9,6 +9,6 @@ ldd SbuCli/sbu | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp -v '{}' sbu_a
 pushd sbu_app/so
 strip *
 popd
-strip sbu
+strip SbuCli/sbu
  
 
