@@ -26,7 +26,7 @@ COPY ./sbu_app /sbu/App
 COPY ./SBUWebApp /sbu/App/SBUWebApp
 COPY ./start.sh /sbu/start.sh
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/sbu/App/so
-ENV PATH $PATH:/sbu/App
+ENV PATH /venv/bin:$PATH:/sbu/App
 
 COPY DefaultSBUApp.config /sbu/App
 COPY DefaultSBUWebAppConfig.json /sbu/App/SBUWebApp/
