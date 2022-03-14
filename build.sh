@@ -1,5 +1,6 @@
 #!/bin/bash
 
+COMPILE_SBU_VERSION=`cat sbu_app/version.txt`
 docker run --rm -it -v $PWD:/sbu compile_sbu:$COMPILE_SBU_VERSION /sbu/sbu_app/build/compile.sh
 
 mkdir sbu/sbu_app
